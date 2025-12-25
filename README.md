@@ -6,8 +6,8 @@ A **production-ready** QAOA-based flash loan arbitrage bot with grace-based econ
 
 ```bash
 # 1. Clone and setup
-git clone <your-repo-url>
-cd eve-q-slurperbot
+git clone https://github.com/ArchitectofAthena/CodexTradingEngine.git
+cd CodexTradingEngine
 
 # 2. Configure environment
 cp .env.example .env
