@@ -1,0 +1,115 @@
+# EVE_Q SlurperBot v2 - Grace Economy Configuration
+
+# Failsafe configuration - Grace-based economics
+failsafe:
+  ttl_hours: 24           # Baseline autonomy freely given
+  max_ttl_hours: 48       # Maximum autonomy after altruistic rewards
+  # TTL increases with successful charity donations
+  # TTL decreases gently after 5+ consecutive failures
+
+# Charity configuration - The Heart of the System
+charity:
+  percentage: 0.15        # 15% of net profits to charity
+
+  # Multi-charity distribution
+  distribution:
+    - name: "GiveDirectly"
+      address: "0x750EF1D7a0b4Ab1c97B7A623D7917CcEb5ea779C"
+      allocation: 0.40
+      mission: "Direct cash transfers to people living in poverty"
+      extraction_mode: "monthly"
+
+    - name: "The Hunger Project"
+      address: "0x0000000000000000000000000000000000000001"
+      allocation: 0.35
+      mission: "Ending world hunger through sustainable community programs"
+      extraction_mode: "monthly"
+
+    - name: "Water.org"
+      address: "0x0000000000000000000000000000000000000002"
+      allocation: 0.25
+      mission: "Providing access to safe water and sanitation"
+      extraction_mode: "monthly"
+
+  # Monthly extraction settings
+  monthly_extraction:
+    enabled: true
+    day_of_month: 1       # Extract on the 1st of each month
+    min_balance_eth: 0.1  # Minimum balance to trigger extraction
+    auto_execute: false   # Require manual approval for safety
+
+  # IPFS logging for transparency
+  ipfs_logging:
+    enabled: true
+    # In production, add IPFS node settings here
+
+# Network configuration
+networks:
+  - name: "Ethereum Mainnet"
+    chain_id: 1
+    enabled: false        # Disabled for testing
+
+  - name: "Arbitrum One"
+    chain_id: 42161
+    enabled: false
+
+  - name: "Optimism"
+    chain_id: 10
+    enabled: false
+
+# Upgrade scanner configuration
+upgrade:
+  auto_scan: true
+  check_interval_hours: 24
+
+# Deployment settings
+deployment:
+  mode: "simulation"      # Options: simulation, testnet, mainnet
+  dry_run: true           # Always simulate first
+
+# Execution settings
+execution:
+  simulation_mode: true   # CRITICAL: Set to false only for live trading
+  min_profit_eth: 0.001   # Minimum profit to execute trade
+  max_gas_price_gwei: 100 # Abort if gas exceeds this
+  max_slippage_percent: 1.0  # Maximum acceptable slippage
+  min_eth_balance: 0.1    # Minimum account balance required
+
+# Logging configuration
+logging:
+  level: "INFO"           # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_dir: "logs"
+  metrics_dir: "data/metrics"
+  enable_json_logs: true
+  enable_console_colors: true
+
+# Monitoring configuration
+monitoring:
+  health_check_interval_seconds: 60
+  metrics_save_interval_seconds: 300  # 5 minutes
+  enable_prometheus: false
+  prometheus_port: 9090
+
+# Safety limits
+safety:
+  max_consecutive_failures: 10  # Abort after this many failures
+  cooldown_after_failure_seconds: 60
+  require_manual_approval_for_live: true
+
+# Quantum optimization settings
+quantum:
+  enable_qaoa: true       # Use quantum optimization if available
+  fallback_classical: true  # Fall back to classical if QAOA fails
+  qaoa_reps: 1            # QAOA circuit depth
+  max_routes_to_evaluate: 10
+
+# DEX configuration
+dex:
+  enabled_dexes:
+    - uniswap_v2
+    - sushiswap
+  scan_interval_seconds: 10
+  quote_timeout_seconds: 5
+
+# Custom token addresses (optional - override defaults)
+custom_tokens: {}
