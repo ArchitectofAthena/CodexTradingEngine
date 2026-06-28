@@ -120,6 +120,16 @@ def write_receipt(receipt: CycleReceipt, output_dir: Path) -> Path:
     return Path(proof.local_path)
 
 
+def persist_receipt_snapshot(receipt: CycleReceipt, output_dir: Path | str) -> Path:
+    """Persist a receipt snapshot without changing its proof metadata."""
+    path = Path(output_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    receipt_path = path / f"{receipt.cycle_id}.json"
+    receipt.local_log_path = str(receipt_path)
+    receipt_path.write_text(receipt.to_json(indent=2), encoding="utf-8")
+    return receipt_path
+
+
 def run_shadow_cycle(
     *,
     output_dir: Path | str = "receipts",
@@ -146,7 +156,7 @@ def run_shadow_cycle(
     if proof.local_path is not None:
         receipt_path = Path(proof.local_path)
     else:
-        receipt_path = write_receipt(receipt, Path(output_dir))
+        receipt_path = persist_receipt_snapshot(receipt, output_dir)
 
     return ShadowCycleRun(
         receipt=receipt,
