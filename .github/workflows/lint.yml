@@ -5,11 +5,15 @@ on:
     paths:
       - '**.py'
       - 'requirements.txt'
+      - 'pyproject.toml'
+      - '.flake8'
       - '.github/workflows/lint.yml'
   pull_request:
     paths:
       - '**.py'
       - 'requirements.txt'
+      - 'pyproject.toml'
+      - '.flake8'
       - '.github/workflows/lint.yml'
 
 jobs:
