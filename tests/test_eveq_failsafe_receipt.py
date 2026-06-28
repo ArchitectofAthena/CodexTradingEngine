@@ -78,9 +78,7 @@ def test_receipt_to_json_serializes_nested_decimals():
             "legs": [{"gas_eth": Decimal("0.01")}],
         }
     ]
-    receipt.charity_allocations = [
-        {"name": "test", "amount_eth": Decimal("0.15")}
-    ]
+    receipt.charity_allocations = [{"name": "test", "amount_eth": Decimal("0.15")}]
 
     payload = json.loads(receipt.to_json())
 
