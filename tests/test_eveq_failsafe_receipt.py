@@ -1,4 +1,5 @@
 from decimal import Decimal
+import json
 
 from eveq_failsafe_receipt import (
     CycleReceipt,
@@ -66,3 +67,23 @@ def test_claimed_trust_flag_cannot_bypass_gates():
     result = validate_receipt(receipt)
     assert result.trust_increment_allowed is False
     assert any("proof gates failed" in error for error in result.errors)
+
+
+def test_receipt_to_json_serializes_nested_decimals():
+    receipt = make_valid_receipt()
+    receipt.candidate_routes = [
+        {
+            "route": "route-a",
+            "expected_profit_eth": Decimal("0.25"),
+            "legs": [{"gas_eth": Decimal("0.01")}],
+        }
+    ]
+    receipt.charity_allocations = [
+        {"name": "test", "amount_eth": Decimal("0.15")}
+    ]
+
+    payload = json.loads(receipt.to_json())
+
+    assert payload["candidate_routes"][0]["expected_profit_eth"] == "0.25"
+    assert payload["candidate_routes"][0]["legs"][0]["gas_eth"] == "0.01"
+    assert payload["charity_allocations"][0]["amount_eth"] == "0.15"
