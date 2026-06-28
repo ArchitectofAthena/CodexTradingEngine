@@ -72,7 +72,8 @@ def build_shadow_receipt(
     candidate_routes: Optional[List[Dict[str, Any]]] = None,
 ) -> CycleReceipt:
     """Build a fully populated shadow CycleReceipt from mock route data."""
-    routes = [score_candidate_route(route) for route in candidate_routes or default_candidate_routes()]
+    source_routes = candidate_routes or default_candidate_routes()
+    routes = [score_candidate_route(route) for route in source_routes]
     selected = max(routes, key=lambda route: route["score_eth"])
     actual_profit = q18(selected["score_eth"])
 
@@ -127,7 +128,10 @@ def run_shadow_cycle(
 ) -> ShadowCycleRun:
     """Run one simulated shadow cycle through the receipt validation gate."""
     failsafe_cfg = failsafe or FailsafeConfig()
-    receipt = build_shadow_receipt(cycle_id=cycle_id, candidate_routes=candidate_routes)
+    receipt = build_shadow_receipt(
+        cycle_id=cycle_id,
+        candidate_routes=candidate_routes,
+    )
     validation = progressive_trust_increment_from_receipt(
         failsafe_cfg,
         receipt,
