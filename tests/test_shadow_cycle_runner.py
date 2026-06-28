@@ -2,7 +2,11 @@ import json
 from decimal import Decimal
 
 from eveq_failsafe_receipt import FailsafeConfig
-from shadow_cycle_runner import build_shadow_receipt, run_shadow_cycle, score_candidate_route
+from shadow_cycle_runner import (
+    build_shadow_receipt,
+    run_shadow_cycle,
+    score_candidate_route,
+)
 
 
 def test_score_candidate_route_subtracts_costs_and_margin():
