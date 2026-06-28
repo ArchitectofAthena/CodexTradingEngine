@@ -304,9 +304,7 @@ def _state_payload(cfg: FailsafeConfig) -> Dict[str, Any]:
 
 
 def _checksum(data: Dict[str, Any]) -> str:
-    encoded = json.dumps(data, sort_keys=True, separators=(",", ":")).encode(
-        "utf-8"
-    )
+    encoded = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
 
