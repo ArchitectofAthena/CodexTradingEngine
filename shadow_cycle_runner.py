@@ -1,8 +1,9 @@
 """Shadow cycle runner for EVE_Q++ receipt pipeline exercises.
 
 The runner simulates one complete observation cycle without moving capital. It
-emits a shadow-mode CycleReceipt, validates it, writes a receipt JSON file, and
-confirms that shadow cycles can learn/log without expanding trust.
+emits a shadow-mode CycleReceipt, routes proof through an adapter, validates the
+receipt, writes a receipt JSON file, and confirms that shadow cycles can
+learn/log without expanding trust.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from eveq_failsafe_receipt import (
     progressive_trust_increment_from_receipt,
     q18,
 )
+from proof_adapters import LocalFileProofAdapter, ProofAdapter, apply_proof_to_receipt
 
 
 @dataclass(frozen=True)
@@ -99,24 +101,23 @@ def build_shadow_receipt(
             "proof_type": "shadow-local-only",
         }
     ]
-    receipt.ipfs_cid = f"mock:{receipt.cycle_id}"
-    receipt.local_log_path = None
     receipt.tx_hashes = []
     receipt.liveness_valid = True
     receipt.execution_success = True
     receipt.charity_success = True
-    receipt.ipfs_success = True
+    receipt.ipfs_success = False
+    receipt.ipfs_cid = None
     receipt.trust_increment_allowed = False
     return receipt.finalize()
 
 
 def write_receipt(receipt: CycleReceipt, output_dir: Path) -> Path:
-    """Write a receipt JSON document and return the resulting path."""
-    output_dir.mkdir(parents=True, exist_ok=True)
-    receipt_path = output_dir / f"{receipt.cycle_id}.json"
-    receipt.local_log_path = str(receipt_path)
-    receipt_path.write_text(receipt.to_json(indent=2), encoding="utf-8")
-    return receipt_path
+    """Write a receipt JSON document using the local proof adapter."""
+    proof = LocalFileProofAdapter(output_dir).publish(receipt)
+    apply_proof_to_receipt(receipt, proof)
+    if proof.local_path is None:
+        raise RuntimeError("local proof adapter did not return a receipt path")
+    return Path(proof.local_path)
 
 
 def run_shadow_cycle(
@@ -125,6 +126,7 @@ def run_shadow_cycle(
     failsafe: Optional[FailsafeConfig] = None,
     cycle_id: Optional[str] = None,
     candidate_routes: Optional[List[Dict[str, Any]]] = None,
+    proof_adapter: Optional[ProofAdapter] = None,
 ) -> ShadowCycleRun:
     """Run one simulated shadow cycle through the receipt validation gate."""
     failsafe_cfg = failsafe or FailsafeConfig()
@@ -132,12 +134,20 @@ def run_shadow_cycle(
         cycle_id=cycle_id,
         candidate_routes=candidate_routes,
     )
+    adapter = proof_adapter or LocalFileProofAdapter(output_dir)
+    proof = adapter.publish(receipt)
+    apply_proof_to_receipt(receipt, proof)
     validation = progressive_trust_increment_from_receipt(
         failsafe_cfg,
         receipt,
         production_mode=False,
     )
-    receipt_path = write_receipt(receipt, Path(output_dir))
+
+    if proof.local_path is not None:
+        receipt_path = Path(proof.local_path)
+    else:
+        receipt_path = write_receipt(receipt, Path(output_dir))
+
     return ShadowCycleRun(
         receipt=receipt,
         validation=validation,
