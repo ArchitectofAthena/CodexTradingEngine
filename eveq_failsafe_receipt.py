@@ -1,9 +1,4 @@
-"""EVE_Q++ receipt-gated failsafe spine.
-
-This module keeps trust and TTL expansion behind validated CycleReceipt state.
-Shadow, dry-run, paper, and simulated cycles may be logged, but they cannot
-expand autonomy.
-"""
+"""Receipt-gated failsafe spine for EVE_Q++."""
 
 from __future__ import annotations
 
@@ -25,12 +20,10 @@ MOCK_CID_PREFIXES = ("mock:", "QmMock", "bafyMock", "local-mock:")
 
 
 def utc_now_iso() -> str:
-    """Return the current UTC time in ISO-8601 form."""
     return datetime.now(timezone.utc).isoformat()
 
 
 def dec(value: Any) -> Decimal:
-    """Convert a value into Decimal using string conversion for float safety."""
     if isinstance(value, Decimal):
         return value
     if value is None:
@@ -39,14 +32,21 @@ def dec(value: Any) -> Decimal:
 
 
 def q18(value: Any) -> Decimal:
-    """Quantize ETH-like values to 18 decimal places."""
     return dec(value).quantize(ETH_QUANT, rounding=ROUND_HALF_UP)
+
+
+def json_safe(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, dict):
+        return {str(key): json_safe(nested) for key, nested in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(item) for item in value]
+    return value
 
 
 @dataclass
 class CycleReceipt:
-    """Canonical proof object for one engine cycle."""
-
     cycle_id: str
     mode: str
     chain: str
@@ -100,7 +100,6 @@ class CycleReceipt:
         slippage_eth: Any = Decimal("0"),
         safety_margin_eth: Any = Decimal("0"),
     ) -> "CycleReceipt":
-        """Create a non-trust-gaining shadow receipt."""
         return cls(
             cycle_id=cycle_id,
             mode="shadow",
@@ -124,11 +123,7 @@ class CycleReceipt:
         return self
 
     def to_dict(self) -> Dict[str, Any]:
-        data = asdict(self)
-        for key, value in list(data.items()):
-            if isinstance(value, Decimal):
-                data[key] = str(value)
-        return data
+        return json_safe(asdict(self))
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "CycleReceipt":
@@ -157,8 +152,6 @@ class CycleReceipt:
 
 @dataclass(frozen=True)
 class ValidationResult:
-    """Receipt validation result used by the failsafe gate."""
-
     valid: bool
     trust_increment_allowed: bool
     errors: List[str] = field(default_factory=list)
@@ -187,7 +180,6 @@ def validate_receipt(
     charity_rate: Decimal = CHARITY_RATE,
     tolerance_eth: Decimal = Decimal("0.000000000000000001"),
 ) -> ValidationResult:
-    """Validate a receipt and compute whether trust may expand."""
     errors: List[str] = []
     warnings: List[str] = []
 
@@ -274,18 +266,15 @@ def validate_receipt(
 
 
 def can_update_trust(receipt: CycleReceipt, *, production_mode: bool = False) -> bool:
-    """Return whether this receipt can update trust."""
     return validate_receipt(receipt, production_mode=production_mode).trust_increment_allowed
 
 
 class FailsafeStateError(RuntimeError):
-    """Raised when the checksum-backed failsafe state cannot be trusted."""
+    pass
 
 
 @dataclass
 class FailsafeConfig:
-    """Failsafe trust and TTL state."""
-
     ttl_hours: float = 24.0
     max_ttl_hours: float = 48.0
     trust_level: float = 0.0
@@ -309,7 +298,6 @@ def _checksum(data: Dict[str, Any]) -> str:
 
 
 def save_state(cfg: FailsafeConfig, path: Optional[str] = None) -> Path:
-    """Persist failsafe state with a checksum envelope."""
     target = Path(path or cfg.state_file or "failsafe_state.json")
     target.parent.mkdir(parents=True, exist_ok=True)
     payload = _state_payload(cfg)
@@ -331,7 +319,6 @@ def save_state(cfg: FailsafeConfig, path: Optional[str] = None) -> Path:
 
 
 def load_state(path: str) -> FailsafeConfig:
-    """Load failsafe state and verify its checksum."""
     target = Path(path)
     with target.open("r", encoding="utf-8") as handle:
         wrapped = json.load(handle)
@@ -354,7 +341,6 @@ def progressive_trust_increment(
     failure_decay_threshold: int = 3,
     logger: Optional[Callable[[str], None]] = None,
 ) -> FailsafeConfig:
-    """Update trust state after the receipt gate has made its decision."""
     if success:
         failsafe_cfg.ttl_hours = min(
             float(failsafe_cfg.max_ttl_hours),
@@ -392,7 +378,6 @@ def progressive_trust_increment_from_receipt(
     production_mode: bool = False,
     logger: Optional[Callable[[str], None]] = None,
 ) -> ValidationResult:
-    """Validate a receipt, then update trust only if validation permits it."""
     result = validate_receipt(receipt, production_mode=production_mode)
 
     if not result.trust_increment_allowed and logger:
