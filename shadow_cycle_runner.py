@@ -117,7 +117,9 @@ def write_receipt(receipt: CycleReceipt, output_dir: Path) -> Path:
     apply_proof_to_receipt(receipt, proof)
     if proof.local_path is None:
         raise RuntimeError("local proof adapter did not return a receipt path")
-    return Path(proof.local_path)
+    receipt_path = Path(proof.local_path)
+    receipt_path.write_text(receipt.to_json(indent=2), encoding="utf-8")
+    return receipt_path
 
 
 def persist_receipt_snapshot(receipt: CycleReceipt, output_dir: Path | str) -> Path:
@@ -155,6 +157,7 @@ def run_shadow_cycle(
 
     if proof.local_path is not None:
         receipt_path = Path(proof.local_path)
+        receipt_path.write_text(receipt.to_json(indent=2), encoding="utf-8")
     else:
         receipt_path = persist_receipt_snapshot(receipt, output_dir)
 
