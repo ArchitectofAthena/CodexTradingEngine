@@ -72,7 +72,7 @@ def test_ipfs_proof_adapter_uses_injected_publisher():
 def test_ipfs_proof_adapter_rejects_mock_like_cids_for_production_trust():
     receipt = make_receipt()
 
-    proof = IPFSProofAdapter(lambda payload: "mock:not-real").publish(receipt)
-
-    assert proof.success is True
-    assert proof.production_trust_eligible is False
+    for cid in ("mock:not-real", "QmMockNotReal", "bafyMockNotReal", "local:not-real"):
+        proof = IPFSProofAdapter(lambda payload, proof_cid=cid: proof_cid).publish(receipt)
+        assert proof.success is True
+        assert proof.production_trust_eligible is False
