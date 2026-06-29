@@ -57,7 +57,15 @@ def test_mock_proof_blocks_production_trust():
     receipt.ipfs_cid = "mock:test-proof"
     result = validate_receipt(receipt, production_mode=True)
     assert result.trust_increment_allowed is False
-    assert any("mock IPFS" in error for error in result.errors)
+    assert any("non-production proof" in error for error in result.errors)
+
+
+def test_local_proof_blocks_production_trust():
+    receipt = make_valid_receipt()
+    receipt.ipfs_cid = "local:test-proof"
+    result = validate_receipt(receipt, production_mode=True)
+    assert result.trust_increment_allowed is False
+    assert any("non-production proof" in error for error in result.errors)
 
 
 def test_claimed_trust_flag_cannot_bypass_gates():

@@ -16,7 +16,8 @@ CHARITY_RATE = Decimal("0.15")
 ETH_QUANT = Decimal("0.000000000000000001")
 TRUSTABLE_MODES = {"live"}
 SIMULATION_MODES = {"shadow", "dry_run", "paper", "simulation"}
-MOCK_CID_PREFIXES = ("mock:", "QmMock", "bafyMock", "local-mock:")
+NON_PRODUCTION_CID_PREFIXES = ("mock:", "QmMock", "bafyMock", "local-mock:", "local:")
+MOCK_CID_PREFIXES = NON_PRODUCTION_CID_PREFIXES
 
 
 def utc_now_iso() -> str:
@@ -43,6 +44,12 @@ def json_safe(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [json_safe(item) for item in value]
     return value
+
+
+def is_non_production_cid(cid: Optional[str]) -> bool:
+    if not cid:
+        return False
+    return cid.startswith(NON_PRODUCTION_CID_PREFIXES)
 
 
 @dataclass
@@ -164,9 +171,7 @@ class ValidationResult:
 
 
 def _is_mock_cid(cid: Optional[str]) -> bool:
-    if not cid:
-        return False
-    return cid.startswith(MOCK_CID_PREFIXES)
+    return is_non_production_cid(cid)
 
 
 def _close_enough(a: Any, b: Any, tolerance: Decimal) -> bool:
@@ -221,8 +226,8 @@ def validate_receipt(
     elif mode not in TRUSTABLE_MODES:
         warnings.append(f"unrecognized/non-trustable mode: {receipt.mode!r}")
 
-    if production_mode and _is_mock_cid(receipt.ipfs_cid):
-        errors.append("mock IPFS CID cannot be used as production proof")
+    if production_mode and is_non_production_cid(receipt.ipfs_cid):
+        errors.append("non-production proof CID cannot be used as production proof")
 
     charity_due_matches = _close_enough(
         receipt.charity_due_eth,
@@ -249,7 +254,7 @@ def validate_receipt(
         and receipt.charity_success
         and receipt.ipfs_success
         and receipt.ipfs_cid is not None
-        and not (production_mode and _is_mock_cid(receipt.ipfs_cid))
+        and not (production_mode and is_non_production_cid(receipt.ipfs_cid))
     )
 
     if receipt.trust_increment_allowed and not computed_trust_allowed:
