@@ -32,6 +32,8 @@ def test_build_shadow_receipt_is_populated_but_not_proven_yet():
     assert receipt.charity_success is True
     assert receipt.ipfs_success is False
     assert receipt.ipfs_cid is None
+    assert receipt.proof_type is None
+    assert receipt.proof_production_trust_eligible is False
     assert receipt.trust_increment_allowed is False
 
 
@@ -53,10 +55,15 @@ def test_run_shadow_cycle_writes_receipt_and_blocks_trust(tmp_path):
     assert run.receipt_path.exists()
     assert run.receipt.ipfs_cid is not None
     assert run.receipt.ipfs_cid.startswith("local:")
+    assert run.receipt.proof_type == "local_file"
+    assert run.receipt.proof_production_trust_eligible is False
 
     payload = json.loads(run.receipt_path.read_text(encoding="utf-8"))
     assert payload["cycle_id"] == "shadow-test-cycle"
     assert payload["mode"] == "shadow"
+    assert payload["proof_type"] == "local_file"
+    assert payload["proof_production_trust_eligible"] is False
+    assert payload["proof_metadata"]["cid"].startswith("local:")
     assert payload["candidate_routes"][0]["score_eth"] == "0.012000000000000000"
     assert payload["charity_allocations"][0]["amount_eth"] == "0.001800000000000000"
 
@@ -71,4 +78,6 @@ def test_run_shadow_cycle_can_use_mock_proof_adapter(tmp_path):
     assert run.validation.valid is True
     assert run.validation.trust_increment_allowed is False
     assert run.receipt.ipfs_cid == "mock:shadow-test-cycle"
+    assert run.receipt.proof_type == "mock"
+    assert run.receipt.proof_production_trust_eligible is False
     assert run.receipt_path.exists()
