@@ -68,6 +68,10 @@ class CycleReceipt:
     charity_due_eth: Decimal = Decimal("0")
     charity_distributed_eth: Decimal = Decimal("0")
     charity_allocations: List[Dict[str, Any]] = field(default_factory=list)
+    proof_type: Optional[str] = None
+    proof_production_trust_eligible: bool = False
+    proof_metadata: Dict[str, Any] = field(default_factory=dict)
+    proof_error: Optional[str] = None
     ipfs_cid: Optional[str] = None
     local_log_path: Optional[str] = None
     tx_hashes: List[str] = field(default_factory=list)
@@ -220,14 +224,21 @@ def validate_receipt(
         errors.append("ipfs_success is false")
     if not receipt.ipfs_cid:
         errors.append("missing ipfs_cid")
+    if receipt.proof_error:
+        errors.append(f"proof error: {receipt.proof_error}")
 
     if mode in SIMULATION_MODES:
         warnings.append(f"{mode} mode cannot gain trust")
     elif mode not in TRUSTABLE_MODES:
         warnings.append(f"unrecognized/non-trustable mode: {receipt.mode!r}")
 
-    if production_mode and is_non_production_cid(receipt.ipfs_cid):
-        errors.append("non-production proof CID cannot be used as production proof")
+    if production_mode:
+        if not receipt.proof_type:
+            errors.append("production proof requires proof_type")
+        if not receipt.proof_production_trust_eligible:
+            errors.append("production proof is not trust eligible")
+        if is_non_production_cid(receipt.ipfs_cid):
+            errors.append("non-production proof CID cannot be used as production proof")
 
     charity_due_matches = _close_enough(
         receipt.charity_due_eth,
@@ -243,6 +254,14 @@ def validate_receipt(
     if receipt.execution_success and mode == "live" and not receipt.tx_hashes:
         errors.append("live execution receipt requires tx_hashes")
 
+    production_proof_allowed = (
+        not production_mode
+        or (
+            receipt.proof_type is not None
+            and receipt.proof_production_trust_eligible
+            and not is_non_production_cid(receipt.ipfs_cid)
+        )
+    )
     computed_trust_allowed = (
         len(errors) == 0
         and mode in TRUSTABLE_MODES
@@ -254,7 +273,7 @@ def validate_receipt(
         and receipt.charity_success
         and receipt.ipfs_success
         and receipt.ipfs_cid is not None
-        and not (production_mode and is_non_production_cid(receipt.ipfs_cid))
+        and production_proof_allowed
     )
 
     if receipt.trust_increment_allowed and not computed_trust_allowed:
