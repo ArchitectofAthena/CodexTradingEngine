@@ -29,12 +29,32 @@ def make_valid_receipt():
     )
 
 
+def make_production_proven_receipt():
+    receipt = make_valid_receipt()
+    receipt.proof_type = "ipfs"
+    receipt.proof_production_trust_eligible = True
+    receipt.proof_metadata = {"cid": receipt.ipfs_cid, "publisher": "test"}
+    return receipt
+
+
 def test_valid_receipt_allows_trust_increment():
     cfg = FailsafeConfig(ttl_hours=24.0, max_ttl_hours=48.0, trust_level=0.0)
     result = progressive_trust_increment_from_receipt(cfg, make_valid_receipt())
     assert result.trust_increment_allowed is True
     assert cfg.ttl_hours == 25.0
     assert cfg.trust_level == 0.05
+
+
+def test_production_receipt_requires_eligible_proof_envelope():
+    result = validate_receipt(make_valid_receipt(), production_mode=True)
+    assert result.trust_increment_allowed is False
+    assert "production proof requires proof_type" in result.errors
+    assert "production proof is not trust eligible" in result.errors
+
+
+def test_production_receipt_with_eligible_proof_can_increment_trust():
+    result = validate_receipt(make_production_proven_receipt(), production_mode=True)
+    assert result.trust_increment_allowed is True
 
 
 def test_shadow_receipt_does_not_increment_trust():
@@ -53,7 +73,7 @@ def test_shadow_receipt_does_not_increment_trust():
 
 
 def test_mock_proof_blocks_production_trust():
-    receipt = make_valid_receipt()
+    receipt = make_production_proven_receipt()
     receipt.ipfs_cid = "mock:test-proof"
     result = validate_receipt(receipt, production_mode=True)
     assert result.trust_increment_allowed is False
@@ -61,7 +81,7 @@ def test_mock_proof_blocks_production_trust():
 
 
 def test_local_proof_blocks_production_trust():
-    receipt = make_valid_receipt()
+    receipt = make_production_proven_receipt()
     receipt.ipfs_cid = "local:test-proof"
     result = validate_receipt(receipt, production_mode=True)
     assert result.trust_increment_allowed is False
