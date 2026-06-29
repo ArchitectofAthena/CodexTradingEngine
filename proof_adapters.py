@@ -48,12 +48,16 @@ class MockProofAdapter:
     proof_type = "mock"
 
     def publish(self, receipt: CycleReceipt) -> ProofResult:
+        cid = f"mock:{receipt.cycle_id}"
         return ProofResult(
             success=True,
             proof_type=self.proof_type,
-            cid=f"mock:{receipt.cycle_id}",
+            cid=cid,
             production_trust_eligible=False,
-            metadata={"reason": "mock proof is development-only"},
+            metadata={
+                "cid": cid,
+                "reason": "mock proof is development-only",
+            },
         )
 
 
@@ -89,6 +93,8 @@ class LocalFileProofAdapter:
             local_path=str(receipt_path),
             production_trust_eligible=False,
             metadata={
+                "cid": cid,
+                "local_path": str(receipt_path),
                 "sha256": digest,
                 "reason": "local file proof is development/local-audit only",
             },
@@ -126,7 +132,10 @@ class IPFSProofAdapter:
             proof_type=self.proof_type,
             cid=cid,
             production_trust_eligible=production_eligible,
-            metadata={"publisher": "injected"},
+            metadata={
+                "cid": cid,
+                "publisher": "injected",
+            },
         )
 
 
@@ -135,6 +144,14 @@ def apply_proof_to_receipt(receipt: CycleReceipt, proof: ProofResult) -> CycleRe
     receipt.ipfs_success = proof.success
     receipt.ipfs_cid = proof.cid
     receipt.local_log_path = proof.local_path or receipt.local_log_path
+    receipt.proof_type = proof.proof_type
+    receipt.proof_production_trust_eligible = proof.production_trust_eligible
+    receipt.proof_metadata = {
+        **proof.metadata,
+        "cid": proof.cid,
+        "local_path": proof.local_path,
+    }
+    receipt.proof_error = proof.error
 
     if proof.error:
         receipt.errors.append(f"proof adapter error: {proof.error}")
