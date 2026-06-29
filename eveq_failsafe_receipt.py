@@ -254,13 +254,10 @@ def validate_receipt(
     if receipt.execution_success and mode == "live" and not receipt.tx_hashes:
         errors.append("live execution receipt requires tx_hashes")
 
-    production_proof_allowed = (
-        not production_mode
-        or (
-            receipt.proof_type is not None
-            and receipt.proof_production_trust_eligible
-            and not is_non_production_cid(receipt.ipfs_cid)
-        )
+    production_proof_allowed = not production_mode or (
+        receipt.proof_type is not None
+        and receipt.proof_production_trust_eligible
+        and not is_non_production_cid(receipt.ipfs_cid)
     )
     computed_trust_allowed = (
         len(errors) == 0
