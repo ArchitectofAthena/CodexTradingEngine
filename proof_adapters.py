@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Protocol
 
-from eveq_failsafe_receipt import CycleReceipt
+from eveq_failsafe_receipt import CycleReceipt, is_non_production_cid
 
 
 @dataclass(frozen=True)
@@ -120,7 +120,7 @@ class IPFSProofAdapter:
                 error=str(exc),
             )
 
-        production_eligible = not cid.startswith(("mock:", "local:", "local-mock:"))
+        production_eligible = not is_non_production_cid(cid)
         return ProofResult(
             success=True,
             proof_type=self.proof_type,
