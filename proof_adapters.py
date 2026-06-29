@@ -102,7 +102,11 @@ def apply_proof_to_receipt(receipt: CycleReceipt, proof: ProofResult) -> CycleRe
     receipt.local_log_path = proof.local_path or receipt.local_log_path
     receipt.proof_type = proof.proof_type
     receipt.proof_production_trust_eligible = proof.production_trust_eligible
-    receipt.proof_metadata = {**proof.metadata, "cid": proof.cid, "local_path": proof.local_path}
+    receipt.proof_metadata = {
+        **proof.metadata,
+        "cid": proof.cid,
+        "local_path": proof.local_path,
+    }
     receipt.proof_error = proof.error
     if proof.error:
         receipt.errors.append(f"proof error: {proof.error}")
