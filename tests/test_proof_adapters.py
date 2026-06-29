@@ -38,6 +38,10 @@ def test_mock_proof_is_never_production_trust_eligible():
     assert proof.production_trust_eligible is False
     assert receipt.ipfs_success is True
     assert receipt.ipfs_cid == "mock:proof-test-cycle"
+    assert receipt.proof_type == "mock"
+    assert receipt.proof_production_trust_eligible is False
+    assert receipt.proof_metadata["cid"] == "mock:proof-test-cycle"
+    assert receipt.proof_error is None
     assert any("not production trust eligible" in item for item in receipt.warnings)
 
 
@@ -55,6 +59,9 @@ def test_local_file_proof_writes_receipt_and_is_not_production_trust_eligible(tm
     assert receipt.ipfs_success is True
     assert receipt.ipfs_cid.startswith("local:")
     assert receipt.local_log_path == proof.local_path
+    assert receipt.proof_type == "local_file"
+    assert receipt.proof_production_trust_eligible is False
+    assert receipt.proof_metadata["local_path"] == proof.local_path
 
 
 def test_ipfs_proof_adapter_uses_injected_publisher():
@@ -67,6 +74,9 @@ def test_ipfs_proof_adapter_uses_injected_publisher():
     assert proof.cid == "bafyProductionProofCid"
     assert proof.production_trust_eligible is True
     assert receipt.ipfs_cid == "bafyProductionProofCid"
+    assert receipt.proof_type == "ipfs"
+    assert receipt.proof_production_trust_eligible is True
+    assert receipt.proof_metadata["cid"] == "bafyProductionProofCid"
 
 
 def test_ipfs_proof_adapter_rejects_mock_like_cids_for_production_trust():
