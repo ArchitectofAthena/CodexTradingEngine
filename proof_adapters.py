@@ -156,5 +156,7 @@ def apply_proof_to_receipt(receipt: CycleReceipt, proof: ProofResult) -> CycleRe
     if proof.error:
         receipt.errors.append(f"proof adapter error: {proof.error}")
     if proof.success and not proof.production_trust_eligible:
-        receipt.warnings.append(f"{proof.proof_type} proof is not production trust eligible")
+        receipt.warnings.append(
+            f"{proof.proof_type} proof is not production trust eligible"
+        )
     return receipt
