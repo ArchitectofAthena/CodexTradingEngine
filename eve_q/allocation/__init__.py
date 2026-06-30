@@ -1,0 +1,1 @@
+"""Charity allocation recommendation package."""
