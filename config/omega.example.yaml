@@ -1,0 +1,26 @@
+log_level: INFO
+
+database_path: data/omega_telemetry.sqlite
+health_path: logs/omega_health.json
+health_interval_seconds: 30
+
+observers:
+  - name: base_context
+    enabled: true
+    poll_interval_seconds: 60
+
+sentiment:
+  enabled: false
+  rules_path: rules/market_signal_rules.json
+  cooldown_minutes: 10
+  poll_interval_seconds: 60
+  min_score: 3.0
+  spike_window_minutes: 15
+  spike_threshold_count: 5
+  sources: []
+
+alerts:
+  telegram:
+    enabled: false
+  discord:
+    enabled: false
