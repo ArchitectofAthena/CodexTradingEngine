@@ -1,0 +1,40 @@
+{
+  "rules": [
+    {
+      "name": "security_notice",
+      "category": "system_status",
+      "weight": 5,
+      "patterns": ["security notice", "incident report", "postmortem", "service paused"]
+    },
+    {
+      "name": "liquidity_change",
+      "category": "market_structure",
+      "weight": 3,
+      "patterns": ["liquidity change", "pool update", "reserve change", "routing update"]
+    },
+    {
+      "name": "venue_flow",
+      "category": "market_structure",
+      "weight": 3,
+      "patterns": ["venue inflow", "venue outflow", "custody update", "settlement update"]
+    },
+    {
+      "name": "governance_activity",
+      "category": "governance",
+      "weight": 2,
+      "patterns": ["proposal", "governance vote", "treasury vote", "delegate update"]
+    },
+    {
+      "name": "volatility_notice",
+      "category": "market_structure",
+      "weight": 2,
+      "patterns": ["volatility", "price dislocation", "spread widening", "funding reset"]
+    },
+    {
+      "name": "public_interest",
+      "category": "attention",
+      "weight": 1,
+      "patterns": ["trending", "public interest", "social volume", "attention spike"]
+    }
+  ]
+}
