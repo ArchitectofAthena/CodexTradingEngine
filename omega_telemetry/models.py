@@ -31,7 +31,7 @@ class Event:
 
 
 @dataclass(slots=True)
-class WhaleEvent(Event):
+class ChainSignalEvent(Event):
     amount: Optional[str] = None
     asset_symbol: Optional[str] = None
     usd_value: Optional[str] = None
