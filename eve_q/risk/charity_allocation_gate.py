@@ -26,8 +26,15 @@ def evaluate_charity_gate(
     review_reasons: List[str] = []
 
     provenance = proposal.get("provenance") or proposal.get("inputs", {}).get("provenance") or []
-    confidence = float(proposal.get("confidence_score", proposal.get("inputs", {}).get("confidence_score", 0.0)))
-    reliability = float(proposal.get("telemetry_source_reliability", proposal.get("inputs", {}).get("telemetry_source_reliability", 0.0)))
+    confidence = float(
+        proposal.get("confidence_score", proposal.get("inputs", {}).get("confidence_score", 0.0))
+    )
+    reliability = float(
+        proposal.get(
+            "telemetry_source_reliability",
+            proposal.get("inputs", {}).get("telemetry_source_reliability", 0.0),
+        )
+    )
 
     if not provenance:
         block_reasons.append("missing_provenance")

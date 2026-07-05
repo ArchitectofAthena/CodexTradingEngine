@@ -64,7 +64,9 @@ class AlertDispatcher:
             results.append(await self._send_discord(event, discord_cfg))
 
         if not results:
-            result = AlertResult(channel="shadow-fallback", delivered=False, response="no_channels_configured")
+            result = AlertResult(
+                channel="shadow-fallback", delivered=False, response="no_channels_configured"
+            )
             self.db.log_alert(event.dedupe_key, result.channel, result.delivered, result.response)
             return [result]
 
@@ -76,7 +78,9 @@ class AlertDispatcher:
         token = cfg.get("bot_token")
         chat_id = cfg.get("chat_id")
         if not token or not chat_id:
-            return AlertResult(channel="telegram", delivered=False, response="missing_telegram_credentials")
+            return AlertResult(
+                channel="telegram", delivered=False, response="missing_telegram_credentials"
+            )
 
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         payload = {
@@ -90,17 +94,25 @@ class AlertDispatcher:
                 delivered = 200 <= resp.status < 300
                 return AlertResult(channel="telegram", delivered=delivered, response=text[:500])
         except Exception as exc:
-            return AlertResult(channel="telegram", delivered=False, response=f"{type(exc).__name__}: {exc}")
+            return AlertResult(
+                channel="telegram", delivered=False, response=f"{type(exc).__name__}: {exc}"
+            )
 
     async def _send_discord(self, event: Event, cfg: Dict[str, Any]) -> AlertResult:
         webhook_url = cfg.get("webhook_url")
         if not webhook_url:
-            return AlertResult(channel="discord", delivered=False, response="missing_discord_webhook")
+            return AlertResult(
+                channel="discord", delivered=False, response="missing_discord_webhook"
+            )
 
         try:
-            async with self.session.post(webhook_url, json={"content": format_event_message(event)}) as resp:
+            async with self.session.post(
+                webhook_url, json={"content": format_event_message(event)}
+            ) as resp:
                 text = await resp.text()
                 delivered = 200 <= resp.status < 300
                 return AlertResult(channel="discord", delivered=delivered, response=text[:500])
         except Exception as exc:
-            return AlertResult(channel="discord", delivered=False, response=f"{type(exc).__name__}: {exc}")
+            return AlertResult(
+                channel="discord", delivered=False, response=f"{type(exc).__name__}: {exc}"
+            )

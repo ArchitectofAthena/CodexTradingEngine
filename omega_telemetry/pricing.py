@@ -35,7 +35,9 @@ class PriceResolver:
 
         params = {"ids": coin_id, "vs_currencies": "usd"}
         timeout = aiohttp.ClientTimeout(total=self.timeout_seconds)
-        async with self.session.get(self.COINGECKO_SIMPLE_PRICE, params=params, timeout=timeout) as resp:
+        async with self.session.get(
+            self.COINGECKO_SIMPLE_PRICE, params=params, timeout=timeout
+        ) as resp:
             resp.raise_for_status()
             payload: Dict[str, Any] = await resp.json()
 

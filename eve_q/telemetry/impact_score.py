@@ -29,7 +29,9 @@ def score_impact(signal: ImpactSignal) -> Dict[str, Any]:
     transparency = clamp01(signal.transparency_score)
     reliability = clamp01(signal.telemetry_source_reliability)
     provenance = signal.provenance or []
-    impact = clamp01(0.30 * receipt + 0.30 * delivery + 0.25 * cost_effectiveness + 0.15 * transparency)
+    impact = clamp01(
+        0.30 * receipt + 0.30 * delivery + 0.25 * cost_effectiveness + 0.15 * transparency
+    )
     confidence = clamp01((0.70 * reliability) + (0.30 if provenance else 0.0))
     return {
         "charity_id": signal.charity_id,
