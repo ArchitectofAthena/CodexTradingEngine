@@ -14,6 +14,7 @@ from typing import Dict, List, Optional, Tuple
 
 class RiskTier(str, Enum):
     """Risk tier classification."""
+
     CONSERVATIVE = "conservative"
     MODERATE = "moderate"
     AGGRESSIVE = "aggressive"
@@ -21,6 +22,7 @@ class RiskTier(str, Enum):
 
 class ExecutionMode(str, Enum):
     """Execution mode affecting risk limits."""
+
     SHADOW = "shadow"
     DRY_RUN = "dry_run"
     PAPER = "paper"
@@ -31,7 +33,7 @@ class ExecutionMode(str, Enum):
 @dataclass(frozen=True)
 class PositionSizeLimit:
     """A position size constraint.
-    
+
     Attributes:
         name: Constraint name.
         max_notional_usd: Maximum position size in USD.
@@ -39,6 +41,7 @@ class PositionSizeLimit:
         max_per_chain: Maximum exposure per chain.
         max_per_asset_pair: Maximum per trading pair.
     """
+
     name: str
     max_notional_usd: Decimal
     max_portfolio_pct: Decimal
@@ -49,7 +52,7 @@ class PositionSizeLimit:
 @dataclass(frozen=True)
 class RiskThresholds:
     """Risk thresholds for position management.
-    
+
     Attributes:
         tier: Risk classification.
         max_daily_loss_pct: Maximum daily loss as % of capital.
@@ -57,6 +60,7 @@ class RiskThresholds:
         max_correlation_exposure: Max correlation factor.
         min_profit_threshold_usd: Minimum profit to execute.
     """
+
     tier: RiskTier
     max_daily_loss_pct: Decimal
     max_drawdown_pct: Decimal
@@ -66,7 +70,7 @@ class RiskThresholds:
 
 class RiskLevelManager:
     """Manages risk levels and constraints by execution mode.
-    
+
     Example:
         >>> manager = RiskLevelManager(portfolio_value_usd=Decimal("100000"))
         >>> limits = manager.get_limits(ExecutionMode.SHADOW)
@@ -83,7 +87,7 @@ class RiskLevelManager:
         risk_tier: RiskTier = RiskTier.CONSERVATIVE,
     ) -> None:
         """Initialize risk manager.
-        
+
         Args:
             portfolio_value_usd: Total portfolio value.
             risk_tier: Risk classification.
@@ -96,10 +100,10 @@ class RiskLevelManager:
 
     def get_limits(self, mode: ExecutionMode) -> PositionSizeLimit:
         """Get position limits for execution mode.
-        
+
         Args:
             mode: Execution mode.
-            
+
         Returns:
             PositionSizeLimit for the mode.
         """
@@ -136,10 +140,16 @@ class RiskLevelManager:
         }
 
         config = tier_configs.get(self.risk_tier, tier_configs[RiskTier.CONSERVATIVE])
-        max_notional = self.portfolio_value * config["max_notional_pct"] / Decimal("100") * multiplier
+        max_notional = (
+            self.portfolio_value * config["max_notional_pct"] / Decimal("100") * multiplier
+        )
         max_portfolio_pct = config["max_portfolio_pct"] * multiplier
-        max_per_chain = self.portfolio_value * config["max_per_chain_pct"] / Decimal("100") * multiplier
-        max_per_pair = self.portfolio_value * config["max_per_pair_pct"] / Decimal("100") * multiplier
+        max_per_chain = (
+            self.portfolio_value * config["max_per_chain_pct"] / Decimal("100") * multiplier
+        )
+        max_per_pair = (
+            self.portfolio_value * config["max_per_pair_pct"] / Decimal("100") * multiplier
+        )
 
         return PositionSizeLimit(
             name=f"{self.risk_tier.value}_{mode.value}",
@@ -151,10 +161,10 @@ class RiskLevelManager:
 
     def get_thresholds(self, mode: ExecutionMode) -> RiskThresholds:
         """Get risk thresholds for execution mode.
-        
+
         Args:
             mode: Execution mode.
-            
+
         Returns:
             RiskThresholds for the mode.
         """
@@ -196,13 +206,13 @@ class RiskLevelManager:
         mode: ExecutionMode = ExecutionMode.SHADOW,
     ) -> Tuple[bool, List[str]]:
         """Check if a position can be executed.
-        
+
         Args:
             notional: Position size in USD.
             chain: Blockchain chain.
             asset_pair: Trading pair (e.g., "WETH/USDC").
             mode: Execution mode.
-            
+
         Returns:
             Tuple of (can_execute, list of constraint violations).
         """
@@ -212,9 +222,7 @@ class RiskLevelManager:
 
         # Check notional limit
         if notional > limits.max_notional_usd:
-            violations.append(
-                f"Position {notional} exceeds limit {limits.max_notional_usd}"
-            )
+            violations.append(f"Position {notional} exceeds limit {limits.max_notional_usd}")
 
         # Check portfolio % limit
         portfolio_pct = (notional / self.portfolio_value) * Decimal("100")
@@ -232,7 +240,9 @@ class RiskLevelManager:
 
         # Check per-pair limit
         if asset_pair:
-            pair_exposure = self._position_tracking.get(f"pair:{asset_pair}", Decimal("0")) + notional
+            pair_exposure = (
+                self._position_tracking.get(f"pair:{asset_pair}", Decimal("0")) + notional
+            )
             if pair_exposure > limits.max_per_asset_pair:
                 violations.append(
                     f"Pair {asset_pair} exposure {pair_exposure} exceeds limit {limits.max_per_asset_pair}"
@@ -254,7 +264,7 @@ class RiskLevelManager:
         asset_pair: Optional[str] = None,
     ) -> None:
         """Record a position for tracking.
-        
+
         Args:
             position_id: Unique position identifier.
             notional: Position size in USD.
@@ -272,7 +282,7 @@ class RiskLevelManager:
 
     def record_pnl(self, pnl: Decimal) -> None:
         """Record profit/loss for the day.
-        
+
         Args:
             pnl: Profit or loss amount.
         """
@@ -289,7 +299,7 @@ class RiskLevelManager:
 
 class KellyCriterionOptimizer:
     """Kelly criterion-based position sizing optimizer.
-    
+
     Example:
         >>> optimizer = KellyCriterionOptimizer(
         ...     win_rate=Decimal("0.55"),
@@ -311,7 +321,7 @@ class KellyCriterionOptimizer:
         avg_loss: Decimal,
     ) -> None:
         """Initialize Kelly optimizer.
-        
+
         Args:
             win_rate: Historical win rate (0-1).
             avg_win: Average win amount.
@@ -324,19 +334,16 @@ class KellyCriterionOptimizer:
     @property
     def optimal_fraction(self) -> Decimal:
         """Calculate optimal Kelly fraction.
-        
+
         Kelly % = (win_rate * avg_win - (1 - win_rate) * avg_loss) / avg_win
-        
+
         Returns:
             Optimal Kelly fraction (0-1).
         """
         if self.avg_win <= 0:
             return Decimal("0")
 
-        numerator = (
-            self.win_rate * self.avg_win
-            - (Decimal("1") - self.win_rate) * self.avg_loss
-        )
+        numerator = self.win_rate * self.avg_win - (Decimal("1") - self.win_rate) * self.avg_loss
         denominator = self.avg_win
         kelly = numerator / denominator
 
@@ -350,12 +357,12 @@ class KellyCriterionOptimizer:
         fractional_kelly: Decimal = Decimal("0.5"),
     ) -> Decimal:
         """Calculate position size using Kelly criterion.
-        
+
         Args:
             capital: Available capital.
             kelly_fraction: Specific Kelly fraction to use (uses optimal if None).
             fractional_kelly: Fraction of Kelly to use (e.g., 0.5 = half-Kelly, safer).
-            
+
         Returns:
             Recommended position size.
         """
@@ -372,11 +379,11 @@ class KellyCriterionOptimizer:
         kelly_fraction: Optional[Decimal] = None,
     ) -> Decimal:
         """Estimate probability of ruin over N trades.
-        
+
         Args:
             trades: Number of trades to simulate.
             kelly_fraction: Kelly fraction to use.
-            
+
         Returns:
             Probability of ruin (0-1).
         """
@@ -392,7 +399,7 @@ class KellyCriterionOptimizer:
             return Decimal("1")
 
         ratio = loss_rate / self.win_rate
-        ruin_prob = ratio ** trades
+        ruin_prob = ratio**trades
 
         # Clamp to [0, 1]
         return max(Decimal("0"), min(Decimal("1"), ruin_prob))

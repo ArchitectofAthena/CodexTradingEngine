@@ -235,7 +235,9 @@ class AlertDispatcher:
             "disable_web_page_preview": True,
         }
 
-        async with self.session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+        async with self.session.post(
+            url, json=payload, timeout=aiohttp.ClientTimeout(total=10)
+        ) as resp:
             text = await resp.text()
             delivered = 200 <= resp.status < 300
             return AlertResult(

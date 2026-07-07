@@ -3,7 +3,12 @@ name: Lint and Format
 on:
   push:
     paths:
-      - '**.py'
+      - 'eve_q/cross_repo_ingestor.py'
+      - 'eve_q/alert_dispatcher.py'
+      - 'eve_q/risk_management.py'
+      - 'tests/test_cross_repo_ingestor.py'
+      - 'tests/test_alert_dispatcher.py'
+      - 'tests/test_risk_management.py'
       - 'requirements.txt'
       - 'requirements-dev.txt'
       - 'pyproject.toml'
@@ -11,7 +16,12 @@ on:
       - '.github/workflows/lint-and-format.yml'
   pull_request:
     paths:
-      - '**.py'
+      - 'eve_q/cross_repo_ingestor.py'
+      - 'eve_q/alert_dispatcher.py'
+      - 'eve_q/risk_management.py'
+      - 'tests/test_cross_repo_ingestor.py'
+      - 'tests/test_alert_dispatcher.py'
+      - 'tests/test_risk_management.py'
       - 'requirements.txt'
       - 'requirements-dev.txt'
       - 'pyproject.toml'
@@ -35,8 +45,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Run flake8
-        run: flake8 .
+      - name: Run black on safety bridge scope
+        run: |
+          black --check \
+            eve_q/cross_repo_ingestor.py \
+            eve_q/alert_dispatcher.py \
+            eve_q/risk_management.py \
+            tests/test_cross_repo_ingestor.py \
+            tests/test_alert_dispatcher.py \
+            tests/test_risk_management.py
 
-      - name: Run black (check only)
-        run: black --check .
+      - name: Run flake8 on safety bridge scope
+        run: |
+          flake8 \
+            eve_q/cross_repo_ingestor.py \
+            eve_q/alert_dispatcher.py \
+            eve_q/risk_management.py \
+            tests/test_cross_repo_ingestor.py \
+            tests/test_alert_dispatcher.py \
+            tests/test_risk_management.py

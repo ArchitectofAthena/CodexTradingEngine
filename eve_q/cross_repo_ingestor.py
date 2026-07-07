@@ -17,7 +17,7 @@ from decimal import Decimal
 @dataclass(frozen=True)
 class ReceiptIngestionConfig:
     """Configuration for cross-repo receipt ingestion.
-    
+
     Attributes:
         source_dir: Directory where CodexTradingEngine writes receipts.
         target_dir: Directory where SpiralBloom OS stores ingested receipts.
@@ -26,6 +26,7 @@ class ReceiptIngestionConfig:
         governance_gate_url: Optional local webhook for governance decisions.
         shadow_mode: If True, ingest but don't execute any actions.
     """
+
     source_dir: Path
     target_dir: Path
     validate_merkle_proofs: bool = True
@@ -37,7 +38,7 @@ class ReceiptIngestionConfig:
 @dataclass
 class ReceiptIngestionResult:
     """Result of a receipt ingestion attempt.
-    
+
     Attributes:
         success: Whether ingestion succeeded.
         receipt_id: Receipt cycle ID.
@@ -48,6 +49,7 @@ class ReceiptIngestionResult:
         governance_gate_queried: Whether policy gate was consulted.
         timestamp: When ingestion occurred.
     """
+
     success: bool
     receipt_id: str
     source_path: Optional[str] = None
@@ -70,7 +72,7 @@ class ReceiptValidator:
 
     def __init__(self, config: ReceiptIngestionConfig) -> None:
         """Initialize validator.
-        
+
         Args:
             config: Ingestion configuration.
         """
@@ -78,10 +80,10 @@ class ReceiptValidator:
 
     def validate_receipt_json(self, receipt_dict: Dict[str, Any]) -> List[str]:
         """Validate receipt JSON structure.
-        
+
         Args:
             receipt_dict: Receipt as dictionary.
-            
+
         Returns:
             List of validation errors (empty if valid).
         """
@@ -102,16 +104,12 @@ class ReceiptValidator:
         # Mode validation
         valid_modes = {"shadow", "dry_run", "paper", "simulation", "live"}
         if receipt_dict.get("mode") not in valid_modes:
-            errors.append(
-                f"Invalid mode: {receipt_dict.get('mode')}. Must be one of {valid_modes}"
-            )
+            errors.append(f"Invalid mode: {receipt_dict.get('mode')}. Must be one of {valid_modes}")
 
         # Proof eligibility check
         if self.config.require_production_eligible:
             if not receipt_dict.get("proof_production_trust_eligible", False):
-                errors.append(
-                    "Proof is not production-eligible (config requires production)"
-                )
+                errors.append("Proof is not production-eligible (config requires production)")
 
         # Charity validation
         try:
@@ -119,28 +117,22 @@ class ReceiptValidator:
             charity_due = Decimal(str(receipt_dict.get("charity_due_eth", 0)))
             expected_charity = actual_profit * Decimal("0.15")
             if actual_profit > 0 and abs(charity_due - expected_charity) > Decimal("0.0001"):
-                errors.append(
-                    f"Charity mismatch: expected {expected_charity}, got {charity_due}"
-                )
+                errors.append(f"Charity mismatch: expected {expected_charity}, got {charity_due}")
         except (ValueError, TypeError) as exc:
             errors.append(f"Invalid profit/charity values: {exc}")
 
         # Execution success + charity success requirement
-        if receipt_dict.get("execution_success") and not receipt_dict.get(
-            "charity_success", False
-        ):
-            errors.append(
-                "Execution succeeded but charity distribution failed (unsafe state)"
-            )
+        if receipt_dict.get("execution_success") and not receipt_dict.get("charity_success", False):
+            errors.append("Execution succeeded but charity distribution failed (unsafe state)")
 
         return errors
 
     def validate_merkle_proof(self, receipt_dict: Dict[str, Any]) -> List[str]:
         """Validate Merkle proof if present.
-        
+
         Args:
             receipt_dict: Receipt as dictionary.
-            
+
         Returns:
             List of validation errors.
         """
@@ -180,7 +172,7 @@ class ReceiptValidator:
 
 class CrossRepoReceiptIngestor:
     """Ingests CodexTradingEngine receipts into SpiralBloom OS.
-    
+
     Example:
         >>> config = ReceiptIngestionConfig(
         ...     source_dir=Path("/path/to/CodexTradingEngine/logs/receipts"),
@@ -194,7 +186,7 @@ class CrossRepoReceiptIngestor:
 
     def __init__(self, config: ReceiptIngestionConfig) -> None:
         """Initialize ingestor.
-        
+
         Args:
             config: Ingestion configuration.
         """
@@ -204,10 +196,10 @@ class CrossRepoReceiptIngestor:
 
     def ingest_receipt_file(self, receipt_path: Path) -> ReceiptIngestionResult:
         """Ingest a single receipt file.
-        
+
         Args:
             receipt_path: Path to receipt JSON file.
-            
+
         Returns:
             ReceiptIngestionResult with success/failure details.
         """
@@ -232,12 +224,8 @@ class CrossRepoReceiptIngestor:
                 return result
 
             # Store in target directory
-            target_path = (
-                self.config.target_dir / f"{result.receipt_id}_ingested.json"
-            )
-            receipt_dict["spiralbloom_ingested_at"] = datetime.now(
-                timezone.utc
-            ).isoformat()
+            target_path = self.config.target_dir / f"{result.receipt_id}_ingested.json"
+            receipt_dict["spiralbloom_ingested_at"] = datetime.now(timezone.utc).isoformat()
             receipt_dict["spiralbloom_source_path"] = str(receipt_path)
             target_path.write_text(
                 json.dumps(receipt_dict, indent=2, default=str),
@@ -247,9 +235,7 @@ class CrossRepoReceiptIngestor:
 
             # Query governance gate if configured
             if self.config.governance_gate_url and not self.config.shadow_mode:
-                result.governance_gate_queried = self._query_governance_gate(
-                    receipt_dict
-                )
+                result.governance_gate_queried = self._query_governance_gate(receipt_dict)
 
             result.telemetry_event_emitted = True
             result.success = True
@@ -263,7 +249,7 @@ class CrossRepoReceiptIngestor:
 
     def ingest_batch(self) -> List[ReceiptIngestionResult]:
         """Ingest all receipts from source directory.
-        
+
         Returns:
             List of ReceiptIngestionResult for each file.
         """
@@ -280,10 +266,10 @@ class CrossRepoReceiptIngestor:
 
     def _query_governance_gate(self, receipt_dict: Dict[str, Any]) -> bool:
         """Query SpiralBloom OS governance gate.
-        
+
         Args:
             receipt_dict: Receipt dictionary.
-            
+
         Returns:
             True if governance gate approved or not configured.
         """
@@ -312,9 +298,7 @@ class CrossRepoReceiptIngestor:
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            result = loop.run_until_complete(
-                self._post_governance_request(governance_request)
-            )
+            result = loop.run_until_complete(self._post_governance_request(governance_request))
             loop.close()
             return result
         except Exception as exc:
@@ -325,10 +309,10 @@ class CrossRepoReceiptIngestor:
 
     async def _post_governance_request(self, request: Dict[str, Any]) -> bool:
         """Async POST to governance gate.
-        
+
         Args:
             request: Governance request dict.
-            
+
         Returns:
             True if approved.
         """
@@ -346,10 +330,10 @@ class CrossRepoReceiptIngestor:
 
     def generate_ingestion_report(self, results: List[ReceiptIngestionResult]) -> str:
         """Generate human-readable ingestion report.
-        
+
         Args:
             results: List of ingestion results.
-            
+
         Returns:
             Formatted report string.
         """
