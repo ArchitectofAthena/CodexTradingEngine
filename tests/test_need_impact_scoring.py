@@ -3,7 +3,9 @@ from eve_q.telemetry.impact_score import ImpactSignal, score_impact
 
 
 def test_need_score_requires_review_without_provenance():
-    result = score_need(NeedSignal(cause_id="famine", urgency_score=1.0, telemetry_source_reliability=0.9))
+    result = score_need(
+        NeedSignal(cause_id="famine", urgency_score=1.0, telemetry_source_reliability=0.9)
+    )
     assert result["need_score"] > 0
     assert result["requires_human_review"] is True
 

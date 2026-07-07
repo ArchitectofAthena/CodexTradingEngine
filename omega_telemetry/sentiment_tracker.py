@@ -1,214 +1,221 @@
-from __future__ import annotations
-
 import asyncio
-import json
 import logging
 import re
-from dataclasses import dataclass
+from collections import Counter
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Tuple
+from typing import Any, Iterable
 
 import aiohttp
 import feedparser
 
-from .db import TelemetryDB
-from .models import SentimentEvent
+from omega_telemetry.models import SentimentEvent
 
 logger = logging.getLogger(__name__)
 
-TICKER_RE = re.compile(r"(?<!\w)\$([A-Z]{2,10})(?!\w)")
+
+TICKER_PATTERN = re.compile(r"(?<![A-Za-z0-9_])\$([A-Z][A-Z0-9]{1,9})(?![A-Za-z0-9_])")
 
 
-@dataclass(slots=True)
-class Rule:
+@dataclass
+class FeedSource:
     name: str
-    category: str
-    weight: float
-    patterns: List[str]
-    case_sensitive: bool = False
+    url: str
+    chain: str = "x"
+    enabled: bool = True
 
 
-class RuleEngine:
-    def __init__(self, rule_payload: Dict[str, Any]) -> None:
-        self.rules: List[Rule] = []
-        for item in rule_payload.get("rules", []):
-            self.rules.append(
-                Rule(
-                    name=item["name"],
-                    category=item["category"],
-                    weight=float(item["weight"]),
-                    patterns=list(item["patterns"]),
-                    case_sensitive=bool(item.get("case_sensitive", False)),
-                )
-            )
-
-    def score(self, text: str) -> Tuple[float, List[str]]:
-        total = 0.0
-        matched: List[str] = []
-        for rule in self.rules:
-            haystack = text if rule.case_sensitive else text.lower()
-            patterns = rule.patterns if rule.case_sensitive else [p.lower() for p in rule.patterns]
-            if any(pattern in haystack for pattern in patterns):
-                total += rule.weight
-                matched.append(rule.name)
-        return total, matched
-
-
-class FeedAdapter:
-    def __init__(self, session: aiohttp.ClientSession, source_cfg: Dict[str, Any]) -> None:
-        self.session = session
-        self.source_cfg = source_cfg
-
-    async def fetch_items(self) -> List[Dict[str, Any]]:
-        source_type = self.source_cfg["type"]
-        if source_type == "rss":
-            return await self._fetch_rss()
-        if source_type == "json":
-            return await self._fetch_json()
-        raise ValueError(f"Unsupported sentiment source type: {source_type}")
-
-    async def _fetch_rss(self) -> List[Dict[str, Any]]:
-        url = self.source_cfg["url"]
-        async with self.session.get(url, timeout=aiohttp.ClientTimeout(total=20)) as resp:
-            resp.raise_for_status()
-            text = await resp.text()
-        parsed = feedparser.parse(text)
-        items: List[Dict[str, Any]] = []
-        for entry in parsed.entries:
-            items.append(
-                {
-                    "id": entry.get("id") or entry.get("link") or entry.get("title"),
-                    "title": entry.get("title", ""),
-                    "summary": entry.get("summary", ""),
-                    "url": entry.get("link", ""),
-                    "author": entry.get("author", ""),
-                    "published": entry.get("published", ""),
-                }
-            )
-        return items
-
-    async def _fetch_json(self) -> List[Dict[str, Any]]:
-        url = self.source_cfg["url"]
-        items_path = self.source_cfg.get("items_path", [])
-        async with self.session.get(url, timeout=aiohttp.ClientTimeout(total=20)) as resp:
-            resp.raise_for_status()
-            payload = await resp.json()
-        cursor: Any = payload
-        for part in items_path:
-            cursor = cursor[part]
-        if not isinstance(cursor, list):
-            raise ValueError("JSON adapter items_path did not resolve to a list")
-        return list(cursor)
+@dataclass
+class SentimentTrackerConfig:
+    feeds: list[FeedSource] = field(default_factory=list)
+    spike_threshold_count: int = 5
+    spike_window_minutes: int = 15
+    cooldown_minutes: int = 30
+    request_timeout_seconds: int = 20
 
 
 class SentimentTracker:
+    """Passive sentiment observer.
+
+    This tracker reads public feed-style sources, extracts ticker mentions,
+    emits sentiment events, and detects short-window ticker spikes.
+
+    Boundary:
+    - no wallet access
+    - no signing
+    - no transaction construction
+    - no broadcast
+    - no capital movement
+    """
+
     def __init__(
         self,
-        session: aiohttp.ClientSession,
-        db: TelemetryDB,
-        config: Dict[str, Any],
-        rules_path: str,
+        db: Any = None,
+        config: SentimentTrackerConfig | None = None,
     ) -> None:
-        self.session = session
         self.db = db
-        self.config = config
-        self.cooldown_minutes = int(config.get("cooldown_minutes", 10))
-        self.poll_interval_seconds = int(config.get("poll_interval_seconds", 60))
-        self.min_score = float(config.get("min_score", 3.0))
-        self.spike_window_minutes = int(config.get("spike_window_minutes", 15))
-        self.spike_threshold_count = int(config.get("spike_threshold_count", 5))
-        with open(rules_path, "r", encoding="utf-8") as f:
-            payload = json.load(f)
-        self.rules = RuleEngine(payload)
-        self.adapters = [FeedAdapter(session, src) for src in config.get("sources", [])]
+        self.config = config or SentimentTrackerConfig()
+        self.spike_threshold_count = self.config.spike_threshold_count
+        self.spike_window_minutes = self.config.spike_window_minutes
+        self.cooldown_minutes = self.config.cooldown_minutes
+        self.request_timeout_seconds = self.config.request_timeout_seconds
 
-    async def run_forever(self) -> None:
-        logger.info("Sentiment tracker starting")
-        while True:
-            try:
-                await self.poll_once()
-            except asyncio.CancelledError:
-                raise
-            except Exception:
-                logger.exception("Sentiment tracker loop error")
-            await asyncio.sleep(self.poll_interval_seconds)
+    async def fetch_text(self, session: aiohttp.ClientSession, url: str) -> str:
+        timeout = aiohttp.ClientTimeout(total=self.request_timeout_seconds)
+        async with session.get(url, timeout=timeout) as response:
+            response.raise_for_status()
+            return await response.text()
 
-    async def poll_once(self) -> None:
-        for adapter in self.adapters:
-            items = await adapter.fetch_items()
-            for item in items:
-                await self._process_item(item, adapter.source_cfg.get("name", "unknown"))
-        await self._emit_spike_events()
+    async def fetch_feed_entries(self, source: FeedSource) -> list[dict[str, Any]]:
+        if not source.enabled:
+            return []
 
-    async def _process_item(self, item: Dict[str, Any], source_name: str) -> None:
-        text_parts = [item.get("title", ""), item.get("summary", "")]
-        text = "\n".join(part for part in text_parts if part).strip()
-        if not text:
-            return
+        try:
+            async with aiohttp.ClientSession() as session:
+                text = await self.fetch_text(session, source.url)
+        except Exception as exc:  # pragma: no cover - network defensive path
+            logger.warning("Failed to fetch sentiment feed %s: %s", source.name, exc)
+            return []
 
-        score_value, matched_rules = self.rules.score(text)
-        if score_value < self.min_score:
-            return
+        parsed = feedparser.parse(text)
+        entries: list[dict[str, Any]] = []
 
-        tickers = sorted(set(TICKER_RE.findall(text)))
-        severity = "critical" if score_value >= self.min_score * 3 else "high" if score_value >= self.min_score * 2 else "medium"
-        dedupe_key = f"sentiment:{source_name}:{item.get('id')}"
-        if self.db.is_duplicate(dedupe_key, self.cooldown_minutes):
-            return
+        for entry in parsed.entries:
+            title = str(entry.get("title", "") or "")
+            summary = str(entry.get("summary", "") or "")
+            link = str(entry.get("link", "") or "")
 
-        ticker_text = f" | tickers: {', '.join(tickers)}" if tickers else ""
-        event = SentimentEvent(
-            event_type="sentiment_match",
-            chain=None,
-            source=source_name,
-            severity=severity,
+            entries.append(
+                {
+                    "source": source.name,
+                    "chain": source.chain,
+                    "title": title,
+                    "summary": summary,
+                    "link": link,
+                    "raw": entry,
+                }
+            )
+
+        return entries
+
+    async def fetch_all_entries(self) -> list[dict[str, Any]]:
+        tasks = [self.fetch_feed_entries(source) for source in self.config.feeds if source.enabled]
+
+        if not tasks:
+            return []
+
+        results = await asyncio.gather(*tasks)
+        entries: list[dict[str, Any]] = []
+
+        for batch in results:
+            entries.extend(batch)
+
+        return entries
+
+    @staticmethod
+    def extract_tickers(text: str) -> list[str]:
+        return sorted({match.group(1).upper() for match in TICKER_PATTERN.finditer(text)})
+
+    @staticmethod
+    def score_entry(text: str, tickers: Iterable[str]) -> float:
+        ticker_count = len(list(tickers))
+        text_length_factor = min(len(text) / 500.0, 1.0)
+        return round(float(ticker_count) + text_length_factor, 4)
+
+    def build_event_from_entry(self, entry: dict[str, Any]) -> SentimentEvent | None:
+        title = str(entry.get("title", "") or "")
+        summary_text = str(entry.get("summary", "") or "")
+        combined_text = f"{title}\n{summary_text}".strip()
+        tickers = self.extract_tickers(combined_text)
+
+        if not tickers:
+            return None
+
+        source = str(entry.get("source", "unknown"))
+        chain = str(entry.get("chain", "x"))
+        link = str(entry.get("link", "") or "")
+        score_value = self.score_entry(combined_text, tickers)
+
+        dedupe_key = f"sentiment_post:{source}:{hash(combined_text)}"
+
+        return SentimentEvent(
+            event_type="sentiment_observation",
+            chain=chain,
+            source=source,
+            severity="medium",
             occurred_at=datetime.now(timezone.utc).isoformat(),
             dedupe_key=dedupe_key,
-            title=f"Sentiment signal from {source_name}",
-            summary=f"score={score_value:.1f}, rules={', '.join(matched_rules)}{ticker_text}",
-            data={
-                "post_id": item.get("id"),
-                "source_url": item.get("url"),
-                "author": item.get("author"),
-                "score_value": score_value,
-                "matched_rules": matched_rules,
+            title=title or "Sentiment observation",
+            summary={
+                "text": summary_text,
                 "tickers": tickers,
-                "raw_title": item.get("title", ""),
+                "ticker_count": len(tickers),
             },
-            post_id=item.get("id"),
-            source_url=item.get("url"),
-            author=item.get("author"),
+            post_id=None,
+            source_url=link or None,
+            author=None,
             score_value=score_value,
-            matched_rules=matched_rules,
+            matched_rules=["ticker_mention"],
             tickers=tickers,
         )
-        self.db.save_event(event)
-        logger.info("Sentiment event: %s", event.summary)
 
-    async def _emit_spike_events(self) -> None:
-        recent = self.db.recent_events(event_type="sentiment_match", minutes=self.spike_window_minutes)
-        ticker_counts: Dict[str, int] = {}
-        for event in recent:
-            tickers = event.get("tickers") or event.get("data", {}).get("tickers") or []
-            for ticker in tickers:
-                ticker_counts[ticker] = ticker_counts.get(ticker, 0) + 1
+    def save_event(self, event: SentimentEvent) -> None:
+        if self.db is None:
+            logger.info("Sentiment event observed without db: %s", event.title)
+            return
+
+        if hasattr(self.db, "check_dedupe_key") and self.db.check_dedupe_key(
+            event.dedupe_key,
+            self.cooldown_minutes,
+        ):
+            return
+
+        self.db.save_event(event)
+
+    def save_events(self, events: Iterable[SentimentEvent]) -> None:
+        for event in events:
+            self.save_event(event)
+
+    def detect_spikes(self, events: Iterable[SentimentEvent]) -> list[SentimentEvent]:
+        ticker_counts: Counter[str] = Counter()
+
+        for event in events:
+            for ticker in getattr(event, "tickers", []) or []:
+                ticker_counts[ticker] += 1
+
+        spike_events: list[SentimentEvent] = []
 
         for ticker, count in ticker_counts.items():
             if count < self.spike_threshold_count:
                 continue
+
             dedupe_key = f"sentiment_spike:{ticker}:{self.spike_window_minutes}"
-            if self.db.is_duplicate(dedupe_key, self.cooldown_minutes):
+            if self.db and self.db.check_dedupe_key(
+                dedupe_key,
+                self.cooldown_minutes,
+            ):
                 continue
+
+            title = (
+                f"Sentiment spike for ${ticker}: "
+                f"{count} tracked posts in the last "
+                f"{self.spike_window_minutes} minutes crossed "
+                "the spike threshold."
+            )
+
             event = SentimentEvent(
                 event_type="sentiment_spike",
-                chain=None,
+                chain="x",
                 source="burst_detector",
                 severity="high" if count < self.spike_threshold_count * 2 else "critical",
                 occurred_at=datetime.now(timezone.utc).isoformat(),
                 dedupe_key=dedupe_key,
-                title=f"Sentiment spike for ${ticker}",
-                summary=f"{count} tracked posts in the last {self.spike_window_minutes} minutes crossed the spike threshold.",
-                data={"ticker": ticker, "count": count, "window_minutes": self.spike_window_minutes},
+                title=title,
+                summary={
+                    "ticker": ticker,
+                    "count": count,
+                    "window_minutes": self.spike_window_minutes,
+                },
                 post_id=None,
                 source_url=None,
                 author=None,
@@ -216,5 +223,57 @@ class SentimentTracker:
                 matched_rules=["burst_detector"],
                 tickers=[ticker],
             )
-            self.db.save_event(event)
+
+            spike_events.append(event)
             logger.info("Sentiment spike: %s -> %s", ticker, count)
+
+        return spike_events
+
+    async def run_once(self) -> list[SentimentEvent]:
+        entries = await self.fetch_all_entries()
+        events: list[SentimentEvent] = []
+
+        for entry in entries:
+            event = self.build_event_from_entry(entry)
+            if event is not None:
+                events.append(event)
+
+        spike_events = self.detect_spikes(events)
+        all_events = events + spike_events
+        self.save_events(all_events)
+
+        return all_events
+
+
+def build_sources(raw_sources: Iterable[dict[str, Any]]) -> list[FeedSource]:
+    sources: list[FeedSource] = []
+
+    for item in raw_sources:
+        sources.append(
+            FeedSource(
+                name=str(item.get("name", "unknown")),
+                url=str(item.get("url", "")),
+                chain=str(item.get("chain", "x")),
+                enabled=bool(item.get("enabled", True)),
+            )
+        )
+
+    return sources
+
+
+def build_tracker_from_config(
+    config: dict[str, Any],
+    db: Any = None,
+) -> SentimentTracker:
+    sentiment_config = config.get("sentiment_tracker", config)
+    sources = build_sources(sentiment_config.get("feeds", []))
+
+    tracker_config = SentimentTrackerConfig(
+        feeds=sources,
+        spike_threshold_count=int(sentiment_config.get("spike_threshold_count", 5)),
+        spike_window_minutes=int(sentiment_config.get("spike_window_minutes", 15)),
+        cooldown_minutes=int(sentiment_config.get("cooldown_minutes", 30)),
+        request_timeout_seconds=int(sentiment_config.get("request_timeout_seconds", 20)),
+    )
+
+    return SentimentTracker(db=db, config=tracker_config)

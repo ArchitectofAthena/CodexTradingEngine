@@ -28,8 +28,7 @@ class TelemetryDB:
 
     def _init_db(self) -> None:
         with self.connect() as conn:
-            conn.executescript(
-                """
+            conn.executescript("""
                 CREATE TABLE IF NOT EXISTS events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     event_type TEXT NOT NULL,
@@ -63,8 +62,7 @@ class TelemetryDB:
 
                 CREATE INDEX IF NOT EXISTS idx_alert_log_dedupe
                 ON alert_log (dedupe_key, created_at);
-                """
-            )
+                """)
 
     def save_event(self, event: Event) -> None:
         record = event.to_record()
@@ -139,7 +137,9 @@ class TelemetryDB:
             ).fetchone()
         return None if row is None else str(row["state_value"])
 
-    def recent_events(self, event_type: Optional[str] = None, minutes: int = 60) -> List[Dict[str, Any]]:
+    def recent_events(
+        self, event_type: Optional[str] = None, minutes: int = 60
+    ) -> List[Dict[str, Any]]:
         cutoff = (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat()
         sql = """
             SELECT payload_json FROM events
