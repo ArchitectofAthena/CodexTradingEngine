@@ -1,7 +1,7 @@
-"""Enhanced alert system with retry logic and deduplication.
+"""Enhanced alert system with retry logic and shadow-mode safety.
 
-This module provides robust alert dispatching with exponential backoff retry,
-sliding window deduplication, and multi-channel support.
+The dispatcher defaults to shadow mode. In shadow mode it returns a synthetic
+success result and never performs outbound HTTP calls.
 """
 
 from __future__ import annotations
@@ -10,8 +10,8 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, Dict, List, Optional
 from enum import Enum
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 import aiohttp
 
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class AlertChannel(str, Enum):
     """Supported alert channels."""
+
     TELEGRAM = "telegram"
     DISCORD = "discord"
     WEBHOOK = "webhook"
@@ -28,60 +29,32 @@ class AlertChannel(str, Enum):
 
 @dataclass(frozen=True)
 class RetryPolicy:
-    """Exponential backoff retry policy.
-    
-    Attributes:
-        max_retries: Maximum number of retry attempts.
-        initial_backoff_seconds: Initial backoff duration.
-        max_backoff_seconds: Maximum backoff duration.
-        backoff_multiplier: Exponential backoff multiplier.
-    """
+    """Exponential backoff retry policy."""
+
     max_retries: int = 3
     initial_backoff_seconds: float = 1.0
     max_backoff_seconds: float = 60.0
     backoff_multiplier: float = 2.0
 
     def get_backoff(self, attempt: int) -> float:
-        """Calculate backoff duration for attempt number.
-        
-        Args:
-            attempt: Attempt number (0-indexed).
-            
-        Returns:
-            Backoff duration in seconds.
-        """
-        backoff = self.initial_backoff_seconds * (self.backoff_multiplier ** attempt)
+        """Calculate backoff duration for an attempt number."""
+        backoff = self.initial_backoff_seconds * (self.backoff_multiplier**attempt)
         return min(backoff, self.max_backoff_seconds)
 
 
 @dataclass
 class AlertDeduplicationWindow:
-    """Sliding window deduplication for alerts.
-    
-    Attributes:
-        window_minutes: Deduplication window size in minutes.
-        dedupe_keys: Set of recent dedupe keys within window.
-        timestamps: Timestamps of alerts.
-    """
+    """Sliding window deduplication for alerts."""
+
     window_minutes: int = 15
     dedupe_keys: Dict[str, datetime] = field(default_factory=dict)
 
     def is_duplicate(self, key: str) -> bool:
-        """Check if alert is a duplicate within the window.
-        
-        Args:
-            key: Deduplication key.
-            
-        Returns:
-            True if duplicate within window.
-        """
+        """Return True when key already appeared within the active window."""
         now = datetime.now(timezone.utc)
         cutoff = now - timedelta(minutes=self.window_minutes)
 
-        # Clean up old entries
-        self.dedupe_keys = {
-            k: v for k, v in self.dedupe_keys.items() if v > cutoff
-        }
+        self.dedupe_keys = {key_: ts for key_, ts in self.dedupe_keys.items() if ts > cutoff}
 
         if key in self.dedupe_keys:
             return True
@@ -96,15 +69,8 @@ class AlertDeduplicationWindow:
 
 @dataclass(frozen=True)
 class AlertResult:
-    """Result of alert dispatch.
-    
-    Attributes:
-        channel: Alert channel used.
-        delivered: Whether alert was successfully delivered.
-        response: Response from service.
-        attempt: Attempt number.
-        error: Error message if applicable.
-    """
+    """Result of alert dispatch."""
+
     channel: str
     delivered: bool
     response: str
@@ -112,21 +78,16 @@ class AlertResult:
     error: Optional[str] = None
 
 
+SendFunc = Callable[..., Awaitable[AlertResult]]
+
+
 class AlertDispatcher:
-    """Enhanced alert dispatcher with retry and deduplication.
-    
-    Example:
-        >>> dispatcher = AlertDispatcher(
-        ...     session=aiohttp.ClientSession(),
-        ...     config={
-        ...         "telegram": {
-        ...             "enabled": True,
-        ...             "bot_token": "...",
-        ...             "chat_id": "...",
-        ...         }
-        ...     }
-        ... )
-        >>> result = await dispatcher.send("critical", "System Alert", "Details...")
+    """Enhanced alert dispatcher with retry, deduplication, and shadow-mode safety.
+
+    Safety boundary:
+    - shadow_mode=True never sends outbound HTTP requests.
+    - non-shadow mode still requires explicit per-channel enabled config.
+    - alerts are external effects only; they do not authorize execution or capital movement.
     """
 
     def __init__(
@@ -136,14 +97,7 @@ class AlertDispatcher:
         retry_policy: Optional[RetryPolicy] = None,
         shadow_mode: bool = True,
     ) -> None:
-        """Initialize alert dispatcher.
-        
-        Args:
-            session: aiohttp ClientSession for HTTP requests.
-            config: Configuration dict with channel settings.
-            retry_policy: Exponential backoff retry policy.
-            shadow_mode: If True, log alerts instead of sending.
-        """
+        """Initialize alert dispatcher."""
         self.session = session
         self.config = config
         self.retry_policy = retry_policy or RetryPolicy()
@@ -159,30 +113,23 @@ class AlertDispatcher:
         data: Optional[Dict[str, Any]] = None,
     ) -> List[AlertResult]:
         """Send alert to configured channels with retry.
-        
-        Args:
-            severity: Alert severity (critical, high, medium, low).
-            title: Alert title.
-            summary: Alert summary/body.
-            dedupe_key: Optional key for deduplication.
-            data: Additional structured data.
-            
-        Returns:
-            List of AlertResult for each channel attempt.
+
+        In shadow mode this method logs and returns a synthetic result without
+        touching Telegram, Discord, webhook, or any other external endpoint.
         """
         if dedupe_key and self.dedup_window.is_duplicate(dedupe_key):
-            logger.debug(f"Duplicate alert suppressed: {dedupe_key}")
+            logger.debug("Duplicate alert suppressed: %s", dedupe_key)
             return []
 
         message = self._format_message(severity, title, summary, data)
 
         if self.shadow_mode:
-            logger.info(f"SHADOW ALERT [{severity}]\n{message}")
+            logger.info("SHADOW ALERT [%s]\n%s", severity, message)
             return [
                 AlertResult(
                     channel="shadow",
                     delivered=True,
-                    response="shadow_mode",
+                    response="shadow_mode_no_external_send",
                 )
             ]
 
@@ -193,61 +140,62 @@ class AlertDispatcher:
         webhook_cfg = self.config.get("webhook", {})
 
         if telegram_cfg.get("enabled"):
-            result = await self._send_with_retry(
-                self._send_telegram,
-                title,
-                message,
-                telegram_cfg,
-                AlertChannel.TELEGRAM,
+            results.append(
+                await self._send_with_retry(
+                    self._send_telegram,
+                    title,
+                    message,
+                    telegram_cfg,
+                    channel=AlertChannel.TELEGRAM,
+                )
             )
-            results.append(result)
 
         if discord_cfg.get("enabled"):
-            result = await self._send_with_retry(
-                self._send_discord,
-                title,
-                message,
-                discord_cfg,
-                AlertChannel.DISCORD,
+            results.append(
+                await self._send_with_retry(
+                    self._send_discord,
+                    title,
+                    message,
+                    discord_cfg,
+                    channel=AlertChannel.DISCORD,
+                )
             )
-            results.append(result)
 
         if webhook_cfg.get("enabled"):
-            result = await self._send_with_retry(
-                self._send_webhook,
-                {"title": title, "message": message, "severity": severity, "data": data},
-                None,
-                webhook_cfg,
-                AlertChannel.WEBHOOK,
+            payload = {"title": title, "message": message, "severity": severity, "data": data}
+            results.append(
+                await self._send_with_retry(
+                    self._send_webhook,
+                    payload,
+                    webhook_cfg,
+                    channel=AlertChannel.WEBHOOK,
+                )
             )
-            results.append(result)
 
         return results
 
     async def _send_with_retry(
         self,
-        send_func: Callable,
+        send_func: SendFunc,
         *args: Any,
         channel: AlertChannel,
     ) -> AlertResult:
-        """Send alert with exponential backoff retry.
-        
-        Args:
-            send_func: Async function to call.
-            args: Arguments to pass to send_func.
-            channel: Alert channel.
-            
-        Returns:
-            AlertResult after final attempt.
-        """
+        """Send alert with exponential backoff retry."""
+        last_error: Optional[str] = None
+
         for attempt in range(self.retry_policy.max_retries + 1):
             try:
                 result = await send_func(*args)
                 if result.delivered:
                     return result
-            except Exception as exc:
+                last_error = result.error or result.response
+            except Exception as exc:  # pragma: no cover - error path tested by callers
+                last_error = str(exc)
                 logger.warning(
-                    f"Alert send failed (attempt {attempt + 1}/{self.retry_policy.max_retries + 1}): {exc}"
+                    "Alert send failed (attempt %s/%s): %s",
+                    attempt + 1,
+                    self.retry_policy.max_retries + 1,
+                    exc,
                 )
 
             if attempt < self.retry_policy.max_retries:
@@ -259,21 +207,16 @@ class AlertDispatcher:
             delivered=False,
             response="Failed after max retries",
             attempt=self.retry_policy.max_retries + 1,
+            error=last_error,
         )
 
     async def _send_telegram(
-        self, title: str, message: str, cfg: Dict[str, Any]
+        self,
+        title: str,
+        message: str,
+        cfg: Dict[str, Any],
     ) -> AlertResult:
-        """Send alert via Telegram.
-        
-        Args:
-            title: Alert title.
-            message: Alert message.
-            cfg: Telegram config.
-            
-        Returns:
-            AlertResult.
-        """
+        """Send alert via Telegram."""
         token = cfg.get("bot_token")
         chat_id = cfg.get("chat_id")
         if not token or not chat_id:
@@ -281,6 +224,7 @@ class AlertDispatcher:
                 channel="telegram",
                 delivered=False,
                 response="Missing credentials",
+                error="missing_credentials",
             )
 
         url = f"https://api.telegram.org/bot{token}/sendMessage"
@@ -291,37 +235,29 @@ class AlertDispatcher:
             "disable_web_page_preview": True,
         }
 
-        try:
-            async with self.session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
-                text = await resp.text()
-                delivered = 200 <= resp.status < 300
-                return AlertResult(
-                    channel="telegram",
-                    delivered=delivered,
-                    response=text[:500],
-                )
-        except Exception as exc:
-            raise exc
+        async with self.session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            text = await resp.text()
+            delivered = 200 <= resp.status < 300
+            return AlertResult(
+                channel="telegram",
+                delivered=delivered,
+                response=text[:500] or "OK",
+            )
 
     async def _send_discord(
-        self, title: str, message: str, cfg: Dict[str, Any]
+        self,
+        title: str,
+        message: str,
+        cfg: Dict[str, Any],
     ) -> AlertResult:
-        """Send alert via Discord.
-        
-        Args:
-            title: Alert title.
-            message: Alert message.
-            cfg: Discord config.
-            
-        Returns:
-            AlertResult.
-        """
+        """Send alert via Discord."""
         webhook_url = cfg.get("webhook_url")
         if not webhook_url:
             return AlertResult(
                 channel="discord",
                 delivered=False,
                 response="Missing webhook URL",
+                error="missing_webhook_url",
             )
 
         payload = {
@@ -329,77 +265,63 @@ class AlertDispatcher:
                 {
                     "title": title,
                     "description": message,
-                    "color": 16711680,  # Red
+                    "color": 16711680,
                 }
             ]
         }
 
-        try:
-            async with self.session.post(
-                webhook_url, json=payload, timeout=aiohttp.ClientTimeout(total=10)
-            ) as resp:
-                text = await resp.text()
-                delivered = 200 <= resp.status < 300
-                return AlertResult(
-                    channel="discord",
-                    delivered=delivered,
-                    response=text[:500] or "OK",
-                )
-        except Exception as exc:
-            raise exc
+        async with self.session.post(
+            webhook_url,
+            json=payload,
+            timeout=aiohttp.ClientTimeout(total=10),
+        ) as resp:
+            text = await resp.text()
+            delivered = 200 <= resp.status < 300
+            return AlertResult(
+                channel="discord",
+                delivered=delivered,
+                response=text[:500] or "OK",
+            )
 
     async def _send_webhook(
-        self, payload: Dict[str, Any], _unused: Any, cfg: Dict[str, Any]
+        self,
+        payload: Dict[str, Any],
+        cfg: Dict[str, Any],
     ) -> AlertResult:
-        """Send alert via custom webhook.
-        
-        Args:
-            payload: Alert payload.
-            _unused: Unused parameter for consistency.
-            cfg: Webhook config.
-            
-        Returns:
-            AlertResult.
-        """
+        """Send alert via custom webhook."""
         webhook_url = cfg.get("url")
         if not webhook_url:
             return AlertResult(
                 channel="webhook",
                 delivered=False,
                 response="Missing webhook URL",
+                error="missing_webhook_url",
             )
 
-        try:
-            async with self.session.post(
-                webhook_url, json=payload, timeout=aiohttp.ClientTimeout(total=10)
-            ) as resp:
-                text = await resp.text()
-                delivered = 200 <= resp.status < 300
-                return AlertResult(
-                    channel="webhook",
-                    delivered=delivered,
-                    response=text[:500] or "OK",
-                )
-        except Exception as exc:
-            raise exc
+        async with self.session.post(
+            webhook_url,
+            json=payload,
+            timeout=aiohttp.ClientTimeout(total=10),
+        ) as resp:
+            text = await resp.text()
+            delivered = 200 <= resp.status < 300
+            return AlertResult(
+                channel="webhook",
+                delivered=delivered,
+                response=text[:500] or "OK",
+            )
 
     @staticmethod
     def _format_message(
-        severity: str, title: str, summary: str, data: Optional[Dict[str, Any]]
+        severity: str,
+        title: str,
+        summary: str,
+        data: Optional[Dict[str, Any]],
     ) -> str:
-        """Format alert message.
-        
-        Args:
-            severity: Alert severity.
-            title: Alert title.
-            summary: Alert summary.
-            data: Additional data.
-            
-        Returns:
-            Formatted message string.
-        """
+        """Format alert message."""
         emoji = {"critical": "🚨", "high": "⚠️", "medium": "🔎", "low": "ℹ️"}.get(
-            severity, "ℹ️"
+            severity,
+            "ℹ️",
         )
         lines = [f"{emoji} {title}", summary]
         if data:
