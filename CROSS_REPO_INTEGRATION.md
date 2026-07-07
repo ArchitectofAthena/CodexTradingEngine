@@ -1,1 +1,218 @@
-# CodexTradingEngine ↔ SpiralBloom OS Cross-Repo Integration\n\n**Status**: Active Integration Bridge v0.1  \n**Last Updated**: 2026-07-07  \n**Architect**: ArchitectofAthena\n\n## Overview\n\nThis document establishes the bidirectional integration between **CodexTradingEngine** (autonomous crypto arbitrage & swarm detection) and **SpiralBloom OS** (recursive multi-agent orchestration with Kuramoto coordination).\n\n## Architecture Map\n\n### CodexTradingEngine (Producer)\n- **Location**: `/eve_q/` and `/proof_adapters.py`\n- **Exports**: Cycle receipts, Merkle proofs, Prometheus metrics, alerts\n- **Key Modules**:\n  - `proof_adapters.py` — Receipt publishing (Mock, Local, IPFS)\n  - `models/receipt.py` — Pydantic v2 receipt validation\n  - `merkle_proofs.py` — Batch verification\n  - `prometheus_exporter.py` — Observability metrics\n  - `alert_dispatcher.py` — Multi-channel alerts (Telegram, Discord, Webhook)\n  - `scroll_protocol.py` — Strategy versioning & composition\n\n### SpiralBloom OS (Consumer & Orchestrator)\n- **Location**: `/simulations/eve_q/`, `/telemetry/eve_q/`, `/tools/`\n- **Consumes**: Receipt chains, event telemetry, simulation results\n- **Key Integration Points**:\n  - `telemetry/eve_q/events.py` — EVE_Q++ event telemetry\n  - `simulations/eve_q/demo_chain.py` — Receipt chain simulation\n  - `tools/simulation_receipt_v0_1.py` — Receipt reader/aggregator\n  - `registry/capability_registry.json` — Module manifest\n  - `runtime/policy_gate.py` — Governance gates & risk checks\n\n## Data Flow Diagrams\n\n### Cycle Execution → Receipt → Proof → Telemetry\n\n```\nCodexTradingEngine:\n  eve_q.execute_cycle()\n    ↓\n  CycleReceiptModel (Pydantic validated)\n    ↓\n  proof_adapters.publish(receipt)\n    ↓\n  ProofResult(ipfs_cid, local_path, production_eligible)\n    ↓\nSpiralBloom OS:\n  receipt_observer.ingest(proof_result)\n    ↓\n  telemetry/eve_q/events.py emit EVE_Q++_RECEIPT_OBSERVED\n    ↓\n  simulations/eve_q/demo_chain.py validate_receipt_chain()\n    ↓\n  BloomHUD displays receipt status, merkle proof, charity allocation\n```\n\n### Governance Gate Integration\n\n```\nCodexTradingEngine:\n  candidate_routes[] with scores\n    ↓\nSpiralBloom OS Policy Gate:\n  check_no_live_execution()\n    ├─ Forbid wallet_execution in v0.1\n    └─ Forbid live mode without approval\n  check_aletheia(evidence)\n    ├─ Require aletheia_validated=true\n    ├─ Require telemetry_count >= 1\n    └─ Require source_confidence >= 0.55\n  check_loopmother(risk)\n    └─ Forbid loop_drift_score > 0.35\n    ↓\n  governance_request.json → Paladin gate\n    ↓\n  human_approval_required → (review / approve / deny)\n    ↓\nCodexTradingEngine:\n  execute_if_approved() OR shadow_mode()\n```\n\n## File Mapping\n\n### Receipt Models\n\n| CodexTradingEngine | SpiralBloom OS |\n|--------------------|----------------|\n| `models/receipt.py` CycleReceiptModel | `schemas/governance_request.schema.json` |\n| `models/receipt.py` RouteCandidate | `config/opportunity_sketch_v0_1.json` |\n| `models/receipt.py` CharityAllocation | `schemas/charity_policy.schema.json` |\n| `proof_adapters.py` ProofResult | `artifacts/simulation/latest_receipt.md` |\n\n### Telemetry Integration\n\n| CodexTradingEngine | SpiralBloom OS |\n|--------------------|----------------|\n| `prometheus_exporter.py` | `telemetry/eve_q/events.py` |\n| `alert_dispatcher.py` | `tools/telemetry_fusion_v0_1.py` |\n| `omega_telemetry/models.py` Event | `registry/capability_registry.json` telemetry category |\n\n### Scroll Protocol ↔ Agent Policy\n\n| CodexTradingEngine | SpiralBloom OS |\n|--------------------|----------------|\n| `scroll_protocol.py` Scroll registry | `orchestration/codex_control_plane/` Kuramoto nodes |\n| `scroll_protocol.py` CompositeScroll | `orchestration/graph_workflows/` multi-step orchestration |\n| `scroll_protocol.py` ScrollVersion | `registry/module_manifest_index.json` versioning |\n\n## Integration Contracts\n\n### Receipt Ingestion Contract\n\n**Producer**: CodexTradingEngine  \n**Consumer**: SpiralBloom OS telemetry/eve_q\n\n```python\n# CodexTradingEngine produces:\nreceipt: CycleReceiptModel = CycleReceiptModel(\n    cycle_id=\"cycle-abc123\",\n    mode=\"shadow\",  # shadow, dry_run, paper, simulation, live\n    chain=\"base\",\n    selected_route=\"weth-usdc-weth\",\n    expected_profit_eth=Decimal(\"0.05\"),\n    actual_profit_eth=Decimal(\"0.048\"),\n    charity_due_eth=Decimal(\"0.0072\"),  # 15% of profit\n    proof_type=\"ipfs\",\n    ipfs_cid=\"QmExample...\",\n    execution_success=True,\n    charity_success=True,\n    ipfs_success=True,\n)\n\n# Proof adapter publishes:\nproof: ProofResult = adapter.publish(receipt)\n# {\n#   \"success\": true,\n#   \"proof_type\": \"ipfs\",\n#   \"cid\": \"QmExample...\",\n#   \"production_trust_eligible\": false,\n#   \"local_path\": \"/receipts/cycle-abc123.json\"\n# }\n\n# SpiralBloom OS ingests:\ntelemetry_event: Event = Event(\n    event_type=\"eve_q_receipt_observed\",\n    title=\"EVE_Q++ Cycle Complete\",\n    summary=f\"Receipt {proof.cid} with {receipt.actual_profit_eth} ETH profit\",\n    severity=\"low\",\n    source=\"eve_q_engine\",\n    chain=receipt.chain,\n    occurred_at=datetime.now(timezone.utc).isoformat(),\n    data=proof.metadata,\n    dedupe_key=f\"receipt:{proof.cid}\",\n)\n```\n\n### Governance Gate Contract\n\n**Producer**: CodexTradingEngine (proposal)  \n**Consumer**: SpiralBloom OS policy_gate.py  \n**Arbiter**: Paladin (human approval gate)\n\n```json\n{\n  \"$schema\": \"governance_request.schema.json\",\n  \"request_id\": \"req-20260707-001\",\n  \"timestamp\": \"2026-07-07T19:30:00Z\",\n  \"eve_phase\": \"signal_analysis\",\n  \"proposal\": {\n    \"proposal_id\": \"prop-arb-base-001\",\n    \"action_type\": \"trade_execution\",\n    \"mode\": \"shadow\",\n    \"asset_pair\": \"WETH/USDC\",\n    \"notional_usd\": 10000\n  },\n  \"evidence\": {\n    \"aletheia_validated\": true,\n    \"telemetry_count\": 5,\n    \"source_confidence\": 0.78,\n    \"audit_trace_present\": true\n  },\n  \"charity_policy\": {\n    \"percentage\": 15,\n    \"recipient\": \"0xCharityWallet\"\n  },\n  \"risk\": {\n    \"loop_drift_score\": 0.12,\n    \"execution_safety\": \"pass\"\n  },\n  \"human_approval\": false\n}\n```\n\n### Metrics Export Contract\n\n**Producer**: CodexTradingEngine prometheus_exporter.py  \n**Consumer**: SpiralBloom OS telemetry aggregators\n\n```prometheus\n# HELP eve_cycles_total Total cycles executed\n# TYPE eve_cycles_total counter\neve_cycles_total{mode=\"shadow\",chain=\"base\"} 42\neve_cycles_total{mode=\"dry_run\",chain=\"ethereum\"} 15\n\n# HELP eve_profit_eth_total Total profit in ETH\n# TYPE eve_profit_eth_total gauge\neve_profit_eth_total{mode=\"shadow\"} 2.345\n\n# HELP eve_charity_distributed_eth Total charity distributed in ETH\n# TYPE eve_charity_distributed_eth gauge\neve_charity_distributed_eth{chain=\"base\"} 0.3521\n```\n\n## Safety Boundaries\n\n### CodexTradingEngine → SpiralBloom OS\n\n✅ **Safe**:\n- Receipt observation (read-only)\n- Merkle proof validation\n- Metrics export\n- Event telemetry\n- Shadow mode cycle execution\n- Simulation receipts\n\n❌ **Forbidden**:\n- Live wallet execution without explicit Paladin approval\n- Direct capital movement\n- Signing transactions\n- Disabling governance gates\n- Modifying policy rules\n\n### SpiralBloom OS → CodexTradingEngine\n\n✅ **Safe**:\n- Policy gate queries\n- Governance approval signals\n- Configuration updates (shadow mode only)\n- Receipt metadata enrichment\n- Scroll registration updates\n\n❌ **Forbidden**:\n- Direct execution triggers\n- Private key access\n- Bypassing Pydantic validation\n- Mutating read-only receipts\n\n## Deployment Checklist\n\n### Phase 0: Contract Validation (v0.1)\n- [ ] Receipt schema agreement between repos\n- [ ] Proof result format standardized\n- [ ] Event telemetry contract defined\n- [ ] Governance request schema validated\n- [ ] Test fixtures created in both repos\n\n### Phase 1: Uni-directional Integration (v0.2)\n- [ ] CodexTradingEngine exports receipts to `/tmp/eve_q_receipts/`\n- [ ] SpiralBloom OS reads receipt batch\n- [ ] Telemetry events emitted\n- [ ] BloomHUD displays receipt chain\n- [ ] Merkle proof validation works end-to-end\n\n### Phase 2: Bi-directional Governance (v0.3)\n- [ ] SpiralBloom OS policy_gate.py accepts governance_request\n- [ ] CodexTradingEngine respects policy verdicts\n- [ ] Paladin gate approval → execution permit\n- [ ] Denial → shadow mode or abort\n- [ ] Audit trail complete\n\n### Phase 3: Full Orchestration (v0.4)\n- [ ] Kuramoto oscillators coordinate EveQ++ phases\n- [ ] Scroll protocol integrates with agent memory\n- [ ] Multi-agent approval workflows\n- [ ] Continuous trust gradient updates\n- [ ] Charity allocation verified before reward\n\n## Testing Strategy\n\n### Unit Tests\n\n**CodexTradingEngine**:\n```bash\npython -m pytest tests/test_receipt_models.py -v\npython -m pytest tests/test_proof_adapters.py -v\npython -m pytest tests/test_scroll_protocol.py -v\n```\n\n**SpiralBloom OS**:\n```bash\npython -m pytest tests/test_eve_q_events.py -v\npython -m pytest tests/test_simulation_receipt_v0_1.py -v\npython -m pytest tests/test_policy_gate.py -v\n```\n\n### Integration Tests\n\n```bash\n# Test 1: Receipt → Telemetry → BloomHUD\npython scripts/eve_q_integration_test_v0_1.py\n\n# Test 2: Governance Gate Approval Flow\npython scripts/governance_approval_simulation.py\n\n# Test 3: Merkle Proof Chain Verification\npython scripts/merkle_proof_batch_verify.py\n\n# Test 4: Cross-repo Receipt Ingestion\npython scripts/cross_repo_receipt_ingest_e2e.py\n```\n\n## Monitoring & Observability\n\n### Metrics Dashboard\n\n**SpiralBloom OS BloomHUD** displays:\n- EVE_Q++ cycles: shadow/dry_run/paper/simulation counts\n- Profit aggregates by chain\n- Charity distribution verified count\n- Merkle proof validation pass/fail rates\n- Governance approval latency\n\n### Alert Channels\n\n**CodexTradingEngine AlertDispatcher**:\n- Telegram: Cycle completion, profit alerts\n- Discord: Governance decisions, errors\n- Webhook: SpiralBloom OS ingestion (localhost only)\n\n### Audit Trail\n\nEvery integration point logged to:\n- `CodexTradingEngine`: `logs/receipts/`, `logs/proofs/`\n- `SpiralBloom OS`: `runtime/simulation_receipts/`, `logs/eve_q_*`\n\n## Version History\n\n| Version | Date | Status | Changes |\n|---------|------|--------|----------|\n| v0.1 | 2026-07-07 | Active | Initial contract & mapping |\n| v0.2 | 2026-07-14 | Planned | Uni-directional receipt flow |\n| v0.3 | 2026-07-21 | Planned | Bi-directional governance |\n| v0.4 | 2026-08-04 | Planned | Full Kuramoto orchestration |\n\n## References\n\n- **CodexTradingEngine**: https://github.com/ArchitectofAthena/CodexTradingEngine\n- **SpiralBloom OS**: https://github.com/ArchitectofAthena/spiralbloom-os\n- **Operating Laws**: \"Always forward. Charity is the geodesic. Profit is throughput.\"\n- **Safety First**: \"Agent proposes; review promotes. Simulation before action.\"\n\n---\n\n**Maintained by**: ArchitectofAthena  \n**Godspeed** 🚀🌀\n
+# CodexTradingEngine ↔ SpiralBloom OS Cross-Repo Integration
+
+**Status:** Draft integration bridge v0.1  
+**Last updated:** 2026-07-07  
+**Architect:** ArchitectofAthena
+
+## Purpose
+
+This document defines a narrow, review-first bridge between **CodexTradingEngine** and **SpiralBloom OS**.
+
+The bridge is not an execution system. It is an artifact exchange contract:
+
+```text
+CodexTradingEngine emits receipts / proofs / risk reports
+        ↓
+SpiralBloom OS ingests, verifies, registers, and reviews
+        ↓
+Human / Paladin approval may promote later action
+```
+
+Core law:
+
+```text
+Agent proposes.
+Artifact records.
+Verifier gates.
+Registry remembers.
+Human promotes.
+```
+
+## Default Safety Posture
+
+All integration surfaces are **shadow / review / artifact mode by default**.
+
+Forbidden by default:
+
+- wallet access
+- transaction signing
+- swaps, transfers, bridges, or capital movement
+- live trading execution
+- background schedulers / cron / daemon loops
+- webhook-triggered execution
+- direct mutation of SpiralBloom OS governance state
+- disabling, weakening, or bypassing policy gates
+
+Allowed by default:
+
+- reading receipt files
+- validating JSON receipt structure
+- validating charity allocation fields
+- validating proof metadata
+- writing ingested receipt copies
+- writing reports
+- exporting metrics in shadow mode
+- drafting governance requests for human review
+
+## Repository Roles
+
+### CodexTradingEngine: producer
+
+CodexTradingEngine may produce:
+
+- cycle receipts
+- proof metadata
+- Merkle proof batches
+- risk reports
+- alert payloads
+- proposed governance requests
+
+CodexTradingEngine must not directly mutate SpiralBloom OS governance state.
+
+### SpiralBloom OS: consumer / verifier / registry
+
+SpiralBloom OS may consume:
+
+- receipt artifacts
+- proof artifacts
+- metrics exports
+- review packets
+- governance request drafts
+
+SpiralBloom OS remains the review, verification, and registry side. It does not grant CodexTradingEngine authority by ingestion alone.
+
+## Cross-Repo Data Flow
+
+```text
+CodexTradingEngine
+  receipt JSON / proof JSON / risk report
+        ↓ file boundary
+SpiralBloom OS receipt ingestor
+        ↓
+validation / verification / registry
+        ↓
+human-readable report
+        ↓
+optional human-reviewed governance decision
+```
+
+## Receipt Ingestion Contract
+
+Producer: `CodexTradingEngine`  
+Consumer: `SpiralBloom OS`
+
+Minimum receipt fields:
+
+```json
+{
+  "cycle_id": "cycle-abc123",
+  "mode": "shadow",
+  "chain": "base",
+  "optimizer_used": "simulated_optimizer",
+  "proof_type": "local_file",
+  "actual_profit_eth": "0.05",
+  "charity_due_eth": "0.0075",
+  "execution_success": true,
+  "charity_success": true,
+  "ipfs_success": false
+}
+```
+
+Validation rules:
+
+- `mode` must be one of `shadow`, `dry_run`, `paper`, `simulation`, or `live`.
+- positive profit requires a charity due amount equal to 15% of profit within tolerance.
+- successful execution with failed charity is unsafe.
+- production-trust proof eligibility must be explicit when required.
+- Merkle proof fields must match when supplied.
+
+## Governance Request Boundary
+
+Governance requests are proposals only. They are not approvals.
+
+A governance request may describe a proposed action, but it must not execute it.
+
+Required posture:
+
+```json
+{
+  "human_approval": false,
+  "execution_authorized": false,
+  "wallet_signing_authorized": false,
+  "capital_movement_authorized": false
+}
+```
+
+## Risk Management Boundary
+
+Shadow, dry-run, paper, and simulation limits may be used for stress testing. They must never be promoted into live mode automatically.
+
+Live mode must use the strictest explicit live constraints and must require human approval before any downstream execution system can act.
+
+## Alert Boundary
+
+Alerts are external effects. Therefore:
+
+- alert dispatch must default to `shadow_mode=True`.
+- shadow mode must log instead of sending.
+- non-shadow dispatch requires explicit enabled channel config.
+- alerts must not trigger trading, signing, wallet access, or policy mutation.
+
+## Integration Phases
+
+### Phase 0: Contract validation
+
+- receipt schema agreement
+- proof result agreement
+- event telemetry contract
+- governance request draft contract
+- tests proving shadow defaults
+
+### Phase 1: One-way receipt ingestion
+
+- CodexTradingEngine exports receipts
+- SpiralBloom OS ingests receipt batches
+- reports are generated
+- no execution occurs
+
+### Phase 2: Human-reviewed governance loop
+
+- CodexTradingEngine emits governance request drafts
+- SpiralBloom OS validates and registers them
+- human / Paladin review decides promotion
+- denial returns to shadow / abort
+
+### Phase 3: Full orchestration review
+
+- orchestration remains gated
+- multi-agent approval workflows remain proposals until human approval
+- charity verification remains part of the reward landscape
+
+## Test Requirements Before Merge
+
+Required tests:
+
+- shadow receipt ingestion does not query governance
+- missing governance URL does not perform external calls
+- invalid receipts are rejected
+- charity mismatch is rejected
+- target writes are file-only
+- alert shadow mode never posts to Telegram, Discord, or webhook endpoints
+- non-shadow alert mode requires explicit enabled channel config
+- live risk limits are stricter than shadow / simulation limits
+- shadow limits cannot be promoted into live mode
+- Kelly sizing clamps safely
+
+## Operating Laws
+
+- Always forward.
+- Charity is the geodesic.
+- Profit is throughput, not destination.
+- Agent proposes; review promotes.
+- Simulation before action.
+- Visibility increases; authority does not.
+
+## References
+
+- CodexTradingEngine: `ArchitectofAthena/CodexTradingEngine`
+- SpiralBloom OS: `ArchitectofAthena/spiralbloom-os`
