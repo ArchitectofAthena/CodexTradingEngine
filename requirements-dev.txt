@@ -1,0 +1,6 @@
+-r requirements.txt
+ruff>=0.1.0
+mypy>=1.7.0
+black>=23.12.0
+bandit>=1.7.5
+pip-audit>=2.6.0
