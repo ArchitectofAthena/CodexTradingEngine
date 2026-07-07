@@ -7,11 +7,12 @@ integrated into SpiralBloom OS telemetry, governance, and BloomHUD dashboards.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from decimal import Decimal
+import aiohttp
 
 
 @dataclass(frozen=True)
@@ -141,7 +142,7 @@ class ReceiptValidator:
 
         errors: List[str] = []
         merkle_root = receipt_dict.get("merkle_root")
-        merkle_proof = receipt_dict.get("merkle_proof")
+        merkle_proof = receipt_dict.get("merkle_proo")
 
         if merkle_root and merkle_proof:
             try:
@@ -274,7 +275,6 @@ class CrossRepoReceiptIngestor:
             True if governance gate approved or not configured.
         """
         import asyncio
-        import aiohttp
 
         if not self.config.governance_gate_url:
             return True
@@ -342,7 +342,7 @@ class CrossRepoReceiptIngestor:
             f"Generated: {datetime.now(timezone.utc).isoformat()}",
             f"Shadow Mode: {self.config.shadow_mode}",
             "",
-            f"## Summary",
+            "## Summary",
             f"Total receipts: {len(results)}",
             f"Successful: {sum(1 for r in results if r.success)}",
             f"Failed: {sum(1 for r in results if not r.success)}",
