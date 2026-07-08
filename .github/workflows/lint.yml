@@ -17,6 +17,7 @@ on:
       - 'tests/test_risk_management.py'
       - 'tests/test_organ_contract_scaffold.py'
       - 'tests/test_organ_contract_enforcement.py'
+      - 'tests/test_ttl_policy_scaffold.py'
       - 'tests/test_charity_allocation_diversity_guard.py'
       - 'tests/test_need_impact_scoring.py'
       - 'requirements.txt'
@@ -40,6 +41,7 @@ on:
       - 'tests/test_risk_management.py'
       - 'tests/test_organ_contract_scaffold.py'
       - 'tests/test_organ_contract_enforcement.py'
+      - 'tests/test_ttl_policy_scaffold.py'
       - 'tests/test_charity_allocation_diversity_guard.py'
       - 'tests/test_need_impact_scoring.py'
       - 'requirements.txt'
@@ -83,6 +85,7 @@ jobs:
             tests/test_risk_management.py \
             tests/test_organ_contract_scaffold.py \
             tests/test_organ_contract_enforcement.py \
+            tests/test_ttl_policy_scaffold.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py
 
@@ -104,6 +107,7 @@ jobs:
             tests/test_risk_management.py \
             tests/test_organ_contract_scaffold.py \
             tests/test_organ_contract_enforcement.py \
+            tests/test_ttl_policy_scaffold.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py
 
@@ -116,6 +120,7 @@ jobs:
             tests/test_risk_management.py \
             tests/test_organ_contract_scaffold.py \
             tests/test_organ_contract_enforcement.py \
+            tests/test_ttl_policy_scaffold.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py \
             -q

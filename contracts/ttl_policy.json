@@ -1,0 +1,115 @@
+{
+  "policy_id": "ttl_graceful_degradation_policy",
+  "version": "0.1.0",
+  "posture": {
+    "authority_expires": true,
+    "uncertainty_degrades_permission": true,
+    "graceful_degradation_preferred": true,
+    "hard_stop_on_forbidden_capability": true,
+    "human_approval_required_for_renewal": true
+  },
+  "authority_rank": {
+    "artifact_only": 0,
+    "simulation": 0,
+    "historical_replay": 0,
+    "testnet": 1,
+    "shadow_live_market_data": 1,
+    "human_gated_execution": 2,
+    "ttl_bounded_autonomy": 3
+  },
+  "modes": {
+    "artifact_only": {
+      "ttl_required": false,
+      "max_ttl_minutes": null,
+      "degradation_target": "artifact_only"
+    },
+    "simulation": {
+      "ttl_required": false,
+      "max_ttl_minutes": null,
+      "degradation_target": "simulation"
+    },
+    "historical_replay": {
+      "ttl_required": false,
+      "max_ttl_minutes": null,
+      "degradation_target": "simulation"
+    },
+    "testnet": {
+      "ttl_required": true,
+      "max_ttl_minutes": 240,
+      "degradation_target": "simulation"
+    },
+    "shadow_live_market_data": {
+      "ttl_required": true,
+      "max_ttl_minutes": 60,
+      "degradation_target": "simulation"
+    },
+    "human_gated_execution": {
+      "ttl_required": true,
+      "max_ttl_minutes": 30,
+      "degradation_target": "shadow_live_market_data"
+    },
+    "ttl_bounded_autonomy": {
+      "ttl_required": true,
+      "max_ttl_minutes": 15,
+      "degradation_target": "human_gated_execution"
+    }
+  },
+  "ttl_shortening_signals": [
+    "telemetry_staleness",
+    "oracle_staleness",
+    "market_volatility_spike",
+    "failed_validation",
+    "high_anomaly_score",
+    "degraded_data_quality",
+    "missing_human_liveness",
+    "contract_drift_detected",
+    "policy_version_mismatch",
+    "charity_verification_uncertainty",
+    "incomplete_receipt_proof"
+  ],
+  "graceful_degradation_triggers": [
+    "ttl_expired",
+    "human_liveness_absent",
+    "telemetry_stale",
+    "receipt_proof_incomplete",
+    "impact_verification_pending",
+    "model_confidence_below_threshold",
+    "policy_uncertainty_rising",
+    "simulation_replay_divergence"
+  ],
+  "hard_stop_triggers": [
+    "wallet_signing",
+    "autonomous_capital_movement",
+    "governance_mutation",
+    "webhook_triggered_execution",
+    "scheduler_triggered_execution",
+    "silent_remote_command_execution",
+    "self_promotion",
+    "receipt_mutation_after_emission"
+  ],
+  "human_approval_required_for": [
+    "ttl_renewal_after_expiry",
+    "simulation_to_testnet_promotion",
+    "testnet_to_human_gated_execution_promotion",
+    "human_gated_execution_to_ttl_bounded_autonomy_promotion",
+    "any_capital_touchpoint",
+    "charity_allocation_policy_change",
+    "contract_or_ttl_policy_change",
+    "hard_stop_recovery"
+  ],
+  "safe_outputs_after_degradation": [
+    "artifact_receipt",
+    "safety_bridge_receipt",
+    "risk_report",
+    "simulation_summary",
+    "drift_audit"
+  ],
+  "hard_invariants": [
+    "Authority expires.",
+    "Uncertainty degrades permission.",
+    "Expired TTL cannot silently renew itself.",
+    "Graceful degradation is preferred over chaotic stop.",
+    "Hard boundaries stop immediately.",
+    "Human approval renews authority."
+  ]
+}
