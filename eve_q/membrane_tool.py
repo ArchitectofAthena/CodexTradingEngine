@@ -21,6 +21,10 @@ from pathlib import Path
 from typing import Any
 
 from eve_q.artifact_carrier import validate_artifact_carrier_manifest
+from eve_q.receipt_carrier_attestation import (
+    load_json,
+    validate_receipt_carrier_attestation,
+)
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
@@ -127,17 +131,35 @@ def extract_carrier_manifest_from_image(
 def validate_membrane_image(
     image_path: Path | str,
     field_name: str = "Comment",
+    attestation_path: Path | str | None = None,
 ) -> dict[str, Any]:
     """Extract and validate an image-carried artifact carrier manifest."""
     manifest = extract_carrier_manifest_from_image(image_path, field_name)
-    errors = validate_artifact_carrier_manifest(manifest)
+    carrier_errors = validate_artifact_carrier_manifest(manifest)
 
-    return {
-        "valid": errors == [],
-        "errors": errors,
+    result: dict[str, Any] = {
+        "valid": carrier_errors == [],
+        "errors": carrier_errors,
         "metadata_field": field_name,
         "manifest": manifest,
     }
+
+    if attestation_path is not None:
+        attestation = load_json(attestation_path)
+        attestation_errors = validate_receipt_carrier_attestation(
+            attestation,
+            manifest,
+        )
+        result["attestation"] = {
+            "valid": attestation_errors == [],
+            "errors": attestation_errors,
+        }
+        result["valid"] = result["valid"] and attestation_errors == []
+        result["errors"] = carrier_errors + [
+            f"attestation: {error}" for error in attestation_errors
+        ]
+
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -147,6 +169,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--image", required=True)
     parser.add_argument("--field", default="Comment")
+    parser.add_argument("--attestation")
     parser.add_argument(
         "--manifest-only",
         action="store_true",
@@ -160,9 +183,13 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(manifest, sort_keys=True))
             return 0
 
-        result = validate_membrane_image(args.image, args.field)
+        result = validate_membrane_image(
+            args.image,
+            args.field,
+            args.attestation,
+        )
     except (OSError, ValueError, json.JSONDecodeError, zlib.error) as exc:
-        result = {"valid": False, "errors": [f"failed to extract manifest: {exc}"]}
+        result = {"valid": False, "errors": [f"failed to validate membrane: {exc}"]}
 
     print(json.dumps(result, sort_keys=True))
     return 0 if result["valid"] else 1

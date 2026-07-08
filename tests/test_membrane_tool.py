@@ -10,6 +10,7 @@ from eve_q.membrane_tool import (
 )
 
 MANIFEST_PATH = Path("examples/artifact_carrier_manifest.example.json")
+ATTESTATION_PATH = Path("examples/receipt_carrier_attestation.example.json")
 
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
@@ -120,4 +121,50 @@ def test_membrane_tool_cli_reports_missing_comment(tmp_path):
 
     assert result.returncode == 1
     assert payload["valid"] is False
-    assert payload["errors"][0].startswith("failed to extract manifest:")
+    assert payload["errors"][0].startswith("failed to validate membrane:")
+
+
+def test_validate_membrane_image_accepts_receipt_attestation(tmp_path):
+    manifest = json.loads(MANIFEST_PATH.read_text())
+    image = tmp_path / "membrane.png"
+    write_png_with_comment(image, json.dumps(manifest))
+
+    result = validate_membrane_image(
+        image,
+        attestation_path=ATTESTATION_PATH,
+    )
+
+    assert result["valid"] is True
+    assert result["errors"] == []
+    assert result["attestation"] == {"valid": True, "errors": []}
+
+
+def test_membrane_tool_cli_validates_receipt_attestation(tmp_path):
+    manifest = json.loads(MANIFEST_PATH.read_text())
+    image = tmp_path / "membrane.png"
+    write_png_with_comment(image, json.dumps(manifest))
+
+    result = run_cli(image, "--attestation", str(ATTESTATION_PATH))
+    payload = json.loads(result.stdout)
+
+    assert result.returncode == 0
+    assert payload["valid"] is True
+    assert payload["attestation"] == {"valid": True, "errors": []}
+
+
+def test_membrane_tool_cli_rejects_attestation_drift(tmp_path):
+    manifest = json.loads(MANIFEST_PATH.read_text())
+    manifest["payload_type"] = "changed_payload"
+
+    image = tmp_path / "membrane.png"
+    write_png_with_comment(image, json.dumps(manifest))
+
+    result = run_cli(image, "--attestation", str(ATTESTATION_PATH))
+    payload = json.loads(result.stdout)
+
+    assert result.returncode == 1
+    assert payload["valid"] is False
+    assert payload["attestation"]["valid"] is False
+    assert any(
+        "carrier_manifest_sha256 mismatch" in error for error in payload["attestation"]["errors"]
+    )

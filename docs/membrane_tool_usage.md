@@ -31,6 +31,17 @@ Expected shape:
 
 The actual output also includes the extracted manifest and metadata field name.
 
+## Validate Membrane Image With Receipt Attestation
+
+```bash
+python -m eve_q.membrane_tool \
+  --image ~/spiral_membrane_sealed.png \
+  --attestation examples/receipt_carrier_attestation.example.json
+```
+
+This extracts the carrier manifest from the image, validates the carrier law, then validates the receipt-to-carrier attestation against the extracted manifest.
+
+The bridge is still read-only.
 ## Extract Manifest Only
 
 ```bash

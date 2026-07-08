@@ -11,6 +11,7 @@ def test_membrane_tool_usage_doc_names_cli_surfaces():
         "python -m eve_q.artifact_carrier",
         "python -m eve_q.receipt_carrier_attestation",
         "--manifest-only",
+        "--attestation",
     ]
 
     for item in required:
@@ -24,6 +25,7 @@ def test_membrane_tool_usage_doc_preserves_safety_boundary():
         "extract only",
         "parse only",
         "validate only",
+        "The bridge is still read-only.",
         "no metadata writing",
         "no IPFS daemon dependency",
         "no network access",
