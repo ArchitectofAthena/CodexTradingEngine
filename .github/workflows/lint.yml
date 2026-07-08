@@ -7,20 +7,20 @@ on:
       - 'eve_q/receipt_emitter.py'
       - 'eve_q/alert_dispatcher.py'
       - 'eve_q/risk_management.py'
+      - 'eve_q/allocation/**'
+      - 'eve_q/telemetry/**'
+      - 'contracts/**'
       - 'tests/test_cross_repo_ingestor.py'
       - 'tests/test_receipt_emitter.py'
       - 'tests/test_alert_dispatcher.py'
       - 'tests/test_risk_management.py'
+      - 'tests/test_organ_contract_scaffold.py'
+      - 'tests/test_charity_allocation_diversity_guard.py'
+      - 'tests/test_need_impact_scoring.py'
       - 'requirements.txt'
       - 'requirements-dev.txt'
       - 'pyproject.toml'
       - '.flake8'
-      - 'contracts/**'
-      - 'eve_q/allocation/**'
-      - 'eve_q/telemetry/**'
-      - 'tests/test_organ_contract_scaffold.py'
-      - 'tests/test_charity_allocation_diversity_guard.py'
-      - 'tests/test_need_impact_scoring.py'
       - '.github/workflows/lint.yml'
   pull_request:
     paths:
@@ -28,20 +28,20 @@ on:
       - 'eve_q/receipt_emitter.py'
       - 'eve_q/alert_dispatcher.py'
       - 'eve_q/risk_management.py'
+      - 'eve_q/allocation/**'
+      - 'eve_q/telemetry/**'
+      - 'contracts/**'
       - 'tests/test_cross_repo_ingestor.py'
       - 'tests/test_receipt_emitter.py'
       - 'tests/test_alert_dispatcher.py'
       - 'tests/test_risk_management.py'
+      - 'tests/test_organ_contract_scaffold.py'
+      - 'tests/test_charity_allocation_diversity_guard.py'
+      - 'tests/test_need_impact_scoring.py'
       - 'requirements.txt'
       - 'requirements-dev.txt'
       - 'pyproject.toml'
       - '.flake8'
-      - 'contracts/**'
-      - 'eve_q/allocation/**'
-      - 'eve_q/telemetry/**'
-      - 'tests/test_organ_contract_scaffold.py'
-      - 'tests/test_charity_allocation_diversity_guard.py'
-      - 'tests/test_need_impact_scoring.py'
       - '.github/workflows/lint.yml'
 
 jobs:
@@ -68,21 +68,17 @@ jobs:
             eve_q/receipt_emitter.py \
             eve_q/alert_dispatcher.py \
             eve_q/risk_management.py \
+            eve_q/allocation/charity_router.py \
+            eve_q/allocation/geodesic_policy.py \
+            eve_q/telemetry/impact_score.py \
+            eve_q/telemetry/need_score.py \
             tests/test_cross_repo_ingestor.py \
             tests/test_receipt_emitter.py \
             tests/test_alert_dispatcher.py \
             tests/test_risk_management.py \
-            tests/test_need_impact_scoring.py \
-            tests/test_charity_allocation_diversity_guard.py \
             tests/test_organ_contract_scaffold.py \
-            eve_q/telemetry/need_score.py \ \
-            eve_q/telemetry/need_score.py \ \
-            eve_q/telemetry/impact_score.py \ \
-            eve_q/telemetry/impact_score.py \ \
-            eve_q/allocation/geodesic_policy.py \ \
-            eve_q/allocation/geodesic_policy.py \ \
-            eve_q/allocation/charity_router.py \ \
-            eve_q/allocation/charity_router.py \
+            tests/test_charity_allocation_diversity_guard.py \
+            tests/test_need_impact_scoring.py
 
       - name: Run flake8 on constitutional scope
         run: |
@@ -91,10 +87,17 @@ jobs:
             eve_q/receipt_emitter.py \
             eve_q/alert_dispatcher.py \
             eve_q/risk_management.py \
+            eve_q/allocation/charity_router.py \
+            eve_q/allocation/geodesic_policy.py \
+            eve_q/telemetry/impact_score.py \
+            eve_q/telemetry/need_score.py \
             tests/test_cross_repo_ingestor.py \
             tests/test_receipt_emitter.py \
             tests/test_alert_dispatcher.py \
-            tests/test_risk_management.py
+            tests/test_risk_management.py \
+            tests/test_organ_contract_scaffold.py \
+            tests/test_charity_allocation_diversity_guard.py \
+            tests/test_need_impact_scoring.py
 
       - name: Run constitutional tests
         run: |
@@ -103,7 +106,7 @@ jobs:
             tests/test_receipt_emitter.py \
             tests/test_alert_dispatcher.py \
             tests/test_risk_management.py \
-            tests/test_need_impact_scoring.py \
-            tests/test_charity_allocation_diversity_guard.py \
             tests/test_organ_contract_scaffold.py \
+            tests/test_charity_allocation_diversity_guard.py \
+            tests/test_need_impact_scoring.py \
             -q
