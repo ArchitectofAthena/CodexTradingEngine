@@ -1,0 +1,88 @@
+{
+  "contract_id": "artifact_carrier_manifest",
+  "version": "0.1.0",
+  "manifest_schema": "spiralbloom.artifact_carrier.v0.1",
+  "default_ttl_mode": "artifact_only",
+  "allowed_artifact_types": [
+    "image_metadata_pointer",
+    "cid_receipt",
+    "encrypted_spore_pointer",
+    "continuity_carrier"
+  ],
+  "allowed_payload_classes": [
+    "public",
+    "encrypted",
+    "private"
+  ],
+  "allowed_ttl_modes": [
+    "artifact_only",
+    "simulation",
+    "historical_replay"
+  ],
+  "required_manifest_fields": [
+    "schema",
+    "version",
+    "artifact_type",
+    "cid",
+    "payload_class",
+    "payload_type",
+    "ttl_mode",
+    "human_promotion_required",
+    "execution_authority",
+    "reverse_execution_channel_opened"
+  ],
+  "encrypted_payload_classes": [
+    "encrypted",
+    "private"
+  ],
+  "required_encryption_fields": [
+    "status",
+    "key_custody"
+  ],
+  "allowed_encryption_statuses": [
+    "encrypted",
+    "detached_encrypted_payload"
+  ],
+  "allowed_key_custody": [
+    "human_held",
+    "external_vault",
+    "not_stored_in_manifest"
+  ],
+  "forbidden_manifest_fields": [
+    "api_key",
+    "command",
+    "commands",
+    "execute",
+    "execution",
+    "private_key",
+    "scheduler",
+    "seed_phrase",
+    "shell",
+    "subprocess",
+    "wallet_private_key",
+    "webhook_url"
+  ],
+  "forbidden_secret_markers": [
+    "BEGIN OPENSSH PRIVATE KEY",
+    "BEGIN PGP PRIVATE KEY",
+    "BEGIN RSA PRIVATE KEY",
+    "PRIVATE KEY",
+    "api_key=",
+    "gho_",
+    "ghp_",
+    "mnemonic",
+    "password=",
+    "seed phrase",
+    "sk-",
+    "wallet seed",
+    "xoxb-"
+  ],
+  "hard_invariants": [
+    "The image carries the acorn.",
+    "The CID points to the memory.",
+    "The key is consent.",
+    "The artifact never commands.",
+    "Metadata is pointer, not authority.",
+    "Human promotion remains required."
+  ]
+}
