@@ -92,3 +92,40 @@ It is not a transaction signer.
 It is not financial advice.
 
 Human review and explicit human promotion remain required for any real-world capital touchpoint.
+
+<!-- constitutional-surfaces-index:start -->
+
+## Constitutional Surfaces Index
+
+CodexTradingEngine is simulation-first and safety-gated. These surfaces define the current artifact membrane:
+
+| Surface | File | Purpose |
+| --- | --- | --- |
+| Artifact carrier validator | `eve_q/artifact_carrier.py` | Validates CID-backed carrier manifests without granting execution authority. |
+| Artifact carrier example | `examples/artifact_carrier_manifest.example.json` | Provides a deterministic teaching artifact for safe carrier manifests. |
+| Artifact carrier example docs | `docs/artifact_carrier_manifest_example.md` | Documents the carrier law: the artifact carries memory, not authority. |
+| Receipt carrier attestation validator | `eve_q/receipt_carrier_attestation.py` | Binds a receipt identifier to a carrier manifest digest and CID as a review artifact. |
+| Receipt carrier attestation example | `examples/receipt_carrier_attestation.example.json` | Demonstrates safe receipt-to-carrier attestation. |
+| Receipt carrier attestation docs | `docs/receipt_carrier_attestation_example.md` | Documents attestation drift detection and non-execution boundaries. |
+
+Current law:
+
+```text
+Receipt remembers.
+Carrier points.
+Hash detects drift.
+TTL expires.
+CI guards.
+Human promotes.
+```
+
+Safety boundary:
+
+- no autonomous capital movement
+- no wallet signing
+- no scheduler authority
+- no reverse execution channel
+- no IPFS daemon dependency for validation
+- no image metadata dependency for validation
+
+<!-- constitutional-surfaces-index:end -->

@@ -25,6 +25,8 @@ on:
       - 'tests/test_artifact_carrier_example.py'
       - 'tests/test_receipt_carrier_attestation.py'
       - 'tests/test_receipt_carrier_attestation_example.py'
+      - 'tests/test_readme_constitutional_surface_index.py'
+      - 'README.md'
       - 'examples/receipt_carrier_attestation.example.json'
       - 'docs/receipt_carrier_attestation_example.md'
       - 'eve_q/receipt_carrier_attestation.py'
@@ -110,6 +112,7 @@ jobs:
           tests/test_artifact_carrier_example.py \
           tests/test_receipt_carrier_attestation.py \
           tests/test_receipt_carrier_attestation_example.py \
+          tests/test_readme_constitutional_surface_index.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py
 
