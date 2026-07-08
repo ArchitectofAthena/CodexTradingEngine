@@ -23,6 +23,8 @@ on:
       - 'tests/test_ttl_policy_evaluator.py'
       - 'tests/test_artifact_carrier_manifest.py'
       - 'tests/test_artifact_carrier_example.py'
+      - 'tests/test_receipt_carrier_attestation.py'
+      - 'eve_q/receipt_carrier_attestation.py'
       - 'examples/artifact_carrier_manifest.example.json'
       - 'docs/artifact_carrier_manifest_example.md'
       - 'tests/test_charity_allocation_diversity_guard.py'
@@ -88,6 +90,7 @@ jobs:
             eve_q/organ_contract.py \
           eve_q/ttl_policy.py \
           eve_q/artifact_carrier.py \
+          eve_q/receipt_carrier_attestation.py \
             eve_q/allocation/charity_router.py \
             eve_q/allocation/geodesic_policy.py \
             eve_q/telemetry/impact_score.py \
@@ -102,6 +105,7 @@ jobs:
           tests/test_ttl_policy_evaluator.py \
           tests/test_artifact_carrier_manifest.py \
           tests/test_artifact_carrier_example.py \
+          tests/test_receipt_carrier_attestation.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py
 
