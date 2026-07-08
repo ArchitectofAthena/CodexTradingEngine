@@ -15,6 +15,7 @@ def test_readme_names_current_constitutional_surfaces():
         "examples/receipt_carrier_attestation.example.json",
         "docs/receipt_carrier_attestation_example.md",
         "eve_q/membrane_tool.py",
+        "Membrane metadata extractor and attestation bridge",
     ]
 
     for item in required:
@@ -32,6 +33,10 @@ def test_readme_preserves_non_execution_boundary():
         "no metadata writing",
         "Human promotes.",
         "Image carries acorn.",
+        "The validator compares.",
+        "The attestation binds.",
+        "image metadata -> carrier manifest -> receipt attestation -> validation result",
+        "--attestation",
     ]
 
     for item in required:

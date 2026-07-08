@@ -107,12 +107,23 @@ CodexTradingEngine is simulation-first and safety-gated. These surfaces define t
 | Receipt carrier attestation validator | `eve_q/receipt_carrier_attestation.py` | Binds a receipt identifier to a carrier manifest digest and CID as a review artifact. |
 | Receipt carrier attestation example | `examples/receipt_carrier_attestation.example.json` | Demonstrates safe receipt-to-carrier attestation. |
 | Receipt carrier attestation docs | `docs/receipt_carrier_attestation_example.md` | Documents attestation drift detection and non-execution boundaries. |
-| Membrane metadata extractor | `eve_q/membrane_tool.py` | Extracts carrier manifests from PNG Comment metadata and validates them without execution authority. |
+| Membrane metadata extractor and attestation bridge | `eve_q/membrane_tool.py` | Extracts carrier manifests from PNG Comment metadata, validates carrier law, and can compare receipt attestations without execution authority. |
 
+
+Membrane bridge:
+
+`python -m eve_q.membrane_tool --image <png> --attestation <attestation.json>`
+
+Chain:
+
+`image metadata -> carrier manifest -> receipt attestation -> validation result`
 Current law:
 
 ```text
 Image carries acorn.
+The validator compares.
+The attestation binds.
+The image carries.
 Receipt remembers.
 Carrier points.
 Hash detects drift.
