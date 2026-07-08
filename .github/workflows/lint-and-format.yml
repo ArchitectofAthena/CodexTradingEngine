@@ -24,6 +24,9 @@ on:
       - 'tests/test_artifact_carrier_manifest.py'
       - 'tests/test_artifact_carrier_example.py'
       - 'tests/test_receipt_carrier_attestation.py'
+      - 'tests/test_receipt_carrier_attestation_example.py'
+      - 'examples/receipt_carrier_attestation.example.json'
+      - 'docs/receipt_carrier_attestation_example.md'
       - 'eve_q/receipt_carrier_attestation.py'
       - 'examples/artifact_carrier_manifest.example.json'
       - 'docs/artifact_carrier_manifest_example.md'
@@ -106,6 +109,7 @@ jobs:
           tests/test_artifact_carrier_manifest.py \
           tests/test_artifact_carrier_example.py \
           tests/test_receipt_carrier_attestation.py \
+          tests/test_receipt_carrier_attestation_example.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py
 

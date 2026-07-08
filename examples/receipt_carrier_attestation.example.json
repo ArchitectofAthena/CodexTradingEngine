@@ -1,0 +1,12 @@
+{
+  "schema": "spiralbloom.receipt_carrier_attestation.v0.1",
+  "version": "0.1.0",
+  "attestation_type": "receipt_carrier_binding",
+  "receipt_id": "receipt_example_001",
+  "carrier_manifest_sha256": "6c51cef59ec337bb5df0d192fbfec8c6d1d3d5ce7809fbf14f0c205999afd2fa",
+  "carrier_cid": "bafybeigdyrzt5sfp7udm7hu76qpq7ka7gskp5b4rq6x2zq4zzzzzz",
+  "ttl_mode": "artifact_only",
+  "human_promotion_required": true,
+  "execution_authority": "none",
+  "reverse_execution_channel_opened": false
+}
