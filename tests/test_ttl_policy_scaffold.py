@@ -82,3 +82,50 @@ def test_policy_doc_preserves_core_law():
     assert "Uncertainty degrades permission." in doc
     assert "Graceful degradation is preferred" in doc
     assert "Agent proposes. Artifact records." in doc
+
+
+EXPECTED_HARD_STOP_TRIGGERS = {
+    "wallet_signing",
+    "autonomous_capital_movement",
+    "governance_mutation",
+    "webhook_triggered_execution",
+    "scheduler_triggered_execution",
+    "silent_remote_command_execution",
+    "self_promotion",
+    "receipt_mutation_after_emission",
+}
+
+
+def normalize_hard_stop_bullet(text):
+    return text.strip().lower().replace("-", "_").replace(" ", "_")
+
+
+def hard_stop_bullets_from_doc():
+    doc = TTL_DOC_PATH.read_text()
+    section = doc.split("## Hard Stop Triggers", 1)[1]
+    section = section.split("## Human Approval Required", 1)[0]
+
+    bullets = []
+    for line in section.splitlines():
+        if line.startswith("- "):
+            bullets.append(normalize_hard_stop_bullet(line[2:]))
+
+    return set(bullets)
+
+
+def test_hard_stop_triggers_match_single_declared_canon():
+    policy = load_ttl_policy()
+    organ_contract = load_organ_contract()
+
+    assert set(policy["hard_stop_triggers"]) == EXPECTED_HARD_STOP_TRIGGERS
+    assert set(organ_contract["forbidden_capabilities"]) == EXPECTED_HARD_STOP_TRIGGERS
+    assert hard_stop_bullets_from_doc() == EXPECTED_HARD_STOP_TRIGGERS
+
+
+def test_policy_doc_declares_structural_verification_boundary():
+    doc = TTL_DOC_PATH.read_text()
+
+    assert "Version: 0.1.0" in doc
+    assert "v0.1.0 is a structural policy scaffold." in doc
+    assert "It does not yet implement or prove runtime TTL behavior." in doc
+    assert "Membrane before motion." in doc

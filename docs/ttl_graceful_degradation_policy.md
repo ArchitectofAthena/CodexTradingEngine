@@ -1,5 +1,7 @@
 # TTL and Graceful Degradation Policy
 
+Version: 0.1.0
+
 ## Purpose
 
 This policy defines how authority expires inside CodexTradingEngine.
@@ -98,6 +100,31 @@ Renewed human approval is required for:
 - any charity allocation policy change
 - any contract or TTL policy change
 - any recovery from hard stop
+
+## Verification Boundary
+
+v0.1.0 is a structural policy scaffold.
+
+It verifies:
+
+- mode coverage
+- TTL-required mode classification
+- degradation rank monotonicity
+- hard-stop trigger declaration
+- human approval declaration
+- JSON/prose alignment for hard-stop triggers
+
+It does not yet implement or prove runtime TTL behavior.
+
+Behavioral firing tests still need to land before any mode above simulation gets
+a real clock. Those future tests must prove:
+
+- an expired TTL degrades to its declared degradation target
+- a hard-stop trigger emits only safe artifacts
+- a hard-stop trigger does not open a reverse execution channel
+- a TTL-shortening signal actually shortens the active window
+
+Membrane before motion.
 
 ## Summary
 
