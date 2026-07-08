@@ -37,6 +37,7 @@ def test_organ_contract_allows_only_artifact_style_outputs():
 
     expected_outputs = {
         "artifact_receipt",
+        "safety_bridge_receipt",
         "risk_report",
         "charity_allocation_proposal",
         "simulation_summary",

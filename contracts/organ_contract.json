@@ -11,6 +11,7 @@
   },
   "allowed_outputs": [
     "artifact_receipt",
+    "safety_bridge_receipt",
     "risk_report",
     "charity_allocation_proposal",
     "simulation_summary",
@@ -28,6 +29,7 @@
     "receipt_mutation_after_emission"
   ],
   "allowed_modes": [
+    "artifact_only",
     "simulation",
     "historical_replay",
     "testnet",
