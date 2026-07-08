@@ -19,6 +19,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    from eve_q.organ_contract import validate_receipt_against_contract
+except ModuleNotFoundError:  # Allows direct script execution from eve_q/.
+    from organ_contract import validate_receipt_against_contract
+
 SPIRALBLOOM_REQUIRED_FIELDS = {
     "source_repo",
     "source_commit",
@@ -156,6 +161,8 @@ def validate_emitted_receipt(receipt: dict[str, Any]) -> list[str]:
         errors.append(
             "receipt must not contain action/intent fields: " + ", ".join(forbidden_present)
         )
+
+    errors.extend(validate_receipt_against_contract(receipt))
 
     return errors
 
