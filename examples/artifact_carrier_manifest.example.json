@@ -1,0 +1,17 @@
+{
+  "schema": "spiralbloom.artifact_carrier.v0.1",
+  "version": "0.1.0",
+  "artifact_type": "encrypted_spore_pointer",
+  "cid": "bafybeigdyrzt5sfp7udm7hu76qpq7ka7gskp5b4rq6x2zq4zzzzzz",
+  "payload_class": "encrypted",
+  "payload_type": "continuity_spore",
+  "ttl_mode": "artifact_only",
+  "human_promotion_required": true,
+  "execution_authority": "none",
+  "reverse_execution_channel_opened": false,
+  "description": "Example CID-backed encrypted memory pointer. The payload is detached and encrypted.",
+  "encryption": {
+    "status": "encrypted",
+    "key_custody": "human_held"
+  }
+}
