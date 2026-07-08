@@ -4,9 +4,11 @@ on:
   push:
     paths:
       - 'eve_q/cross_repo_ingestor.py'
+      - 'eve_q/receipt_emitter.py'
       - 'eve_q/alert_dispatcher.py'
       - 'eve_q/risk_management.py'
       - 'tests/test_cross_repo_ingestor.py'
+      - 'tests/test_receipt_emitter.py'
       - 'tests/test_alert_dispatcher.py'
       - 'tests/test_risk_management.py'
       - 'requirements.txt'
@@ -17,9 +19,11 @@ on:
   pull_request:
     paths:
       - 'eve_q/cross_repo_ingestor.py'
+      - 'eve_q/receipt_emitter.py'
       - 'eve_q/alert_dispatcher.py'
       - 'eve_q/risk_management.py'
       - 'tests/test_cross_repo_ingestor.py'
+      - 'tests/test_receipt_emitter.py'
       - 'tests/test_alert_dispatcher.py'
       - 'tests/test_risk_management.py'
       - 'requirements.txt'
@@ -45,30 +49,35 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Run black on safety bridge scope
+      - name: Run black on bridge scope
         run: |
           black --check \
             eve_q/cross_repo_ingestor.py \
+            eve_q/receipt_emitter.py \
             eve_q/alert_dispatcher.py \
             eve_q/risk_management.py \
             tests/test_cross_repo_ingestor.py \
+            tests/test_receipt_emitter.py \
             tests/test_alert_dispatcher.py \
             tests/test_risk_management.py
 
-      - name: Run flake8 on safety bridge scope
+      - name: Run flake8 on bridge scope
         run: |
           flake8 \
             eve_q/cross_repo_ingestor.py \
+            eve_q/receipt_emitter.py \
             eve_q/alert_dispatcher.py \
             eve_q/risk_management.py \
             tests/test_cross_repo_ingestor.py \
+            tests/test_receipt_emitter.py \
             tests/test_alert_dispatcher.py \
             tests/test_risk_management.py
 
-      - name: Run safety bridge tests
+      - name: Run bridge tests
         run: |
           pytest -o addopts='' \
             tests/test_cross_repo_ingestor.py \
+            tests/test_receipt_emitter.py \
             tests/test_alert_dispatcher.py \
             tests/test_risk_management.py \
             -q
