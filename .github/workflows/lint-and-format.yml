@@ -28,6 +28,8 @@ on:
       - 'tests/test_readme_constitutional_surface_index.py'
       - 'tests/test_receipt_carrier_attestation_cli.py'
       - 'tests/test_artifact_carrier_cli.py'
+      - 'tests/test_membrane_tool.py'
+      - 'eve_q/membrane_tool.py'
       - 'README.md'
       - 'examples/receipt_carrier_attestation.example.json'
       - 'docs/receipt_carrier_attestation_example.md'
@@ -97,6 +99,7 @@ jobs:
             eve_q/organ_contract.py \
           eve_q/ttl_policy.py \
           eve_q/artifact_carrier.py \
+          eve_q/membrane_tool.py \
           eve_q/receipt_carrier_attestation.py \
             eve_q/allocation/charity_router.py \
             eve_q/allocation/geodesic_policy.py \
@@ -117,6 +120,7 @@ jobs:
           tests/test_readme_constitutional_surface_index.py \
           tests/test_receipt_carrier_attestation_cli.py \
           tests/test_artifact_carrier_cli.py \
+          tests/test_membrane_tool.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py
 
