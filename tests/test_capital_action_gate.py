@@ -138,6 +138,24 @@ def test_charity_completion_accepts_source_receipt_cid(tmp_path):
     assert certificate["source_receipt_cid"] == trade["cid"]
 
 
+def test_trade_completion_accepts_receipt_cid_present_but_not_latest(
+    tmp_path,
+):
+    ledger_path, trade, charity = build_trade_charity_ledger(tmp_path)
+    audit = audit_receipt_ledger(ledger_path)
+
+    certificate = build_completion_certificate(
+        action_kind=ACTION_TRADE,
+        target_status="SETTLED",
+        receipt_cid=trade["cid"],
+        ledger_audit=audit,
+    )
+
+    assert certificate["completion_status"] == "ACCOUNTED"
+    assert certificate["receipt_cid"] == trade["cid"]
+    assert certificate["ledger_latest_cid"] == charity["cid"]
+
+
 def test_rejects_missing_receipt_cid(tmp_path):
     ledger_path, trade = build_trade_ledger(tmp_path)
     audit = audit_receipt_ledger(ledger_path)
