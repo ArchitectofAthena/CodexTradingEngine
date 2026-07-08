@@ -35,8 +35,13 @@ def validate_ledger_audit(
     if ledger_audit.get("valid") is not True:
         raise CapitalActionGateError("cannot complete capital action with invalid ledger audit")
 
-    if ledger_audit.get("latest_cid") != receipt_cid:
-        raise CapitalActionGateError("receipt CID must match audited latest CID")
+    receipt_cids = ledger_audit.get("receipt_cids")
+
+    if not isinstance(receipt_cids, list):
+        raise CapitalActionGateError("ledger audit must include receipt CID membership list")
+
+    if receipt_cid not in receipt_cids:
+        raise CapitalActionGateError("receipt CID must be present in audited ledger")
 
     if ledger_audit.get("execution_authority") != "none":
         raise CapitalActionGateError("ledger audit execution authority must be none")

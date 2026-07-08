@@ -89,6 +89,17 @@ def audit_receipt_ledger(ledger_path: Path) -> dict[str, Any]:
 
         expected_previous_cid = cid
 
+    receipt_events = [
+        {
+            "sequence": event.get("sequence"),
+            "cid": event.get("cid"),
+            "receipt_type": event.get("receipt_type"),
+            "previous_cid": event.get("previous_cid"),
+        }
+        for event in events
+    ]
+    receipt_cids = [event["cid"] for event in receipt_events if event.get("cid")]
+
     return {
         "schema": AUDIT_SCHEMA,
         "version": AUDIT_VERSION,
@@ -96,6 +107,8 @@ def audit_receipt_ledger(ledger_path: Path) -> dict[str, Any]:
         "event_count": len(events),
         "valid": not errors,
         "errors": errors,
+        "receipt_cids": receipt_cids,
+        "receipt_events": receipt_events,
         "latest_cid": expected_previous_cid,
         "execution_authority": "none",
         "artifact_is_command": False,
