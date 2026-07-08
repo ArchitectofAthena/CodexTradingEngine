@@ -30,6 +30,8 @@ on:
       - 'tests/test_artifact_carrier_cli.py'
       - 'tests/test_membrane_tool.py'
       - 'tests/test_membrane_tool_usage_docs.py'
+      - 'tests/test_constitutional_membrane_checkpoint.py'
+      - 'docs/constitutional_membrane_checkpoint.md'
       - 'docs/membrane_tool_usage.md'
       - 'eve_q/membrane_tool.py'
       - 'README.md'
@@ -124,6 +126,7 @@ jobs:
           tests/test_artifact_carrier_cli.py \
           tests/test_membrane_tool.py \
           tests/test_membrane_tool_usage_docs.py \
+          tests/test_constitutional_membrane_checkpoint.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py
 
