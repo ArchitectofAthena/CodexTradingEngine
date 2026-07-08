@@ -6,6 +6,7 @@ not grant authority, execute commands, hold secrets, or move capital.
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 from collections.abc import Iterable, Mapping
@@ -260,3 +261,39 @@ def validate_artifact_carrier_manifest(
     errors.extend(_validate_encryption_block(manifest, contract))
 
     return sorted(set(errors))
+
+
+def load_json(path: Path | str) -> dict[str, Any]:
+    """Load a JSON object from disk."""
+    value = json.loads(Path(path).read_text())
+    if not isinstance(value, dict):
+        raise ValueError("expected JSON object")
+    return value
+
+
+def validate_artifact_carrier_manifest_file(
+    manifest_path: Path | str,
+) -> dict[str, Any]:
+    """Validate an artifact carrier manifest JSON file."""
+    manifest = load_json(manifest_path)
+    errors = validate_artifact_carrier_manifest(manifest)
+    return {"valid": errors == [], "errors": errors}
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the local artifact carrier manifest validator CLI."""
+    parser = argparse.ArgumentParser(description="Validate an artifact carrier manifest.")
+    parser.add_argument("--manifest", required=True)
+    args = parser.parse_args(argv)
+
+    try:
+        result = validate_artifact_carrier_manifest_file(args.manifest)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        result = {"valid": False, "errors": [f"failed to load input: {exc}"]}
+
+    print(json.dumps(result, sort_keys=True))
+    return 0 if result["valid"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
