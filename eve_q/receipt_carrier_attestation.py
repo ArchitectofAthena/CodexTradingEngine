@@ -6,6 +6,7 @@ execution authority. The attestation is a review artifact only.
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 from collections.abc import Mapping
@@ -143,3 +144,37 @@ def validate_receipt_carrier_attestation(
         errors.append("attestation must not open reverse execution channel")
 
     return sorted(set(errors))
+
+
+def validate_receipt_carrier_attestation_files(
+    carrier_path: Path | str,
+    attestation_path: Path | str,
+) -> dict[str, Any]:
+    """Validate carrier and attestation JSON files."""
+    carrier_manifest = load_json(carrier_path)
+    attestation = load_json(attestation_path)
+    errors = validate_receipt_carrier_attestation(attestation, carrier_manifest)
+    return {"valid": errors == [], "errors": errors}
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the local attestation validator CLI."""
+    parser = argparse.ArgumentParser(description="Validate a receipt carrier attestation.")
+    parser.add_argument("--carrier", required=True)
+    parser.add_argument("--attestation", required=True)
+    args = parser.parse_args(argv)
+
+    try:
+        result = validate_receipt_carrier_attestation_files(
+            carrier_path=args.carrier,
+            attestation_path=args.attestation,
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        result = {"valid": False, "errors": [f"failed to load input: {exc}"]}
+
+    print(json.dumps(result, sort_keys=True))
+    return 0 if result["valid"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
