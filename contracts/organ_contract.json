@@ -1,0 +1,56 @@
+{
+  "organ_id": "codex_trading_engine",
+  "organ_type": "market_facing_metabolic_organ",
+  "version": "0.1.0",
+  "default_mode": "simulation",
+  "constitutional_posture": {
+    "proposal_only": true,
+    "human_promotion_required": true,
+    "ttl_required_for_autonomy": true,
+    "no_reverse_execution_channel": true
+  },
+  "allowed_outputs": [
+    "artifact_receipt",
+    "risk_report",
+    "charity_allocation_proposal",
+    "simulation_summary",
+    "drift_audit",
+    "testnet_result"
+  ],
+  "forbidden_capabilities": [
+    "wallet_signing",
+    "autonomous_capital_movement",
+    "governance_mutation",
+    "webhook_triggered_execution",
+    "scheduler_triggered_execution",
+    "silent_remote_command_execution",
+    "self_promotion",
+    "receipt_mutation_after_emission"
+  ],
+  "allowed_modes": [
+    "simulation",
+    "historical_replay",
+    "testnet",
+    "shadow_live_market_data",
+    "human_gated_execution",
+    "ttl_bounded_autonomy"
+  ],
+  "promotion_path": [
+    "simulate",
+    "validate",
+    "emit_receipt",
+    "ingest_receipt",
+    "verify",
+    "human_review",
+    "human_promotion"
+  ],
+  "hard_invariants": [
+    "Codex proposes.",
+    "Artifacts record.",
+    "Verifiers gate.",
+    "Registry remembers.",
+    "Human promotes.",
+    "No single charity may become the whole definition of good.",
+    "Graceful degradation over chaotic stop."
+  ]
+}
