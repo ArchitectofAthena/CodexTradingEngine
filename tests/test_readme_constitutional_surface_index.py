@@ -14,6 +14,7 @@ def test_readme_names_current_constitutional_surfaces():
         "eve_q/receipt_carrier_attestation.py",
         "examples/receipt_carrier_attestation.example.json",
         "docs/receipt_carrier_attestation_example.md",
+        "eve_q/membrane_tool.py",
     ]
 
     for item in required:
@@ -28,7 +29,9 @@ def test_readme_preserves_non_execution_boundary():
         "no wallet signing",
         "no scheduler authority",
         "no reverse execution channel",
+        "no metadata writing",
         "Human promotes.",
+        "Image carries acorn.",
     ]
 
     for item in required:
