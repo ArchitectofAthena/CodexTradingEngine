@@ -1,8 +1,6 @@
 import json
 import subprocess
 import sys
-from pathlib import Path
-
 import pytest
 
 from eve_q.receipt_emitter import (
