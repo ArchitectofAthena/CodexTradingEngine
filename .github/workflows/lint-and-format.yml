@@ -8,6 +8,7 @@ on:
       - 'eve_q/alert_dispatcher.py'
       - 'eve_q/risk_management.py'
       - 'eve_q/organ_contract.py'
+      - 'eve_q/ttl_policy.py'
       - 'eve_q/allocation/**'
       - 'eve_q/telemetry/**'
       - 'contracts/**'
@@ -18,6 +19,7 @@ on:
       - 'tests/test_organ_contract_scaffold.py'
       - 'tests/test_organ_contract_enforcement.py'
       - 'tests/test_ttl_policy_scaffold.py'
+      - 'tests/test_ttl_policy_evaluator.py'
       - 'tests/test_charity_allocation_diversity_guard.py'
       - 'tests/test_need_impact_scoring.py'
       - 'requirements.txt'
@@ -32,6 +34,7 @@ on:
       - 'eve_q/alert_dispatcher.py'
       - 'eve_q/risk_management.py'
       - 'eve_q/organ_contract.py'
+      - 'eve_q/ttl_policy.py'
       - 'eve_q/allocation/**'
       - 'eve_q/telemetry/**'
       - 'contracts/**'
@@ -42,6 +45,7 @@ on:
       - 'tests/test_organ_contract_scaffold.py'
       - 'tests/test_organ_contract_enforcement.py'
       - 'tests/test_ttl_policy_scaffold.py'
+      - 'tests/test_ttl_policy_evaluator.py'
       - 'tests/test_charity_allocation_diversity_guard.py'
       - 'tests/test_need_impact_scoring.py'
       - 'requirements.txt'
@@ -75,6 +79,7 @@ jobs:
             eve_q/alert_dispatcher.py \
             eve_q/risk_management.py \
             eve_q/organ_contract.py \
+          eve_q/ttl_policy.py \
             eve_q/allocation/charity_router.py \
             eve_q/allocation/geodesic_policy.py \
             eve_q/telemetry/impact_score.py \
@@ -86,6 +91,7 @@ jobs:
             tests/test_organ_contract_scaffold.py \
             tests/test_organ_contract_enforcement.py \
             tests/test_ttl_policy_scaffold.py \
+          tests/test_ttl_policy_evaluator.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py
 
@@ -97,6 +103,7 @@ jobs:
             eve_q/alert_dispatcher.py \
             eve_q/risk_management.py \
             eve_q/organ_contract.py \
+          eve_q/ttl_policy.py \
             eve_q/allocation/charity_router.py \
             eve_q/allocation/geodesic_policy.py \
             eve_q/telemetry/impact_score.py \
@@ -108,5 +115,6 @@ jobs:
             tests/test_organ_contract_scaffold.py \
             tests/test_organ_contract_enforcement.py \
             tests/test_ttl_policy_scaffold.py \
+          tests/test_ttl_policy_evaluator.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py
