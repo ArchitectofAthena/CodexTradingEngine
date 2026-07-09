@@ -18,13 +18,14 @@ def utc_now_iso() -> str:
 @dataclass(frozen=True)
 class PricePoint:
     """A pricing data point.
-    
+
     Attributes:
         symbol: Asset symbol (e.g., 'ETH', 'BTC').
         usd: Price in USD.
         source: Source of price data (e.g., 'coingecko').
         timestamp: When this price was fetched.
     """
+
     symbol: str
     usd: float
     source: str = "unknown"
@@ -38,7 +39,7 @@ class PricePoint:
 @dataclass
 class Event:
     """A telemetry event.
-    
+
     Attributes:
         event_type: Type of event (e.g., 'arb_found', 'execution_error').
         title: Short title.
@@ -50,6 +51,7 @@ class Event:
         data: Additional structured data.
         dedupe_key: Key for deduplication.
     """
+
     event_type: str
     title: str
     summary: str
@@ -82,15 +84,48 @@ class Event:
         }
 
 
+@dataclass
+class SentimentEvent(Event):
+    """Telemetry event specialized for sentiment surfaces.
+
+    This preserves the package import surface expected by omega_telemetry
+    while keeping sentiment events compatible with the generic Event model.
+    """
+
+    sentiment: Optional[str] = None
+    score: Optional[float] = None
+
+    def to_record(self) -> Dict[str, Any]:
+        """Convert to database record with optional sentiment fields."""
+        record = super().to_record()
+        if self.sentiment is not None:
+            record["sentiment"] = self.sentiment
+        if self.score is not None:
+            record["score"] = self.score
+        return record
+
+
+@dataclass
+class ChainSignalEvent(Event):
+    """Telemetry event specialized for chain signal surfaces."""
+
+    def to_record(self) -> Dict[str, Any]:
+        """Convert to database record with a chain-signal marker."""
+        record = super().to_record()
+        record["chain_signal"] = True
+        return record
+
+
 @dataclass(frozen=True)
 class AlertResult:
     """Result of an alert dispatch attempt.
-    
+
     Attributes:
         channel: Alert channel (e.g., 'telegram', 'discord').
         delivered: Whether alert was successfully delivered.
         response: Response from the alert service.
     """
+
     channel: str
     delivered: bool
     response: str
