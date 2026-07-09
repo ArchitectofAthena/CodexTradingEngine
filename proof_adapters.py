@@ -10,7 +10,7 @@ import hashlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Protocol
+from typing import Any, Callable, Dict, Optional
 
 from eveq_failsafe_receipt import CycleReceipt, is_non_production_cid
 
@@ -18,7 +18,7 @@ from eveq_failsafe_receipt import CycleReceipt, is_non_production_cid
 @dataclass(frozen=True)
 class ProofResult:
     """Result of a proof publication attempt.
-    
+
     Attributes:
         success: Whether the proof was successfully created.
         proof_type: The type of proof (e.g., 'mock', 'local_file', 'ipfs').
@@ -28,6 +28,7 @@ class ProofResult:
         metadata: Additional metadata about the proof.
         error: Error message if proof creation failed.
     """
+
     success: bool
     proof_type: str
     cid: Optional[str] = None
@@ -39,7 +40,7 @@ class ProofResult:
 
 class ProofAdapter(ABC):
     """Abstract base class for proof adapters.
-    
+
     Proof adapters handle publishing and storing cycle receipts in various backends.
     """
 
@@ -48,10 +49,10 @@ class ProofAdapter(ABC):
     @abstractmethod
     def publish(self, receipt: CycleReceipt) -> ProofResult:
         """Publish a receipt and return the proof result.
-        
+
         Args:
             receipt: The cycle receipt to publish.
-            
+
         Returns:
             ProofResult containing the publication outcome and proof details.
         """
@@ -60,7 +61,7 @@ class ProofAdapter(ABC):
 
 class MockProofAdapter(ProofAdapter):
     """Mock proof adapter for development and testing.
-    
+
     Example:
         >>> adapter = MockProofAdapter()
         >>> receipt = CycleReceipt.shadow(cycle_id="test-1", ...)
@@ -72,10 +73,10 @@ class MockProofAdapter(ProofAdapter):
 
     def publish(self, receipt: CycleReceipt) -> ProofResult:
         """Generate a mock proof for development.
-        
+
         Args:
             receipt: The cycle receipt to mock-publish.
-            
+
         Returns:
             ProofResult with mock CID and development-only flag.
         """
@@ -91,7 +92,7 @@ class MockProofAdapter(ProofAdapter):
 
 class LocalFileProofAdapter(ProofAdapter):
     """Proof adapter that stores receipts as local JSON files.
-    
+
     Example:
         >>> adapter = LocalFileProofAdapter(output_dir="./receipts")
         >>> receipt = CycleReceipt.shadow(cycle_id="cycle-1", ...)
@@ -103,7 +104,7 @@ class LocalFileProofAdapter(ProofAdapter):
 
     def __init__(self, output_dir: Path | str = "receipts") -> None:
         """Initialize the local file adapter.
-        
+
         Args:
             output_dir: Directory to store receipt JSON files.
         """
@@ -111,10 +112,10 @@ class LocalFileProofAdapter(ProofAdapter):
 
     def publish(self, receipt: CycleReceipt) -> ProofResult:
         """Publish receipt to local filesystem.
-        
+
         Args:
             receipt: The cycle receipt to store.
-            
+
         Returns:
             ProofResult with local file path and SHA256 digest.
         """
@@ -144,7 +145,7 @@ class LocalFileProofAdapter(ProofAdapter):
 
 class IPFSProofAdapter(ProofAdapter):
     """Proof adapter that publishes receipts to IPFS.
-    
+
     Example:
         >>> def mock_publisher(json_str: str) -> str:
         ...     return "QmExample123..."
@@ -158,7 +159,7 @@ class IPFSProofAdapter(ProofAdapter):
 
     def __init__(self, publisher: Callable[[str], str]) -> None:
         """Initialize IPFS adapter with a publisher function.
-        
+
         Args:
             publisher: Async or sync callable that takes JSON string and returns CID.
         """
@@ -166,10 +167,10 @@ class IPFSProofAdapter(ProofAdapter):
 
     def publish(self, receipt: CycleReceipt) -> ProofResult:
         """Publish receipt to IPFS.
-        
+
         Args:
             receipt: The cycle receipt to publish.
-            
+
         Returns:
             ProofResult with IPFS CID and production eligibility flag.
         """
@@ -191,26 +192,48 @@ class IPFSProofAdapter(ProofAdapter):
         )
 
 
-def apply_proof_to_receipt(receipt: CycleReceipt, proof: ProofResult) -> CycleReceipt:
-    """Apply a proof result to a receipt.
-    
-    Args:
-        receipt: The cycle receipt to update.
-        proof: The proof result to apply.
-        
-    Returns:
-        The updated receipt (modified in-place and returned).
-        
-    Example:
-        >>> receipt = CycleReceipt.shadow(...)
-        >>> adapter = MockProofAdapter()
-        >>> proof = adapter.publish(receipt)
-        >>> updated = apply_proof_to_receipt(receipt, proof)
-        >>> assert updated.proof_type == "mock"
+def apply_proof_to_receipt(
+    receipt: CycleReceipt,
+    proof: ProofResult,
+) -> CycleReceipt:
+    """Apply a proof result to a cycle receipt.
+
+    The receipt keeps top-level proof metadata for audit compatibility:
+    cid, local_path, proof_type, and production_trust_eligible.
     """
+    metadata = dict(proof.metadata or {})
+
+    if proof.cid is not None:
+        metadata.setdefault("cid", proof.cid)
+
+    if proof.local_path is not None:
+        metadata.setdefault("local_path", proof.local_path)
+
+    metadata.setdefault("proof_type", proof.proof_type)
+    metadata.setdefault(
+        "production_trust_eligible",
+        proof.production_trust_eligible,
+    )
+
     receipt.ipfs_success = proof.success
     receipt.ipfs_cid = proof.cid
-    receipt.local_log_path = proof.local_path or receipt.local_log_path
     receipt.proof_type = proof.proof_type
-    receipt.proof_production_trust_eligible = proof.production_trust_eligible
+    receipt.proof_metadata = metadata
+    receipt.proof_error = proof.error
+
+    if proof.local_path is not None:
+        receipt.local_log_path = proof.local_path
+
+    receipt.proof_production_trust_eligible = (
+        proof.success
+        and proof.production_trust_eligible
+        and proof.cid is not None
+        and not is_non_production_cid(proof.cid)
+    )
+
+    if not receipt.proof_production_trust_eligible:
+        warning = f"{proof.proof_type} proof is not production trust eligible"
+        if warning not in receipt.warnings:
+            receipt.warnings.append(warning)
+
     return receipt
