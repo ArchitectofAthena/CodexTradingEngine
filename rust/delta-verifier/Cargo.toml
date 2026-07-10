@@ -1,0 +1,13 @@
+[package]
+name = "codex-delta-verifier"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Pure Rust exact verifier for simulation-only triangular arbitrage candidates"
+
+[lib]
+name = "codex_delta_verifier"
+path = "src/lib.rs"
+
+[lints.rust]
+unsafe_code = "forbid"
