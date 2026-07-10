@@ -2,7 +2,7 @@
 
 **Simulation-first crypto telemetry and safety research engine for Termux/Python.**
 
-CodexTradingEngine emits proposals, artifact receipts, risk reports, TTL evaluations, CID-backed carrier manifests, and charity allocation artifacts. It does **not** autonomously move capital.
+CodexTradingEngine emits proposals, artifact receipts, risk reports, TTL evaluations, CID-backed carrier manifests, charity allocation artifacts, and bounded arbitrage research candidates. It does **not** autonomously move capital.
 
 ## Safety Posture
 
@@ -54,6 +54,8 @@ CodexTradingEngine may produce:
 - testnet results
 - charity allocation proposals
 - CID-backed carrier manifests
+- QAOA-ready price-delta candidates
+- Rust verification reports
 
 These outputs are review artifacts. They are not commands.
 
@@ -82,9 +84,26 @@ The artifact never commands.
 
 Artifact carrier manifests can point to public, encrypted, or private payloads. Private or encrypted payloads require encryption metadata and human-held or external-vault key custody. Secrets, wallet seeds, private keys, API keys, shell commands, and execution fields are rejected.
 
+## Hybrid Arbitrage Research Lane
+
+```text
+Python constructs the market graph, QUBO, policy context, and receipts.
+Qiskit QAOA triangulates price-delta candidates.
+Rust performs exact route, fee, slippage, latency, and margin verification.
+Classical solvers remain available for fallback, benchmarking, and independent checks.
+```
+
+The initial implementation is intentionally simulation-only and uses an at-most-one triangular-cycle selection QUBO. Qiskit is optional; the deterministic QUBO and classical fallback remain usable without it.
+
+```text
+QAOA discovers the geometry of the opportunity.
+Rust confirms that the geometry still exists.
+Python controls what may happen with that knowledge.
+```
+
 ## Status
 
-This repository is an early-stage safety and telemetry research project.
+This repository is an early-stage safety, telemetry, and arbitrage-research project.
 
 It is not a live autonomous trading engine.
 It is not a wallet.
@@ -108,7 +127,10 @@ CodexTradingEngine is simulation-first and safety-gated. These surfaces define t
 | Receipt carrier attestation example | `examples/receipt_carrier_attestation.example.json` | Demonstrates safe receipt-to-carrier attestation. |
 | Receipt carrier attestation docs | `docs/receipt_carrier_attestation_example.md` | Documents attestation drift detection and non-execution boundaries. |
 | Membrane metadata extractor and attestation bridge | `eve_q/membrane_tool.py` | Extracts carrier manifests from PNG Comment metadata, validates carrier law, and can compare receipt attestations without execution authority. |
-
+| QAOA delta triangulation core | `eve_q/qaoa_delta.py` | Enumerates triangular price deltas, builds QUBO/Ising contracts, and provides a classical fallback with `authority: false`. |
+| Rust exact delta verifier | `rust/delta-verifier/` | Reprices a closed triangular route after fee, slippage, latency, gas, and margin assumptions without network access. |
+| Hybrid delta architecture | `docs/QAOA_DELTA_TRIANGULATION_v0_1.md` | Defines Python, Qiskit, Rust, fallback, and authority boundaries. |
+| Hybrid delta CI | `.github/workflows/hybrid-delta-ci.yml` | Validates Python 3.11/3.13, Qiskit 2.5 ansatz construction, and stable Rust. |
 
 Membrane bridge:
 
@@ -117,6 +139,11 @@ Membrane bridge:
 Chain:
 
 `image metadata -> carrier manifest -> receipt attestation -> validation result`
+
+Hybrid delta chain:
+
+`market snapshot -> triangular cycles -> QUBO -> QAOA candidate -> Rust verification -> policy review -> simulation receipt`
+
 Current law:
 
 ```text
@@ -141,5 +168,7 @@ Safety boundary:
 - no IPFS daemon dependency for validation
 - no image metadata dependency for validation
 - no metadata writing
+- no flash-loan execution
+- no remote quantum execution by default
 
 <!-- constitutional-surfaces-index:end -->
