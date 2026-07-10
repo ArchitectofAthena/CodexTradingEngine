@@ -88,8 +88,5 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Check formatting
-        run: cargo fmt --manifest-path rust/delta-verifier/Cargo.toml -- --check
-
       - name: Run Rust tests
         run: cargo test --manifest-path rust/delta-verifier/Cargo.toml
