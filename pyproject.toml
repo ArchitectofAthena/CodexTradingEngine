@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "CodexTradingEngine"
 version = "2.0.0"
-description = "Autonomous crypto trade engine for Termux and Python3, featuring bot swarm detection, arbitrage sniper scripts, Codex scroll invocation, and real-time data overlay."
+description = "Simulation-first crypto telemetry, arbitrage research, receipt, and safety engine for Termux and Python."
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "ArchitectofAthena"}]
@@ -28,6 +28,9 @@ test = [
     "pytest==9.1.1",
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=4.1.0",
+]
+quantum = [
+    "qiskit==2.5.0",
 ]
 security = [
     "bandit>=1.7.5",
