@@ -160,10 +160,23 @@ jobs:
               MarketEdge("btc-usd", "BTC", "USD", 41_000.0),
           )
           route = enumerate_triangular_cycles(edges)[0]
+          borrowed_asset = route.asset_path[0]
           candidates = enumerate_flash_liquidity_candidates(
               (route,),
-              (FlashLiquidityProvider("flash-provider:test", 9.0, {"USD": 5_000.0}),),
-              (FlashAmountBucket("flash-bucket:usd-1000", "USD", 1_000.0),),
+              (
+                  FlashLiquidityProvider(
+                      "flash-provider:test",
+                      9.0,
+                      {borrowed_asset: 5_000.0},
+                  ),
+              ),
+              (
+                  FlashAmountBucket(
+                      f"flash-bucket:{borrowed_asset.lower()}-1000",
+                      borrowed_asset,
+                      1_000.0,
+                  ),
+              ),
           )
           flash_model = build_flash_liquidity_qubo(candidates)
           flash_cycles = tuple(candidate.as_qaoa_cycle() for candidate in candidates)
