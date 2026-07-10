@@ -7,15 +7,19 @@ on:
       - "eve_q/qaoa_delta.py"
       - "eve_q/qaoa_sampling.py"
       - "eve_q/rust_repricing.py"
+      - "eve_q/delta_robustness.py"
       - "tests/test_qaoa_delta.py"
       - "tests/test_qaoa_sampling.py"
       - "tests/test_rust_repricing.py"
+      - "tests/test_delta_robustness.py"
       - "rust/delta-verifier/**"
       - "schemas/delta_repricing_request.schema.json"
       - "schemas/delta_repricing_response.schema.json"
+      - "schemas/delta_robustness_receipt.schema.json"
       - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
       - "docs/QAOA_DELTA_PHASE_2A.md"
       - "docs/QAOA_DELTA_PHASE_2B.md"
+      - "docs/QAOA_DELTA_PHASE_2C1.md"
       - "pyproject.toml"
       - ".github/workflows/hybrid-delta-ci.yml"
   push:
@@ -26,15 +30,19 @@ on:
       - "eve_q/qaoa_delta.py"
       - "eve_q/qaoa_sampling.py"
       - "eve_q/rust_repricing.py"
+      - "eve_q/delta_robustness.py"
       - "tests/test_qaoa_delta.py"
       - "tests/test_qaoa_sampling.py"
       - "tests/test_rust_repricing.py"
+      - "tests/test_delta_robustness.py"
       - "rust/delta-verifier/**"
       - "schemas/delta_repricing_request.schema.json"
       - "schemas/delta_repricing_response.schema.json"
+      - "schemas/delta_robustness_receipt.schema.json"
       - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
       - "docs/QAOA_DELTA_PHASE_2A.md"
       - "docs/QAOA_DELTA_PHASE_2B.md"
+      - "docs/QAOA_DELTA_PHASE_2C1.md"
       - "pyproject.toml"
       - ".github/workflows/hybrid-delta-ci.yml"
 
@@ -65,7 +73,11 @@ jobs:
           python -m compileall -q \
             eve_q/qaoa_delta.py \
             eve_q/qaoa_sampling.py \
-            eve_q/rust_repricing.py
+            eve_q/rust_repricing.py \
+            eve_q/delta_robustness.py
+
+      - name: Validate robustness schema syntax
+        run: python -m json.tool schemas/delta_robustness_receipt.schema.json >/dev/null
 
       - name: Run hybrid delta tests
         run: |
@@ -73,6 +85,7 @@ jobs:
             tests/test_qaoa_delta.py \
             tests/test_qaoa_sampling.py \
             tests/test_rust_repricing.py \
+            tests/test_delta_robustness.py \
             --no-cov -q
 
   qiskit-adapter:
@@ -132,7 +145,7 @@ jobs:
         run: cargo test --manifest-path rust/delta-verifier/Cargo.toml
 
   bridge-integration:
-    name: Python to Rust repricing bridge
+    name: Python to Rust repricing and robustness bridge
     runs-on: ubuntu-latest
 
     steps:
@@ -150,7 +163,11 @@ jobs:
       - name: Build isolated Rust verifier
         run: cargo build --manifest-path rust/delta-verifier/Cargo.toml
 
-      - name: Exercise bounded subprocess contract
+      - name: Exercise bounded subprocess and robustness contracts
         env:
           CODEX_DELTA_VERIFIER_BIN: ${{ github.workspace }}/rust/delta-verifier/target/debug/codex-delta-verifier
-        run: python -m pytest tests/test_rust_repricing.py --no-cov -q
+        run: |
+          python -m pytest \
+            tests/test_rust_repricing.py \
+            tests/test_delta_robustness.py \
+            --no-cov -q

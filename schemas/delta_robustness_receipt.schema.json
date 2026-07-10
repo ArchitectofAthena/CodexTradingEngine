@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiralbloom.local/schemas/delta_robustness_receipt.schema.json",
+  "title": "Delta Robustness Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "baseline_snapshot_sha256",
+    "model_sha256",
+    "confidence_receipt_id",
+    "candidate_id",
+    "scenario_set_sha256",
+    "scenario_count",
+    "survival_count",
+    "survival_rate",
+    "worst_case_log_delta",
+    "median_log_delta",
+    "margin_failure_reasons",
+    "robustness_class",
+    "results",
+    "authority"
+  ],
+  "properties": {
+    "schema_version": {"const": "delta-robustness-receipt-v0.1"},
+    "receipt_id": {"type": "string", "pattern": "^delta-robustness:[0-9a-f]{24}$"},
+    "baseline_snapshot_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "model_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "confidence_receipt_id": {"type": "string", "pattern": "^qaoa-confidence:"},
+    "candidate_id": {"type": "string", "pattern": "^triangle:"},
+    "scenario_set_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "scenario_count": {"type": "integer", "minimum": 1, "maximum": 256},
+    "survival_count": {"type": "integer", "minimum": 0},
+    "survival_rate": {"type": "number", "minimum": 0, "maximum": 1},
+    "worst_case_log_delta": {"type": "number"},
+    "median_log_delta": {"type": "number"},
+    "margin_failure_reasons": {
+      "type": "object",
+      "additionalProperties": {"type": "integer", "minimum": 1}
+    },
+    "robustness_class": {
+      "enum": ["robust", "resilient", "conditional", "fragile", "failed"]
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/result"}
+    },
+    "authority": {"const": false}
+  },
+  "$defs": {
+    "triple": {
+      "type": "array",
+      "prefixItems": [{"type": "number"}, {"type": "number"}, {"type": "number"}],
+      "items": false
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario_id",
+        "rate_shift_bps",
+        "fee_shift_bps",
+        "slippage_shift_bps",
+        "latency_shift_bps",
+        "gas_penalty_log_shift",
+        "authority"
+      ],
+      "properties": {
+        "scenario_id": {"type": "string", "pattern": "^delta-scenario:"},
+        "rate_shift_bps": {"$ref": "#/$defs/triple"},
+        "fee_shift_bps": {"$ref": "#/$defs/triple"},
+        "slippage_shift_bps": {"$ref": "#/$defs/triple"},
+        "latency_shift_bps": {"$ref": "#/$defs/triple"},
+        "gas_penalty_log_shift": {"type": "number", "minimum": 0},
+        "authority": {"const": false}
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario",
+        "scenario_snapshot_sha256",
+        "request_id",
+        "net_log_delta",
+        "minimum_log_delta",
+        "profitable",
+        "passes_margin",
+        "delta_drift",
+        "failure_reasons",
+        "authority"
+      ],
+      "properties": {
+        "scenario": {"$ref": "#/$defs/scenario"},
+        "scenario_snapshot_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "request_id": {"type": "string", "pattern": "^delta-reprice:"},
+        "net_log_delta": {"type": "number"},
+        "minimum_log_delta": {"type": "number"},
+        "profitable": {"type": "boolean"},
+        "passes_margin": {"type": "boolean"},
+        "delta_drift": {"type": "number"},
+        "failure_reasons": {
+          "type": "array",
+          "items": {"enum": ["not_profitable", "below_minimum_margin"]},
+          "uniqueItems": true
+        },
+        "authority": {"const": false}
+      }
+    }
+  }
+}
