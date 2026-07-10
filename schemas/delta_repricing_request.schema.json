@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiralbloom.local/schemas/delta_repricing_request.schema.json",
+  "title": "Delta Repricing Request v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "snapshot_sha256",
+    "model_sha256",
+    "confidence_receipt_id",
+    "candidate_id",
+    "edges",
+    "gas_penalty_log",
+    "minimum_log_delta",
+    "authority"
+  ],
+  "properties": {
+    "schema_version": {"const": "delta-repricing-request-v0.1"},
+    "request_id": {"type": "string", "pattern": "^delta-reprice:[0-9a-f]{24}$"},
+    "snapshot_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "model_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "confidence_receipt_id": {"type": "string", "pattern": "^qaoa-confidence:"},
+    "candidate_id": {"type": "string", "pattern": "^triangle:[0-9a-f]{20}$"},
+    "edges": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "edge_id",
+          "source_asset",
+          "target_asset",
+          "quoted_rate",
+          "fee_bps",
+          "slippage_bps",
+          "latency_penalty_bps"
+        ],
+        "properties": {
+          "edge_id": {"type": "string", "minLength": 1},
+          "source_asset": {"type": "string", "minLength": 1},
+          "target_asset": {"type": "string", "minLength": 1},
+          "quoted_rate": {"type": "number", "exclusiveMinimum": 0},
+          "fee_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+          "slippage_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+          "latency_penalty_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000}
+        }
+      }
+    },
+    "gas_penalty_log": {"type": "number", "minimum": 0},
+    "minimum_log_delta": {"type": "number"},
+    "authority": {"const": false}
+  }
+}
