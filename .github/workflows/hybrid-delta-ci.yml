@@ -4,9 +4,12 @@ on:
   pull_request:
     paths:
       - "eve_q/qaoa_delta.py"
+      - "eve_q/qaoa_sampling.py"
       - "tests/test_qaoa_delta.py"
+      - "tests/test_qaoa_sampling.py"
       - "rust/delta-verifier/**"
       - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
+      - "docs/QAOA_DELTA_PHASE_2A.md"
       - "pyproject.toml"
       - ".github/workflows/hybrid-delta-ci.yml"
   push:
@@ -14,9 +17,12 @@ on:
       - main
     paths:
       - "eve_q/qaoa_delta.py"
+      - "eve_q/qaoa_sampling.py"
       - "tests/test_qaoa_delta.py"
+      - "tests/test_qaoa_sampling.py"
       - "rust/delta-verifier/**"
       - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
+      - "docs/QAOA_DELTA_PHASE_2A.md"
       - "pyproject.toml"
       - ".github/workflows/hybrid-delta-ci.yml"
 
@@ -42,11 +48,15 @@ jobs:
       - name: Install core and tests
         run: python -m pip install -e '.[test]'
 
-      - name: Compile triangulation core
-        run: python -m compileall -q eve_q/qaoa_delta.py
+      - name: Compile hybrid delta core
+        run: python -m compileall -q eve_q/qaoa_delta.py eve_q/qaoa_sampling.py
 
-      - name: Run triangulation tests
-        run: python -m pytest tests/test_qaoa_delta.py --no-cov -q
+      - name: Run hybrid delta tests
+        run: |
+          python -m pytest \
+            tests/test_qaoa_delta.py \
+            tests/test_qaoa_sampling.py \
+            --no-cov -q
 
   qiskit-adapter:
     name: Qiskit 2.5 adapter
@@ -62,21 +72,34 @@ jobs:
       - name: Install quantum lane
         run: python -m pip install -e '.[test,quantum]'
 
-      - name: Construct QAOA ansatz locally
+      - name: Construct and sample QAOA locally
         run: |
           python - <<'PY'
-          from eve_q.qaoa_delta import QuboModel, build_qiskit_qaoa_ansatz
+          import math
 
-          model = QuboModel(
-              variable_order=("triangle:test",),
-              linear={"triangle:test": -0.02},
-              quadratic={},
+          from eve_q.qaoa_delta import TriangularCycle, build_cycle_selection_qubo
+          from eve_q.qaoa_sampling import optimize_qaoa_statevector
+
+          cycle = TriangularCycle(
+              candidate_id="triangle:test",
+              edge_ids=("test:a", "test:b", "test:c"),
+              asset_path=("USD", "ETH", "BTC", "USD"),
+              net_multiplier=math.exp(0.02),
+              net_log_delta=0.02,
           )
-          ansatz, offset = build_qiskit_qaoa_ansatz(model, reps=1)
-          assert ansatz.num_qubits == 1
-          assert ansatz.num_parameters == 2
-          assert isinstance(offset, float)
-          print("QAOA ansatz constructed without remote execution.")
+          model = build_cycle_selection_qubo((cycle,))
+          receipt = optimize_qaoa_statevector(
+              model,
+              (cycle,),
+              reps=1,
+              parameter_grid=(0.0, math.pi / 2.0),
+              max_evaluations=8,
+          )
+          assert receipt.model_sha256
+          assert receipt.best_sample.selected_candidate_ids in ((), ("triangle:test",))
+          assert receipt.classical_selection.selected_candidate_ids == ("triangle:test",)
+          assert receipt.authority is False
+          print("QAOA candidate receipt constructed without remote execution.")
           PY
 
   rust-verifier:
