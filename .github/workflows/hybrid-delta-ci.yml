@@ -3,6 +3,7 @@ name: Hybrid Delta CI
 on:
   pull_request:
     paths:
+      - "README.md"
       - "eve_q/qaoa_delta.py"
       - "eve_q/qaoa_sampling.py"
       - "eve_q/rust_repricing.py"
@@ -10,6 +11,8 @@ on:
       - "tests/test_qaoa_sampling.py"
       - "tests/test_rust_repricing.py"
       - "rust/delta-verifier/**"
+      - "schemas/delta_repricing_request.schema.json"
+      - "schemas/delta_repricing_response.schema.json"
       - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
       - "docs/QAOA_DELTA_PHASE_2A.md"
       - "docs/QAOA_DELTA_PHASE_2B.md"
@@ -19,6 +22,7 @@ on:
     branches:
       - main
     paths:
+      - "README.md"
       - "eve_q/qaoa_delta.py"
       - "eve_q/qaoa_sampling.py"
       - "eve_q/rust_repricing.py"
@@ -26,6 +30,8 @@ on:
       - "tests/test_qaoa_sampling.py"
       - "tests/test_rust_repricing.py"
       - "rust/delta-verifier/**"
+      - "schemas/delta_repricing_request.schema.json"
+      - "schemas/delta_repricing_response.schema.json"
       - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
       - "docs/QAOA_DELTA_PHASE_2A.md"
       - "docs/QAOA_DELTA_PHASE_2B.md"
