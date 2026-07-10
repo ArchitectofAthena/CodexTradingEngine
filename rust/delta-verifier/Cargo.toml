@@ -13,6 +13,10 @@ path = "src/lib.rs"
 name = "codex-delta-verifier"
 path = "src/main.rs"
 
+[[bin]]
+name = "codex-flash-liquidity-verifier"
+path = "src/bin/codex-flash-liquidity-verifier.rs"
+
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
