@@ -3,26 +3,38 @@ name: Hybrid Delta CI
 on:
   pull_request:
     paths:
+      - "README.md"
       - "eve_q/qaoa_delta.py"
       - "eve_q/qaoa_sampling.py"
+      - "eve_q/rust_repricing.py"
       - "tests/test_qaoa_delta.py"
       - "tests/test_qaoa_sampling.py"
+      - "tests/test_rust_repricing.py"
       - "rust/delta-verifier/**"
+      - "schemas/delta_repricing_request.schema.json"
+      - "schemas/delta_repricing_response.schema.json"
       - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
       - "docs/QAOA_DELTA_PHASE_2A.md"
+      - "docs/QAOA_DELTA_PHASE_2B.md"
       - "pyproject.toml"
       - ".github/workflows/hybrid-delta-ci.yml"
   push:
     branches:
       - main
     paths:
+      - "README.md"
       - "eve_q/qaoa_delta.py"
       - "eve_q/qaoa_sampling.py"
+      - "eve_q/rust_repricing.py"
       - "tests/test_qaoa_delta.py"
       - "tests/test_qaoa_sampling.py"
+      - "tests/test_rust_repricing.py"
       - "rust/delta-verifier/**"
+      - "schemas/delta_repricing_request.schema.json"
+      - "schemas/delta_repricing_response.schema.json"
       - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
       - "docs/QAOA_DELTA_PHASE_2A.md"
+      - "docs/QAOA_DELTA_PHASE_2B.md"
       - "pyproject.toml"
       - ".github/workflows/hybrid-delta-ci.yml"
 
@@ -49,13 +61,18 @@ jobs:
         run: python -m pip install -e '.[test]'
 
       - name: Compile hybrid delta core
-        run: python -m compileall -q eve_q/qaoa_delta.py eve_q/qaoa_sampling.py
+        run: |
+          python -m compileall -q \
+            eve_q/qaoa_delta.py \
+            eve_q/qaoa_sampling.py \
+            eve_q/rust_repricing.py
 
       - name: Run hybrid delta tests
         run: |
           python -m pytest \
             tests/test_qaoa_delta.py \
             tests/test_qaoa_sampling.py \
+            tests/test_rust_repricing.py \
             --no-cov -q
 
   qiskit-adapter:
@@ -113,3 +130,27 @@ jobs:
 
       - name: Run Rust tests
         run: cargo test --manifest-path rust/delta-verifier/Cargo.toml
+
+  bridge-integration:
+    name: Python to Rust repricing bridge
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python test lane
+        run: python -m pip install -e '.[test]'
+
+      - name: Build isolated Rust verifier
+        run: cargo build --manifest-path rust/delta-verifier/Cargo.toml
+
+      - name: Exercise bounded subprocess contract
+        env:
+          CODEX_DELTA_VERIFIER_BIN: ${{ github.workspace }}/rust/delta-verifier/target/debug/codex-delta-verifier
+        run: python -m pytest tests/test_rust_repricing.py --no-cov -q

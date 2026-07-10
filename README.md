@@ -55,7 +55,8 @@ CodexTradingEngine may produce:
 - charity allocation proposals
 - CID-backed carrier manifests
 - QAOA-ready price-delta candidates
-- Rust verification reports
+- QAOA confidence receipts
+- Rust exact-repricing evidence
 
 These outputs are review artifacts. They are not commands.
 
@@ -88,17 +89,20 @@ Artifact carrier manifests can point to public, encrypted, or private payloads. 
 
 ```text
 Python constructs the market graph, QUBO, policy context, and receipts.
-Qiskit QAOA triangulates price-delta candidates.
-Rust performs exact route, fee, slippage, latency, and margin verification.
+Qiskit QAOA triangulates and samples price-delta candidates.
+Rust performs exact route, fee, slippage, latency, gas, and margin verification.
 Classical solvers remain available for fallback, benchmarking, and independent checks.
 ```
 
-The initial implementation is intentionally simulation-only and uses an at-most-one triangular-cycle selection QUBO. Qiskit is optional; the deterministic QUBO and classical fallback remain usable without it.
+The implementation is intentionally simulation-only. Qiskit performs bounded local sampling and emits confidence evidence. Python binds that evidence to a strict request and invokes an explicit local Rust verifier with `shell=False`. Rust independently reconstructs candidate identity, reprices the route, and returns `authority: false` evidence.
+
+The complete Python → Rust subprocess path is exercised in CI against a real compiled verifier binary, including candidate-identity rejection and authority-boundary checks.
 
 ```text
 QAOA discovers the geometry of the opportunity.
 Rust confirms that the geometry still exists.
 Python controls what may happen with that knowledge.
+Human review remains the promotion gate.
 ```
 
 ## Status
@@ -128,9 +132,15 @@ CodexTradingEngine is simulation-first and safety-gated. These surfaces define t
 | Receipt carrier attestation docs | `docs/receipt_carrier_attestation_example.md` | Documents attestation drift detection and non-execution boundaries. |
 | Membrane metadata extractor and attestation bridge | `eve_q/membrane_tool.py` | Extracts carrier manifests from PNG Comment metadata, validates carrier law, and can compare receipt attestations without execution authority. |
 | QAOA delta triangulation core | `eve_q/qaoa_delta.py` | Enumerates triangular price deltas, builds QUBO/Ising contracts, and provides a classical fallback with `authority: false`. |
+| QAOA sampling and confidence receipts | `eve_q/qaoa_sampling.py` | Performs bounded local sampling, deterministic decoding, and exact-baseline comparison. |
+| Python-to-Rust repricing bridge | `eve_q/rust_repricing.py` | Binds candidate evidence to a strict subprocess request and fails closed on protocol drift. |
 | Rust exact delta verifier | `rust/delta-verifier/` | Reprices a closed triangular route after fee, slippage, latency, gas, and margin assumptions without network access. |
+| Repricing request schema | `schemas/delta_repricing_request.schema.json` | Defines the strict hash-bound candidate request surface. |
+| Repricing response schema | `schemas/delta_repricing_response.schema.json` | Defines the strict exact-verification response surface. |
 | Hybrid delta architecture | `docs/QAOA_DELTA_TRIANGULATION_v0_1.md` | Defines Python, Qiskit, Rust, fallback, and authority boundaries. |
-| Hybrid delta CI | `.github/workflows/hybrid-delta-ci.yml` | Validates Python 3.11/3.13, Qiskit 2.5 ansatz construction, and stable Rust. |
+| Phase 2A architecture | `docs/QAOA_DELTA_PHASE_2A.md` | Defines bounded QAOA sampling and confidence receipts. |
+| Phase 2B architecture | `docs/QAOA_DELTA_PHASE_2B.md` | Defines the isolated Python-to-Rust exact-repricing contract. |
+| Hybrid delta CI | `.github/workflows/hybrid-delta-ci.yml` | Validates Python 3.11/3.13, Qiskit 2.5, stable Rust, and the real subprocess bridge. |
 
 Membrane bridge:
 
@@ -142,7 +152,7 @@ Chain:
 
 Hybrid delta chain:
 
-`market snapshot -> triangular cycles -> QUBO -> QAOA candidate -> Rust verification -> policy review -> simulation receipt`
+`market snapshot -> triangular cycles -> QUBO -> QAOA confidence receipt -> Rust exact repricing -> policy review -> simulation receipt`
 
 Current law:
 
