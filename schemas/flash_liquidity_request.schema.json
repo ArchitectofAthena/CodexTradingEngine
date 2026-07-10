@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://architectofathena.github.io/CodexTradingEngine/schemas/flash_liquidity_request.schema.json",
+  "title": "Flash Liquidity Verification Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "snapshot_sha256",
+    "model_sha256",
+    "confidence_receipt_id",
+    "flash_candidate_id",
+    "route_candidate_id",
+    "edges",
+    "gas_penalty_log",
+    "provider_id",
+    "borrowed_asset",
+    "amount_bucket_id",
+    "principal_amount",
+    "provider_fee_bps",
+    "available_capacity",
+    "minimum_net_profit",
+    "authority"
+  ],
+  "properties": {
+    "schema_version": {"const": "flash-liquidity-request-v0.1"},
+    "request_id": {"type": "string", "pattern": "^flash-verify:"},
+    "snapshot_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "model_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "confidence_receipt_id": {"type": "string", "pattern": "^qaoa-confidence:"},
+    "flash_candidate_id": {"type": "string", "pattern": "^flash-geometry:"},
+    "route_candidate_id": {"type": "string", "pattern": "^triangle:"},
+    "edges": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "edge_id",
+          "source_asset",
+          "target_asset",
+          "quoted_rate",
+          "fee_bps",
+          "slippage_bps",
+          "latency_penalty_bps"
+        ],
+        "properties": {
+          "edge_id": {"type": "string", "minLength": 1},
+          "source_asset": {"type": "string", "minLength": 1},
+          "target_asset": {"type": "string", "minLength": 1},
+          "quoted_rate": {"type": "number", "exclusiveMinimum": 0},
+          "fee_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+          "slippage_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+          "latency_penalty_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000}
+        }
+      }
+    },
+    "gas_penalty_log": {"type": "number", "minimum": 0},
+    "provider_id": {"type": "string", "pattern": "^flash-provider:"},
+    "borrowed_asset": {"type": "string", "minLength": 1},
+    "amount_bucket_id": {"type": "string", "pattern": "^flash-bucket:"},
+    "principal_amount": {"type": "number", "exclusiveMinimum": 0},
+    "provider_fee_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+    "available_capacity": {"type": "number", "exclusiveMinimum": 0},
+    "minimum_net_profit": {"type": "number", "minimum": 0},
+    "authority": {"const": false}
+  }
+}

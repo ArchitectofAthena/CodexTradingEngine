@@ -1,0 +1,22 @@
+{
+  "schema_version": "flash-liquidity-response-v0.1",
+  "request_id": "flash-verify:teaching-example",
+  "snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "model_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "confidence_receipt_id": "qaoa-confidence:teaching-example",
+  "flash_candidate_id": "flash-geometry:teaching-example",
+  "route_candidate_id": "triangle:teaching-example",
+  "verifier": "codex-flash-liquidity-verifier/0.1.0",
+  "status": "verified",
+  "verification": {
+    "route_net_log_delta": 0.024692612590371414,
+    "route_output_amount": 1025.0,
+    "repayment_amount": 1000.9,
+    "net_profit": 24.1,
+    "capacity_ok": true,
+    "borrowed_asset_matches_route": true,
+    "repayment_feasible": true,
+    "authority": false
+  },
+  "authority": false
+}

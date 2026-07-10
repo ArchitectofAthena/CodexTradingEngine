@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://architectofathena.github.io/CodexTradingEngine/schemas/flash_liquidity_response.schema.json",
+  "title": "Flash Liquidity Verification Response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "snapshot_sha256",
+    "model_sha256",
+    "confidence_receipt_id",
+    "flash_candidate_id",
+    "route_candidate_id",
+    "verifier",
+    "status",
+    "verification",
+    "authority"
+  ],
+  "properties": {
+    "schema_version": {"const": "flash-liquidity-response-v0.1"},
+    "request_id": {"type": "string", "pattern": "^flash-verify:"},
+    "snapshot_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "model_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "confidence_receipt_id": {"type": "string", "pattern": "^qaoa-confidence:"},
+    "flash_candidate_id": {"type": "string", "pattern": "^flash-geometry:"},
+    "route_candidate_id": {"type": "string", "pattern": "^triangle:"},
+    "verifier": {"type": "string", "pattern": "^codex-flash-liquidity-verifier/"},
+    "status": {"const": "verified"},
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route_net_log_delta",
+        "route_output_amount",
+        "repayment_amount",
+        "net_profit",
+        "capacity_ok",
+        "borrowed_asset_matches_route",
+        "repayment_feasible",
+        "authority"
+      ],
+      "properties": {
+        "route_net_log_delta": {"type": "number"},
+        "route_output_amount": {"type": "number", "minimum": 0},
+        "repayment_amount": {"type": "number", "minimum": 0},
+        "net_profit": {"type": "number"},
+        "capacity_ok": {"type": "boolean"},
+        "borrowed_asset_matches_route": {"type": "boolean"},
+        "repayment_feasible": {"type": "boolean"},
+        "authority": {"const": false}
+      }
+    },
+    "authority": {"const": false}
+  }
+}
