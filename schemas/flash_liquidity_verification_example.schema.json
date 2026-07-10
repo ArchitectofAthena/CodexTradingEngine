@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://architectofathena.github.io/CodexTradingEngine/schemas/flash_liquidity_verification_example.schema.json",
+  "title": "Flash Liquidity Verification Example",
+  "allOf": [
+    {"$ref": "./flash_liquidity_response.schema.json"}
+  ]
+}
