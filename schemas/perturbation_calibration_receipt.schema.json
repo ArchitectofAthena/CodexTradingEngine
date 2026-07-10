@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://architectofathena.github.io/CodexTradingEngine/schemas/perturbation_calibration_receipt.schema.json",
+  "title": "Perturbation Calibration Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "baseline_snapshot_sha256",
+    "candidate_id",
+    "dataset_sha256",
+    "policy_sha256",
+    "scenario_set_sha256",
+    "observation_count",
+    "observation_ids",
+    "policy",
+    "scenarios",
+    "clipped_counts",
+    "authority"
+  ],
+  "properties": {
+    "schema_version": {"const": "perturbation-calibration-receipt-v0.1"},
+    "receipt_id": {"type": "string", "pattern": "^perturbation-calibration:[0-9a-f]{24}$"},
+    "baseline_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "candidate_id": {"type": "string", "pattern": "^triangle:[0-9a-f]{20}$"},
+    "dataset_sha256": {"$ref": "#/$defs/sha256"},
+    "policy_sha256": {"$ref": "#/$defs/sha256"},
+    "scenario_set_sha256": {"$ref": "#/$defs/sha256"},
+    "observation_count": {"type": "integer", "minimum": 1, "maximum": 4096},
+    "observation_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^market-observation:"}
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quantiles",
+        "minimum_observations",
+        "maximum_observations",
+        "max_abs_rate_shift_bps",
+        "max_cost_shift_bps",
+        "max_gas_shift_log",
+        "authority"
+      ],
+      "properties": {
+        "quantiles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
+        },
+        "minimum_observations": {"type": "integer", "minimum": 1},
+        "maximum_observations": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "max_abs_rate_shift_bps": {"type": "number", "exclusiveMinimum": 0, "maximum": 5000},
+        "max_cost_shift_bps": {"type": "number", "exclusiveMinimum": 0, "maximum": 5000},
+        "max_gas_shift_log": {"type": "number", "exclusiveMinimum": 0},
+        "authority": {"const": false}
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"$ref": "#/$defs/scenario"}
+    },
+    "clipped_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rate_shift_bps",
+        "fee_shift_bps",
+        "slippage_shift_bps",
+        "latency_shift_bps",
+        "gas_penalty_log_shift"
+      ],
+      "properties": {
+        "rate_shift_bps": {"type": "integer", "minimum": 0},
+        "fee_shift_bps": {"type": "integer", "minimum": 0},
+        "slippage_shift_bps": {"type": "integer", "minimum": 0},
+        "latency_shift_bps": {"type": "integer", "minimum": 0},
+        "gas_penalty_log_shift": {"type": "integer", "minimum": 0}
+      }
+    },
+    "authority": {"const": false}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "vector3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"type": "number"}
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario_id",
+        "rate_shift_bps",
+        "fee_shift_bps",
+        "slippage_shift_bps",
+        "latency_shift_bps",
+        "gas_penalty_log_shift",
+        "authority"
+      ],
+      "properties": {
+        "scenario_id": {"type": "string", "pattern": "^delta-scenario:calibrated-"},
+        "rate_shift_bps": {"$ref": "#/$defs/vector3"},
+        "fee_shift_bps": {"$ref": "#/$defs/vector3"},
+        "slippage_shift_bps": {"$ref": "#/$defs/vector3"},
+        "latency_shift_bps": {"$ref": "#/$defs/vector3"},
+        "gas_penalty_log_shift": {"type": "number", "minimum": 0},
+        "authority": {"const": false}
+      }
+    }
+  }
+}
