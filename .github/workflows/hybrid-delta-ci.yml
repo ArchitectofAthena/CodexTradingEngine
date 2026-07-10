@@ -1,0 +1,95 @@
+name: Hybrid Delta CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/qaoa_delta.py"
+      - "tests/test_qaoa_delta.py"
+      - "rust/delta-verifier/**"
+      - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
+      - "pyproject.toml"
+      - ".github/workflows/hybrid-delta-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "eve_q/qaoa_delta.py"
+      - "tests/test_qaoa_delta.py"
+      - "rust/delta-verifier/**"
+      - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
+      - "pyproject.toml"
+      - ".github/workflows/hybrid-delta-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  python-core:
+    name: Python ${{ matrix.python-version }} core
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install core and tests
+        run: python -m pip install -e '.[test]'
+
+      - name: Compile triangulation core
+        run: python -m compileall -q eve_q/qaoa_delta.py
+
+      - name: Run triangulation tests
+        run: python -m pytest tests/test_qaoa_delta.py --no-cov -q
+
+  qiskit-adapter:
+    name: Qiskit 2.5 adapter
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install quantum lane
+        run: python -m pip install -e '.[test,quantum]'
+
+      - name: Construct QAOA ansatz locally
+        run: |
+          python - <<'PY'
+          from eve_q.qaoa_delta import QuboModel, build_qiskit_qaoa_ansatz
+
+          model = QuboModel(
+              variable_order=("triangle:test",),
+              linear={"triangle:test": -0.02},
+              quadratic={},
+          )
+          ansatz, offset = build_qiskit_qaoa_ansatz(model, reps=1)
+          assert ansatz.num_qubits == 1
+          assert ansatz.num_parameters == 2
+          assert isinstance(offset, float)
+          print("QAOA ansatz constructed without remote execution.")
+          PY
+
+  rust-verifier:
+    name: Rust exact verifier
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Check formatting
+        run: cargo fmt --manifest-path rust/delta-verifier/Cargo.toml -- --check
+
+      - name: Run Rust tests
+        run: cargo test --manifest-path rust/delta-verifier/Cargo.toml --locked
