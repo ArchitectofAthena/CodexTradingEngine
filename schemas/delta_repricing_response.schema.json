@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiralbloom.local/schemas/delta_repricing_response.schema.json",
+  "title": "Delta Repricing Response v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "snapshot_sha256",
+    "model_sha256",
+    "confidence_receipt_id",
+    "candidate_id",
+    "verifier",
+    "status",
+    "verification",
+    "authority"
+  ],
+  "properties": {
+    "schema_version": {"const": "delta-repricing-response-v0.1"},
+    "request_id": {"type": "string", "pattern": "^delta-reprice:[0-9a-f]{24}$"},
+    "snapshot_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "model_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "confidence_receipt_id": {"type": "string", "pattern": "^qaoa-confidence:"},
+    "candidate_id": {"type": "string", "pattern": "^triangle:[0-9a-f]{20}$"},
+    "verifier": {"type": "string", "pattern": "^codex-delta-verifier/"},
+    "status": {"const": "verified"},
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edge_ids",
+        "asset_path",
+        "net_multiplier",
+        "net_log_delta",
+        "minimum_log_delta",
+        "profitable",
+        "passes_margin",
+        "authority"
+      ],
+      "properties": {
+        "edge_ids": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "asset_path": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "net_multiplier": {"type": "number", "exclusiveMinimum": 0},
+        "net_log_delta": {"type": "number"},
+        "minimum_log_delta": {"type": "number"},
+        "profitable": {"type": "boolean"},
+        "passes_margin": {"type": "boolean"},
+        "authority": {"const": false}
+      }
+    },
+    "authority": {"const": false}
+  }
+}
