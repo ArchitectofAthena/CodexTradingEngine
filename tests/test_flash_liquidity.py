@@ -25,21 +25,27 @@ def _fixture():
         MarketEdge("btc-usd", "BTC", "USD", 41_000.0, venue="gamma"),
     )
     route = enumerate_triangular_cycles(edges)[0]
+    borrowed_asset = route.asset_path[0]
+    asset_slug = borrowed_asset.lower()
     providers = (
         FlashLiquidityProvider(
             "flash-provider:cheap",
             fee_bps=9.0,
-            capacity_by_asset={"USD": 5_000.0},
+            capacity_by_asset={borrowed_asset: 5_000.0},
         ),
         FlashLiquidityProvider(
             "flash-provider:deep",
             fee_bps=30.0,
-            capacity_by_asset={"USD": 20_000.0},
+            capacity_by_asset={borrowed_asset: 20_000.0},
         ),
     )
     buckets = (
-        FlashAmountBucket("flash-bucket:usd-1000", "USD", 1_000.0),
-        FlashAmountBucket("flash-bucket:usd-10000", "USD", 10_000.0),
+        FlashAmountBucket(
+            f"flash-bucket:{asset_slug}-1000", borrowed_asset, 1_000.0
+        ),
+        FlashAmountBucket(
+            f"flash-bucket:{asset_slug}-10000", borrowed_asset, 10_000.0
+        ),
     )
     candidates = enumerate_flash_liquidity_candidates((route,), providers, buckets)
     return edges, route, providers, buckets, candidates
@@ -70,7 +76,7 @@ def test_enumerates_route_provider_bucket_geometry_deterministically() -> None:
     assert first == second
     assert len(first) == 4
     assert len({candidate.candidate_id for candidate in first}) == 4
-    assert all(candidate.borrowed_asset == "USD" for candidate in first)
+    assert all(candidate.borrowed_asset == route.asset_path[0] for candidate in first)
     assert all(candidate.authority is False for candidate in first)
     assert sum(candidate.feasible for candidate in first) == 3
 
@@ -90,7 +96,7 @@ def test_qubo_exactly_selects_a_feasible_low_fee_geometry() -> None:
     )
     assert selected.feasible is True
     assert selected.provider_id == "flash-provider:cheap"
-    assert selected.amount_bucket_id == "flash-bucket:usd-1000"
+    assert selected.principal_amount == 1_000.0
     assert selected.projected_net_profit > 0.0
     assert selection.authority is False
 
