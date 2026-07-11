@@ -1,0 +1,129 @@
+{
+  "manifest_id": "codex_bounded_authority_manifest_v0.2",
+  "version": "0.2.0",
+  "posture": {
+    "proposal_only": true,
+    "authority_bounded_in_space": true,
+    "authority_bounded_in_time": true,
+    "expiry_never_self_renews": true,
+    "human_approval_required_for_renewal": true,
+    "receipt_is_not_command": true
+  },
+  "authority": {
+    "authority": false,
+    "execution_authority": false,
+    "wallet_authority": false,
+    "signing_authority": false,
+    "capital_authority": false,
+    "deployment_authority": false,
+    "scheduler_authority": false,
+    "human_promotion_required": true
+  },
+  "scope": {
+    "allowed_assets": [
+      "BTC",
+      "ETH",
+      "SOL"
+    ],
+    "allowed_venues": [
+      "synthetic_fixture",
+      "historical_replay"
+    ],
+    "allowed_order_types": [
+      "proposal",
+      "simulation"
+    ],
+    "max_position_notional_usd": 10000.0,
+    "max_daily_loss_usd": 250.0,
+    "max_leverage": 1.0
+  },
+  "degradation_rank": {
+    "bounded_proposal": 6,
+    "simulation_only": 5,
+    "local_analysis_only": 4,
+    "risk_review_only": 3,
+    "alert_only": 2,
+    "receipt_only": 1,
+    "inert": 0
+  },
+  "clock_types": {
+    "signal": {
+      "required": true,
+      "max_ttl_seconds": 90,
+      "expiry_target": "simulation_only",
+      "on_expiry": "discard_signal",
+      "renewal_requires_human": true
+    },
+    "provider_evidence": {
+      "required": true,
+      "max_ttl_seconds": 3600,
+      "expiry_target": "local_analysis_only",
+      "on_expiry": "ignore_remote_evidence",
+      "renewal_requires_human": true
+    },
+    "strategy_packet": {
+      "required": true,
+      "max_ttl_seconds": 300,
+      "expiry_target": "local_analysis_only",
+      "on_expiry": "recompile_or_no_proposal",
+      "renewal_requires_human": true
+    },
+    "execution_intent": {
+      "required": false,
+      "max_ttl_seconds": 30,
+      "expiry_target": "risk_review_only",
+      "on_expiry": "cancel_and_reprice_advisory",
+      "renewal_requires_human": true
+    },
+    "position": {
+      "required": false,
+      "max_ttl_seconds": 900,
+      "expiry_target": "risk_review_only",
+      "on_expiry": "closure_review_advisory",
+      "renewal_requires_human": true
+    },
+    "autonomy_lease": {
+      "required": true,
+      "max_ttl_seconds": 86400,
+      "expiry_target": "alert_only",
+      "on_expiry": "degrade_to_alert_only",
+      "renewal_requires_human": true
+    },
+    "credential_lease": {
+      "required": false,
+      "max_ttl_seconds": 172800,
+      "expiry_target": "inert",
+      "on_expiry": "revoke_credential_advisory",
+      "renewal_requires_human": true
+    }
+  },
+  "denied_capabilities": [
+    "wallet_signing",
+    "order_submission",
+    "transaction_submission",
+    "rpc_submission",
+    "mempool_mutation",
+    "flash_loan_borrowing",
+    "autonomous_capital_movement",
+    "scheduler_triggered_execution",
+    "self_promotion",
+    "governance_mutation"
+  ],
+  "human_approval_required_for": [
+    "any_ttl_renewal",
+    "any_scope_expansion",
+    "any_capital_touchpoint",
+    "any_live_venue",
+    "any_execution_capability",
+    "hard_stop_recovery",
+    "manifest_change"
+  ],
+  "hard_invariants": [
+    "Authority is bounded in space.",
+    "Authority is bounded in time.",
+    "Expiry reduces capability and never silently renews it.",
+    "A receipt records degradation and cannot execute it.",
+    "Simulation ceilings are not live capital authority.",
+    "Human promotion remains required."
+  ]
+}
