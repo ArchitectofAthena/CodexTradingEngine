@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/codex/bounded_authority_manifest_v0_2.schema.json",
+  "title": "Codex bounded authority manifest v0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_id",
+    "version",
+    "posture",
+    "authority",
+    "scope",
+    "degradation_rank",
+    "clock_types",
+    "denied_capabilities",
+    "human_approval_required_for",
+    "hard_invariants"
+  ],
+  "properties": {
+    "manifest_id": {
+      "const": "codex_bounded_authority_manifest_v0.2"
+    },
+    "version": {
+      "const": "0.2.0"
+    },
+    "posture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proposal_only",
+        "authority_bounded_in_space",
+        "authority_bounded_in_time",
+        "expiry_never_self_renews",
+        "human_approval_required_for_renewal",
+        "receipt_is_not_command"
+      ],
+      "properties": {
+        "proposal_only": {"const": true},
+        "authority_bounded_in_space": {"const": true},
+        "authority_bounded_in_time": {"const": true},
+        "expiry_never_self_renews": {"const": true},
+        "human_approval_required_for_renewal": {"const": true},
+        "receipt_is_not_command": {"const": true}
+      }
+    },
+    "authority": {
+      "$ref": "#/$defs/authority"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_assets",
+        "allowed_venues",
+        "allowed_order_types",
+        "max_position_notional_usd",
+        "max_daily_loss_usd",
+        "max_leverage"
+      ],
+      "properties": {
+        "allowed_assets": {"$ref": "#/$defs/stringArray"},
+        "allowed_venues": {"$ref": "#/$defs/stringArray"},
+        "allowed_order_types": {"$ref": "#/$defs/stringArray"},
+        "max_position_notional_usd": {"type": "number", "minimum": 0},
+        "max_daily_loss_usd": {"type": "number", "minimum": 0},
+        "max_leverage": {"type": "number", "minimum": 0}
+      }
+    },
+    "degradation_rank": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bounded_proposal",
+        "simulation_only",
+        "local_analysis_only",
+        "risk_review_only",
+        "alert_only",
+        "receipt_only",
+        "inert"
+      ],
+      "properties": {
+        "bounded_proposal": {"const": 6},
+        "simulation_only": {"const": 5},
+        "local_analysis_only": {"const": 4},
+        "risk_review_only": {"const": 3},
+        "alert_only": {"const": 2},
+        "receipt_only": {"const": 1},
+        "inert": {"const": 0}
+      }
+    },
+    "clock_types": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "signal",
+        "provider_evidence",
+        "strategy_packet",
+        "execution_intent",
+        "position",
+        "autonomy_lease",
+        "credential_lease"
+      ],
+      "properties": {
+        "signal": {"$ref": "#/$defs/clockPolicy"},
+        "provider_evidence": {"$ref": "#/$defs/clockPolicy"},
+        "strategy_packet": {"$ref": "#/$defs/clockPolicy"},
+        "execution_intent": {"$ref": "#/$defs/clockPolicy"},
+        "position": {"$ref": "#/$defs/clockPolicy"},
+        "autonomy_lease": {"$ref": "#/$defs/clockPolicy"},
+        "credential_lease": {"$ref": "#/$defs/clockPolicy"}
+      }
+    },
+    "denied_capabilities": {"$ref": "#/$defs/stringArray"},
+    "human_approval_required_for": {"$ref": "#/$defs/stringArray"},
+    "hard_invariants": {"$ref": "#/$defs/stringArray"}
+  },
+  "$defs": {
+    "stringArray": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "execution_authority",
+        "wallet_authority",
+        "signing_authority",
+        "capital_authority",
+        "deployment_authority",
+        "scheduler_authority",
+        "human_promotion_required"
+      ],
+      "properties": {
+        "authority": {"const": false},
+        "execution_authority": {"const": false},
+        "wallet_authority": {"const": false},
+        "signing_authority": {"const": false},
+        "capital_authority": {"const": false},
+        "deployment_authority": {"const": false},
+        "scheduler_authority": {"const": false},
+        "human_promotion_required": {"const": true}
+      }
+    },
+    "clockPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "max_ttl_seconds",
+        "expiry_target",
+        "on_expiry",
+        "renewal_requires_human"
+      ],
+      "properties": {
+        "required": {"type": "boolean"},
+        "max_ttl_seconds": {"type": "integer", "minimum": 1},
+        "expiry_target": {
+          "enum": [
+            "bounded_proposal",
+            "simulation_only",
+            "local_analysis_only",
+            "risk_review_only",
+            "alert_only",
+            "receipt_only",
+            "inert"
+          ]
+        },
+        "on_expiry": {"type": "string", "minLength": 1},
+        "renewal_requires_human": {"const": true}
+      }
+    }
+  }
+}
