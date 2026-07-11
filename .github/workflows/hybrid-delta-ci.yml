@@ -9,22 +9,26 @@ on:
       - "eve_q/rust_repricing.py"
       - "eve_q/delta_robustness.py"
       - "eve_q/flash_liquidity.py"
+      - "eve_q/perturbation_calibration.py"
       - "tests/test_qaoa_delta.py"
       - "tests/test_qaoa_sampling.py"
       - "tests/test_rust_repricing.py"
       - "tests/test_delta_robustness.py"
       - "tests/test_flash_liquidity.py"
+      - "tests/test_perturbation_calibration.py"
       - "rust/delta-verifier/**"
       - "schemas/delta_repricing_request.schema.json"
       - "schemas/delta_repricing_response.schema.json"
       - "schemas/delta_robustness_receipt.schema.json"
       - "schemas/flash_liquidity_request.schema.json"
       - "schemas/flash_liquidity_response.schema.json"
+      - "schemas/perturbation_calibration_receipt.schema.json"
       - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
       - "docs/QAOA_DELTA_PHASE_2A.md"
       - "docs/QAOA_DELTA_PHASE_2B.md"
       - "docs/QAOA_DELTA_PHASE_2C1.md"
       - "docs/QAOA_DELTA_PHASE_2C2.md"
+      - "docs/QAOA_DELTA_PHASE_2D.md"
       - "pyproject.toml"
       - ".github/workflows/hybrid-delta-ci.yml"
   push:
@@ -37,22 +41,26 @@ on:
       - "eve_q/rust_repricing.py"
       - "eve_q/delta_robustness.py"
       - "eve_q/flash_liquidity.py"
+      - "eve_q/perturbation_calibration.py"
       - "tests/test_qaoa_delta.py"
       - "tests/test_qaoa_sampling.py"
       - "tests/test_rust_repricing.py"
       - "tests/test_delta_robustness.py"
       - "tests/test_flash_liquidity.py"
+      - "tests/test_perturbation_calibration.py"
       - "rust/delta-verifier/**"
       - "schemas/delta_repricing_request.schema.json"
       - "schemas/delta_repricing_response.schema.json"
       - "schemas/delta_robustness_receipt.schema.json"
       - "schemas/flash_liquidity_request.schema.json"
       - "schemas/flash_liquidity_response.schema.json"
+      - "schemas/perturbation_calibration_receipt.schema.json"
       - "docs/QAOA_DELTA_TRIANGULATION_v0_1.md"
       - "docs/QAOA_DELTA_PHASE_2A.md"
       - "docs/QAOA_DELTA_PHASE_2B.md"
       - "docs/QAOA_DELTA_PHASE_2C1.md"
       - "docs/QAOA_DELTA_PHASE_2C2.md"
+      - "docs/QAOA_DELTA_PHASE_2D.md"
       - "pyproject.toml"
       - ".github/workflows/hybrid-delta-ci.yml"
 
@@ -85,13 +93,15 @@ jobs:
             eve_q/qaoa_sampling.py \
             eve_q/rust_repricing.py \
             eve_q/delta_robustness.py \
-            eve_q/flash_liquidity.py
+            eve_q/flash_liquidity.py \
+            eve_q/perturbation_calibration.py
 
       - name: Validate evidence schema syntax
         run: |
           python -m json.tool schemas/delta_robustness_receipt.schema.json >/dev/null
           python -m json.tool schemas/flash_liquidity_request.schema.json >/dev/null
           python -m json.tool schemas/flash_liquidity_response.schema.json >/dev/null
+          python -m json.tool schemas/perturbation_calibration_receipt.schema.json >/dev/null
 
       - name: Run hybrid delta tests
         run: |
@@ -101,6 +111,7 @@ jobs:
             tests/test_rust_repricing.py \
             tests/test_delta_robustness.py \
             tests/test_flash_liquidity.py \
+            tests/test_perturbation_calibration.py \
             --no-cov -q
 
   qiskit-adapter:

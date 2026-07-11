@@ -60,6 +60,7 @@ CodexTradingEngine may produce:
 - perturbed-state robustness receipts
 - flash-liquidity geometry candidates
 - Rust flash-liquidity verification evidence
+- source-bound perturbation calibration receipts
 
 These outputs are review artifacts. They are not commands.
 
@@ -99,15 +100,18 @@ Classical solvers remain available for fallback, benchmarking, and independent c
 
 The implementation is intentionally simulation-only. Qiskit performs bounded local sampling and emits confidence evidence. Python binds that evidence to a strict request and invokes an explicit local Rust verifier with `shell=False`. Rust independently reconstructs candidate identity, reprices the route, and returns `authority: false` evidence.
 
-Phase 2C-1 then generates deterministic alternate market states for reserve movement, cost changes, slippage, latency, and gas. Every state is hash-bound and sent through the same Rust verifier. The resulting receipt records survival rate, worst-case delta, median delta, failure reasons, and a declared robustness class. The included scenario values are teaching fixtures, not calibrated market probabilities.
+Phase 2C-1 generates deterministic alternate market states for reserve movement, cost changes, slippage, latency, and gas. Every state is hash-bound and sent through the same Rust verifier. The resulting receipt records survival rate, worst-case delta, median delta, failure reasons, and a declared robustness class. The original included scenario values remain teaching fixtures rather than calibrated probabilities.
 
 Phase 2C-2 expands a route into provider, borrowed-asset, and amount-bucket geometry. QAOA may rank complete route-plus-liquidity candidates. A second isolated Rust binary reconstructs the triangular route, verifies declared capacity, calculates provider repayment, and determines whether the complete loop can repay itself above a declared minimum-profit threshold. No borrowing or transaction submission occurs.
 
-The complete Python → Rust subprocess, robustness, and flash-liquidity paths are exercised in CI against real compiled verifier binaries, including candidate-identity rejection and authority-boundary checks.
+Phase 2D accepts source-bound historical observations and deterministically calibrates adverse rate, fee, slippage, latency, and gas scenarios. Observations are aligned by edge identity, quantiles and clipping limits are explicit policy, and the emitted receipt binds the complete corpus, policy, and scenario set with SHA-256. The scenarios describe the supplied corpus; they do not promise recurrence or authorize execution.
+
+The complete Python → Rust subprocess, robustness, and flash-liquidity paths are exercised in CI against real compiled verifier binaries, including candidate-identity rejection and authority-boundary checks. The calibration path is independently exercised on Python 3.11 and 3.13.
 
 ```text
 QAOA discovers the geometry of the opportunity.
 Rust confirms that the geometry still exists.
+History calibrates the pressure test.
 Perturbation tests whether that geometry survives pressure.
 Flash-liquidity verification tests whether temporary capital can be repaid.
 Python controls what may happen with that knowledge.
@@ -144,12 +148,14 @@ CodexTradingEngine is simulation-first and safety-gated. These surfaces define t
 | QAOA sampling and confidence receipts | `eve_q/qaoa_sampling.py` | Performs bounded local sampling, deterministic decoding, and exact-baseline comparison. |
 | Python-to-Rust repricing bridge | `eve_q/rust_repricing.py` | Binds candidate evidence to a strict subprocess request and fails closed on protocol drift. |
 | Perturbed-state robustness engine | `eve_q/delta_robustness.py` | Reprices a selected candidate across deterministic alternate market states and emits non-authoritative survival evidence. |
+| Market perturbation calibrator | `eve_q/perturbation_calibration.py` | Converts source-bound historical route observations into bounded empirical adverse scenarios and a non-authoritative calibration receipt. |
 | Flash-liquidity geometry | `eve_q/flash_liquidity.py` | Expands routes into provider and amount-bucket choices, builds the combined QUBO, and validates Rust evidence. |
 | Rust exact delta verifier | `rust/delta-verifier/` | Reprices a closed triangular route after fee, slippage, latency, gas, and margin assumptions without network access. |
 | Rust flash-liquidity verifier | `rust/delta-verifier/src/bin/codex-flash-liquidity-verifier.rs` | Verifies route identity, capacity, provider repayment, and minimum net profit without borrowing or network access. |
 | Repricing request schema | `schemas/delta_repricing_request.schema.json` | Defines the strict hash-bound candidate request surface. |
 | Repricing response schema | `schemas/delta_repricing_response.schema.json` | Defines the strict exact-verification response surface. |
 | Robustness receipt schema | `schemas/delta_robustness_receipt.schema.json` | Defines scenario, survival, failure, and authority invariants for robustness evidence. |
+| Perturbation calibration receipt schema | `schemas/perturbation_calibration_receipt.schema.json` | Defines corpus, policy, scenario, clipping, and authority invariants for empirical calibration evidence. |
 | Flash-liquidity request schema | `schemas/flash_liquidity_request.schema.json` | Defines the route, provider, bucket, capacity, and repayment request surface. |
 | Flash-liquidity response schema | `schemas/flash_liquidity_response.schema.json` | Defines exact capacity and repayment verification evidence. |
 | Hybrid delta architecture | `docs/QAOA_DELTA_TRIANGULATION_v0_1.md` | Defines Python, Qiskit, Rust, fallback, and authority boundaries. |
@@ -157,7 +163,8 @@ CodexTradingEngine is simulation-first and safety-gated. These surfaces define t
 | Phase 2B architecture | `docs/QAOA_DELTA_PHASE_2B.md` | Defines the isolated Python-to-Rust exact-repricing contract. |
 | Phase 2C-1 architecture | `docs/QAOA_DELTA_PHASE_2C1.md` | Defines deterministic perturbed-state robustness evidence. |
 | Phase 2C-2 architecture | `docs/QAOA_DELTA_PHASE_2C2.md` | Defines route-plus-provider-plus-amount geometry and repayment verification. |
-| Hybrid delta CI | `.github/workflows/hybrid-delta-ci.yml` | Validates Python 3.11/3.13, Qiskit 2.5, stable Rust, exact repricing, robustness, and flash-liquidity verification. |
+| Phase 2D architecture | `docs/QAOA_DELTA_PHASE_2D.md` | Defines source-bound historical observation calibration and empirical interpretation boundaries. |
+| Hybrid delta CI | `.github/workflows/hybrid-delta-ci.yml` | Validates Python 3.11/3.13, Qiskit 2.5, stable Rust, exact repricing, robustness, calibration, and flash-liquidity verification. |
 
 Membrane bridge:
 
@@ -169,7 +176,7 @@ Chain:
 
 Hybrid delta chain:
 
-`market snapshot -> triangular cycles -> route QUBO -> QAOA route receipt -> Rust exact repricing -> perturbed-state robustness -> route/provider/bucket QUBO -> QAOA liquidity receipt -> Rust capacity and repayment verification -> policy review -> simulation receipt`
+`market snapshot -> triangular cycles -> route QUBO -> QAOA route receipt -> Rust exact repricing -> source-bound historical corpus -> perturbation calibration -> Rust-backed robustness -> route/provider/bucket QUBO -> QAOA liquidity receipt -> Rust capacity and repayment verification -> policy review -> simulation receipt`
 
 Current law:
 
