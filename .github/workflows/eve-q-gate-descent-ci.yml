@@ -1,0 +1,62 @@
+name: EVE_Q++ Gate Descent CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/gate_descent.py"
+      - "schemas/gate_descent_proposal_v0_1.schema.json"
+      - "examples/governance/gate_descent_g0_to_g1_draft_v0_1.json"
+      - "tests/test_gate_descent_v0_1.py"
+      - "docs/governance/EVE_Q_GATE_DESCENT_v0_1.md"
+      - ".github/workflows/eve-q-gate-descent-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "eve_q/gate_descent.py"
+      - "schemas/gate_descent_proposal_v0_1.schema.json"
+      - "examples/governance/gate_descent_g0_to_g1_draft_v0_1.json"
+      - "tests/test_gate_descent_v0_1.py"
+      - "docs/governance/EVE_Q_GATE_DESCENT_v0_1.md"
+      - ".github/workflows/eve-q-gate-descent-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  gate-descent:
+    name: Gate descent controller (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Compile controller
+        run: |
+          python -m py_compile eve_q/gate_descent.py
+
+      - name: Run gate descent tests
+        run: |
+          python -m pytest -q --no-cov tests/test_gate_descent_v0_1.py
+
+      - name: Validate canonical draft example
+        run: |
+          python -m eve_q.gate_descent \
+            --validate examples/governance/gate_descent_g0_to_g1_draft_v0_1.json \
+            --now 2026-07-11T21:05:00Z
