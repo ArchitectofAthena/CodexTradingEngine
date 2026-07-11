@@ -1,0 +1,90 @@
+name: EVE_Q++ Contract Producer CI
+
+on:
+  pull_request:
+    paths:
+      - "schemas/proposal_artifact_v0_1.schema.json"
+      - "schemas/evidence_bundle_v0_1.schema.json"
+      - "schemas/gate_decision_v0_1.schema.json"
+      - "schemas/human_promotion_receipt_v0_1.schema.json"
+      - "schemas/registry_entry_v0_1.schema.json"
+      - "schemas/execution_receipt_v0_1.schema.json"
+      - "contracts/eve_q_cross_repo_contract_v0_1.manifest.json"
+      - "contracts/EVE_Q_CROSS_REPO_PINNING_v0_1.md"
+      - "eve_q/contract_bundle.py"
+      - "tests/test_contract_bundle.py"
+      - "tests/test_contract_schema_mirror.py"
+      - ".github/workflows/eve-q-contract-producer-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "schemas/proposal_artifact_v0_1.schema.json"
+      - "schemas/evidence_bundle_v0_1.schema.json"
+      - "schemas/gate_decision_v0_1.schema.json"
+      - "schemas/human_promotion_receipt_v0_1.schema.json"
+      - "schemas/registry_entry_v0_1.schema.json"
+      - "schemas/execution_receipt_v0_1.schema.json"
+      - "contracts/eve_q_cross_repo_contract_v0_1.manifest.json"
+      - "contracts/EVE_Q_CROSS_REPO_PINNING_v0_1.md"
+      - "eve_q/contract_bundle.py"
+      - "tests/test_contract_bundle.py"
+      - "tests/test_contract_schema_mirror.py"
+      - ".github/workflows/eve-q-contract-producer-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract-producer:
+    name: Producer contract (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile contract bundle helper
+        run: python -m py_compile eve_q/contract_bundle.py
+
+      - name: Run producer contract tests
+        run: |
+          python -m pytest -q \
+            tests/test_contract_bundle.py \
+            tests/test_contract_schema_mirror.py
+
+      - name: Verify non-authority language
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          text = "\n".join(
+              [
+                  Path("contracts/EVE_Q_CROSS_REPO_PINNING_v0_1.md").read_text(encoding="utf-8"),
+                  Path("eve_q/contract_bundle.py").read_text(encoding="utf-8"),
+              ]
+          )
+          required = [
+              "human_promotion_required",
+              "may_execute",
+              "may_move_capital",
+              "authority",
+          ]
+          for phrase in required:
+              assert phrase in text, phrase
+          PY
