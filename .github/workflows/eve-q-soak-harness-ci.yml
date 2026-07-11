@@ -5,7 +5,11 @@ on:
     paths:
       - "eve_q/soak_harness.py"
       - "shadow_cycle_runner.py"
+      - "scripts/run_eve_q_soak_v0_1.sh"
       - "tests/test_eve_q_soak_harness_v0_1.py"
+      - "tests/test_eve_q_soak_launcher_v0_1.py"
+      - "docs/testing/EVE_Q_SOAK_HARNESS_v0_1.md"
+      - "docs/testing/EVE_Q_SOAK_ACCEPTANCE_v0_1.json"
       - ".github/workflows/eve-q-soak-harness-ci.yml"
   push:
     branches:
@@ -13,7 +17,11 @@ on:
     paths:
       - "eve_q/soak_harness.py"
       - "shadow_cycle_runner.py"
+      - "scripts/run_eve_q_soak_v0_1.sh"
       - "tests/test_eve_q_soak_harness_v0_1.py"
+      - "tests/test_eve_q_soak_launcher_v0_1.py"
+      - "docs/testing/EVE_Q_SOAK_HARNESS_v0_1.md"
+      - "docs/testing/EVE_Q_SOAK_ACCEPTANCE_v0_1.json"
       - ".github/workflows/eve-q-soak-harness-ci.yml"
 
 permissions:
@@ -63,7 +71,8 @@ jobs:
       - name: Run soak unit and cross-repository tests
         run: |
           python -m pytest -q --no-cov \
-            tests/test_eve_q_soak_harness_v0_1.py
+            tests/test_eve_q_soak_harness_v0_1.py \
+            tests/test_eve_q_soak_launcher_v0_1.py
 
       - name: Run 24-cycle CI campaign
         run: |
