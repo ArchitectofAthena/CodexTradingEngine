@@ -1,0 +1,114 @@
+{
+  "$id": "https://spiralbloom.local/schemas/gate1_rollback_receipt_v0_1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actions": {
+      "additionalProperties": false,
+      "properties": {
+        "gate_0_restored": {
+          "const": true
+        },
+        "gate_2_through_6_locked": {
+          "const": true
+        },
+        "network_capture_stopped": {
+          "const": true
+        },
+        "pending_capture_abandoned": {
+          "const": true
+        },
+        "pilot_disabled": {
+          "const": true
+        }
+      },
+      "required": [
+        "pilot_disabled",
+        "network_capture_stopped",
+        "pending_capture_abandoned",
+        "gate_0_restored",
+        "gate_2_through_6_locked"
+      ],
+      "type": "object"
+    },
+    "artifact_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "artifact_is_command": {
+      "const": false
+    },
+    "artifact_type": {
+      "const": "Gate1RollbackReceipt"
+    },
+    "authority": {
+      "const": false
+    },
+    "completed_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "contract_version": {
+      "const": "eve_q_gate1_hardening_v0.1"
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "from_gate": {
+      "const": "LIVE_READ_ONLY_TELEMETRY_PILOT"
+    },
+    "human_promotion_required": {
+      "const": true
+    },
+    "may_execute": {
+      "const": false
+    },
+    "may_generate_live_proposal": {
+      "const": false
+    },
+    "may_move_capital": {
+      "const": false
+    },
+    "producer_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "to_gate": {
+      "const": "SIMULATION_ONLY"
+    },
+    "trigger": {
+      "enum": [
+        "kill_switch",
+        "source_outage",
+        "dns_policy_failure",
+        "operator_abort"
+      ]
+    }
+  },
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "trigger",
+    "started_at",
+    "completed_at",
+    "from_gate",
+    "to_gate",
+    "actions",
+    "producer_commit",
+    "artifact_is_command",
+    "authority",
+    "human_promotion_required",
+    "may_generate_live_proposal",
+    "may_execute",
+    "may_move_capital"
+  ],
+  "title": "EVE_Q++ Gate1RollbackReceipt v0.1",
+  "type": "object"
+}
