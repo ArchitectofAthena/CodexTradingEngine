@@ -1,0 +1,88 @@
+name: Typed TTL Lattice CI
+
+on:
+  pull_request:
+    paths:
+      - "contracts/bounded_authority_manifest_v0_2.json"
+      - "schemas/bounded_authority_manifest_v0_2.schema.json"
+      - "schemas/ttl_lattice_receipt_v0_1.schema.json"
+      - "eve_q/ttl_lattice.py"
+      - "tests/test_ttl_lattice.py"
+      - "docs/TYPED_TTL_LATTICE_V0_2.md"
+      - ".github/workflows/ttl-lattice-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "contracts/bounded_authority_manifest_v0_2.json"
+      - "schemas/bounded_authority_manifest_v0_2.schema.json"
+      - "schemas/ttl_lattice_receipt_v0_1.schema.json"
+      - "eve_q/ttl_lattice.py"
+      - "tests/test_ttl_lattice.py"
+      - "docs/TYPED_TTL_LATTICE_V0_2.md"
+      - ".github/workflows/ttl-lattice-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  ttl-lattice-contract:
+    name: TTL lattice contract (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test runner
+        run: python -m pip install --upgrade pip pytest
+
+      - name: Compile TTL lattice surface
+        run: python -m compileall -q eve_q/ttl_lattice.py
+
+      - name: Validate JSON syntax
+        run: |
+          python -m json.tool contracts/bounded_authority_manifest_v0_2.json >/dev/null
+          python -m json.tool schemas/bounded_authority_manifest_v0_2.schema.json >/dev/null
+          python -m json.tool schemas/ttl_lattice_receipt_v0_1.schema.json >/dev/null
+
+      - name: Run typed TTL lattice tests
+        run: python -m pytest -q tests/test_ttl_lattice.py
+
+      - name: Verify authority membrane remains closed
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("contracts/bounded_authority_manifest_v0_2.json").read_text())
+          authority = manifest["authority"]
+          for field in (
+              "authority",
+              "execution_authority",
+              "wallet_authority",
+              "signing_authority",
+              "capital_authority",
+              "deployment_authority",
+              "scheduler_authority",
+          ):
+              assert authority[field] is False, field
+          assert authority["human_promotion_required"] is True
+
+          source = Path("eve_q/ttl_lattice.py").read_text(encoding="utf-8")
+          assert "subprocess" not in source
+          assert "requests" not in source
+          assert "urllib" not in source
+          assert "socket" not in source
+          assert "shell=True" not in source
+          PY
