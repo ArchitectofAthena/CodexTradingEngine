@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiralbloom.local/schemas/proposal_artifact_v0_1.schema.json",
+  "title": "EVE_Q++ ProposalArtifact v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "producer",
+    "scope",
+    "ttl",
+    "proposal_id",
+    "bounded_inputs",
+    "assumptions",
+    "simulation_outputs",
+    "risk_envelope",
+    "charity_allocation_candidate",
+    "prohibited_actions",
+    "authority",
+    "human_promotion_required",
+    "autonomous_capital_movement"
+  ],
+  "properties": {
+    "artifact_type": {"const": "ProposalArtifact"},
+    "contract_version": {"const": "eve_q_cross_repo_v0.1"},
+    "artifact_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "component", "commit_sha"],
+      "properties": {
+        "repository": {"const": "ArchitectofAthena/CodexTradingEngine"},
+        "component": {"type": "string", "minLength": 1},
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "environment", "action_class"],
+      "properties": {
+        "domain": {"const": "market_research"},
+        "environment": {"enum": ["simulation", "shadow", "testnet"]},
+        "action_class": {"enum": ["observe", "simulate", "propose", "evaluate"]}
+      }
+    },
+    "ttl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["issued_at", "expires_at", "ttl_seconds"],
+      "properties": {
+        "issued_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "ttl_seconds": {"type": "integer", "minimum": 1, "maximum": 172800}
+      }
+    },
+    "proposal_id": {"type": "string", "minLength": 1},
+    "bounded_inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_id", "source_kind", "content_sha256", "observed_at"],
+        "properties": {
+          "source_id": {"type": "string", "minLength": 1},
+          "source_kind": {"enum": ["market_snapshot", "onchain_snapshot", "sentiment_snapshot", "policy_snapshot", "impact_snapshot"]},
+          "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "observed_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "simulation_outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["run_id", "receipt_sha256", "status"],
+        "properties": {
+          "run_id": {"type": "string", "minLength": 1},
+          "receipt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "status": {"enum": ["passed", "failed", "inconclusive"]}
+        }
+      }
+    },
+    "risk_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_notional_usd", "max_loss_usd", "slippage_bps", "confidence", "known_failure_modes"],
+      "properties": {
+        "max_notional_usd": {"type": "number", "minimum": 0},
+        "max_loss_usd": {"type": "number", "minimum": 0},
+        "slippage_bps": {"type": "number", "minimum": 0},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "known_failure_modes": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "charity_allocation_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "fraction", "impact_category", "verified_impact_required"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "fraction": {"type": "number", "minimum": 0, "maximum": 1},
+        "impact_category": {"type": "string", "minLength": 1},
+        "verified_impact_required": {"const": true}
+      }
+    },
+    "prohibited_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"enum": ["wallet_access", "signing", "order_submission", "transaction_construction", "transaction_broadcast", "capital_movement", "self_promotion"]},
+      "allOf": [
+        {"contains": {"const": "capital_movement"}},
+        {"contains": {"const": "self_promotion"}}
+      ]
+    },
+    "authority": {"const": false},
+    "human_promotion_required": {"const": true},
+    "autonomous_capital_movement": {"const": false}
+  }
+}

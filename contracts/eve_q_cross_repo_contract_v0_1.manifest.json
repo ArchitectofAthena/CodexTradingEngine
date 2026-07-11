@@ -1,0 +1,56 @@
+{
+  "contract_version": "eve_q_cross_repo_v0.1",
+  "source_repository": "ArchitectofAthena/spiralbloom-os",
+  "source_commit": "981aa240ff5bd73fb4562c4e351789aa9cfb307c",
+  "source_issue": 102,
+  "source_pull_request": 103,
+  "producer_repository": "ArchitectofAthena/CodexTradingEngine",
+  "producer_commit_at_first_pin": "893c2209ca975704dc1f2b4be10677ae6422f93c",
+  "canonical_serialization": "utf8-json-sorted-keys-compact-separators",
+  "schemas": [
+    {
+      "path": "schemas/proposal_artifact_v0_1.schema.json",
+      "source_git_blob_sha": "d6b0e9b68b6d770fc6412e843c25fdcdb69fdf27"
+    },
+    {
+      "path": "schemas/evidence_bundle_v0_1.schema.json",
+      "source_git_blob_sha": "328e27cc8fb86f294f8bf292f6dc404c92928f18"
+    },
+    {
+      "path": "schemas/gate_decision_v0_1.schema.json",
+      "source_git_blob_sha": "f5bc408e7c8608eade56593cca3f8e7f5de94738"
+    },
+    {
+      "path": "schemas/human_promotion_receipt_v0_1.schema.json",
+      "source_git_blob_sha": "1d903435a0dedb2bdd699c012ea1df4459ec01fa"
+    },
+    {
+      "path": "schemas/registry_entry_v0_1.schema.json",
+      "source_git_blob_sha": "210a36ffa99eb41fd9edd0518f31ed0f3210b114"
+    },
+    {
+      "path": "schemas/execution_receipt_v0_1.schema.json",
+      "source_git_blob_sha": "dc0d35bc29f7466bdb216e7423661e02e77d9737"
+    }
+  ],
+  "schema_count": 6,
+  "first_verified_ipfs_pin": {
+    "cid": "bafkreidqrdsqpa5v5maissurtxigreapdx5fl6qpdtmygxxnlntbulnswe",
+    "pin_type": "recursive",
+    "status": "IPFS_PINNED_VERIFIED",
+    "local_sha256": "3692c541176e47ec95e75b502a5933457bba55392aa25e093305b56898e36b6e",
+    "previous_cid": null,
+    "verification": [
+      "kubo_add_pin_true",
+      "recursive_pin_lookup",
+      "cid_cat_exact_byte_comparison"
+    ],
+    "persistence_scope": "local_kubo_node"
+  },
+  "authority": false,
+  "execution_authority": "none",
+  "artifact_is_command": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "human_promotion_required": true
+}

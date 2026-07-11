@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiralbloom.local/schemas/gate_decision_v0_1.schema.json",
+  "title": "EVE_Q++ GateDecision v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "producer",
+    "proposal_artifact_sha256",
+    "evidence_bundle_sha256",
+    "decision",
+    "evidence_state",
+    "contradiction_status",
+    "reasons",
+    "scope_authority",
+    "execution_authority",
+    "capital_movement_authorized",
+    "authority",
+    "human_promotion_required"
+  ],
+  "properties": {
+    "artifact_type": {"const": "GateDecision"},
+    "contract_version": {"const": "eve_q_cross_repo_v0.1"},
+    "artifact_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "component", "commit_sha"],
+      "properties": {
+        "repository": {"const": "ArchitectofAthena/spiralbloom-os"},
+        "component": {"type": "string", "minLength": 1},
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "proposal_artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "evidence_bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "decision": {"enum": ["COMMIT", "HOLD", "DEFER", "REOPEN", "REJECT"]},
+    "evidence_state": {"enum": ["GROUNDED", "HERDING_RISK", "INTEGRATING", "INSUFFICIENT"]},
+    "contradiction_status": {"enum": ["none", "reviewed", "new", "unresolved"]},
+    "reasons": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "scope_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["may_inform", "may_execute", "allowed_scope", "expires_at"],
+      "properties": {
+        "may_inform": {"const": true},
+        "may_execute": {"const": false},
+        "allowed_scope": {
+          "type": "array",
+          "items": {"enum": ["further_simulation", "additional_evidence", "human_review", "registry_update", "manual_external_consideration"]}
+        },
+        "expires_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "execution_authority": {"const": false},
+    "capital_movement_authorized": {"const": false},
+    "authority": {"const": false},
+    "human_promotion_required": {"const": true}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"evidence_state": {"const": "HERDING_RISK"}}, "required": ["evidence_state"]},
+      "then": {"properties": {"decision": {"const": "HOLD"}}}
+    },
+    {
+      "if": {"properties": {"evidence_state": {"const": "INTEGRATING"}}, "required": ["evidence_state"]},
+      "then": {"properties": {"decision": {"enum": ["HOLD", "DEFER"]}}}
+    },
+    {
+      "if": {"properties": {"evidence_state": {"const": "INSUFFICIENT"}}, "required": ["evidence_state"]},
+      "then": {"properties": {"decision": {"enum": ["DEFER", "REJECT"]}}}
+    },
+    {
+      "if": {"properties": {"contradiction_status": {"const": "new"}}, "required": ["contradiction_status"]},
+      "then": {"properties": {"decision": {"const": "REOPEN"}}}
+    },
+    {
+      "if": {"properties": {"decision": {"const": "COMMIT"}}, "required": ["decision"]},
+      "then": {
+        "properties": {
+          "evidence_state": {"const": "GROUNDED"},
+          "contradiction_status": {"enum": ["none", "reviewed"]}
+        }
+      }
+    }
+  ]
+}

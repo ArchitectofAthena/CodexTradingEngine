@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiralbloom.local/schemas/registry_entry_v0_1.schema.json",
+  "title": "EVE_Q++ RegistryEntry v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "producer",
+    "subject_artifact_sha256",
+    "prior_artifact_hashes",
+    "state_transition",
+    "alternatives_preserved",
+    "contradictions_preserved",
+    "immutable",
+    "execution_inferred",
+    "authority"
+  ],
+  "properties": {
+    "artifact_type": {"const": "RegistryEntry"},
+    "contract_version": {"const": "eve_q_cross_repo_v0.1"},
+    "artifact_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "component", "commit_sha"],
+      "properties": {
+        "repository": {"const": "ArchitectofAthena/spiralbloom-os"},
+        "component": {"type": "string", "minLength": 1},
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "subject_artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "prior_artifact_hashes": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+      "uniqueItems": true
+    },
+    "state_transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "reason"],
+      "properties": {
+        "from": {"enum": ["NONE", "PROPOSED", "EVIDENCED", "HELD", "DEFERRED", "COMMITTED", "REOPENED", "REJECTED", "PROMOTED", "EXECUTED"]},
+        "to": {"enum": ["PROPOSED", "EVIDENCED", "HELD", "DEFERRED", "COMMITTED", "REOPENED", "REJECTED", "PROMOTED", "EXECUTED"]},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "alternatives_preserved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["artifact_sha256", "disposition", "reason"],
+        "properties": {
+          "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "disposition": {"enum": ["rejected", "deferred", "held", "superseded"]},
+          "reason": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "contradictions_preserved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["contradiction_id", "status", "summary"],
+        "properties": {
+          "contradiction_id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["new", "reviewed", "resolved", "unresolved"]},
+          "summary": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "immutable": {"const": true},
+    "execution_inferred": {"const": false},
+    "authority": {"const": false}
+  }
+}

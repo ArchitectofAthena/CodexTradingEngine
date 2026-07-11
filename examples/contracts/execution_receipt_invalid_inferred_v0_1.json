@@ -1,0 +1,26 @@
+{
+  "artifact_type": "ExecutionReceipt",
+  "contract_version": "eve_q_cross_repo_v0.1",
+  "artifact_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "created_at": "2026-07-11T19:05:00Z",
+  "executor": {
+    "executor_id": "shadow-observer-v0-1",
+    "executor_type": "shadow_observer"
+  },
+  "execution_mode": "shadow",
+  "proposal_artifact_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "gate_decision_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+  "human_promotion_receipt_sha256": null,
+  "observed": false,
+  "inferred": true,
+  "proposal_approval_was_not_treated_as_execution": false,
+  "capital_movement_occurred": false,
+  "result": {
+    "status": "succeeded",
+    "observed_at": "2026-07-11T19:05:00Z",
+    "summary": "Invalid fixture: execution was inferred rather than observed.",
+    "output_hashes": [],
+    "external_reference": null
+  },
+  "authority": false
+}

@@ -1,0 +1,49 @@
+{
+  "base_fixture": "examples/contracts/proposal_artifact_valid_v0_1.json",
+  "cases": [
+    {
+      "name": "stale_ttl",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/ttl/expires_at",
+          "value": "2026-07-11T18:59:59Z"
+        }
+      ],
+      "expected_finding": "proposal TTL is stale"
+    },
+    {
+      "name": "missing_provenance",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/bounded_inputs"
+        }
+      ],
+      "expected_finding": "bounded input provenance is required"
+    },
+    {
+      "name": "self_promotion_attempt",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/authority",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/prohibited_actions",
+          "value": [
+            "wallet_access",
+            "signing",
+            "order_submission",
+            "transaction_construction",
+            "transaction_broadcast",
+            "capital_movement"
+          ]
+        }
+      ],
+      "expected_finding": "missing prohibited action: self_promotion"
+    }
+  ]
+}

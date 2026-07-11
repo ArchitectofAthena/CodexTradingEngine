@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiralbloom.local/schemas/execution_receipt_v0_1.schema.json",
+  "title": "EVE_Q++ ExecutionReceipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "executor",
+    "execution_mode",
+    "proposal_artifact_sha256",
+    "gate_decision_sha256",
+    "human_promotion_receipt_sha256",
+    "observed",
+    "inferred",
+    "proposal_approval_was_not_treated_as_execution",
+    "capital_movement_occurred",
+    "result",
+    "authority"
+  ],
+  "properties": {
+    "artifact_type": {"const": "ExecutionReceipt"},
+    "contract_version": {"const": "eve_q_cross_repo_v0.1"},
+    "artifact_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "executor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executor_id", "executor_type"],
+      "properties": {
+        "executor_id": {"type": "string", "minLength": 1},
+        "executor_type": {"enum": ["simulation_harness", "testnet_harness", "shadow_observer", "human_external"]}
+      }
+    },
+    "execution_mode": {"enum": ["simulation", "shadow", "testnet", "manual_external"]},
+    "proposal_artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "gate_decision_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "human_promotion_receipt_sha256": {
+      "oneOf": [
+        {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        {"type": "null"}
+      ]
+    },
+    "observed": {"const": true},
+    "inferred": {"const": false},
+    "proposal_approval_was_not_treated_as_execution": {"const": true},
+    "capital_movement_occurred": {"type": "boolean"},
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_at", "summary", "output_hashes"],
+      "properties": {
+        "status": {"enum": ["succeeded", "failed", "partial", "cancelled", "expired"]},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "summary": {"type": "string", "minLength": 1},
+        "output_hashes": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "uniqueItems": true
+        },
+        "external_reference": {"type": ["string", "null"]}
+      }
+    },
+    "authority": {"const": false}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"capital_movement_occurred": {"const": true}}, "required": ["capital_movement_occurred"]},
+      "then": {
+        "properties": {
+          "execution_mode": {"const": "manual_external"},
+          "human_promotion_receipt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "executor": {
+            "properties": {"executor_type": {"const": "human_external"}}
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"execution_mode": {"enum": ["simulation", "shadow", "testnet"]}}, "required": ["execution_mode"]},
+      "then": {"properties": {"capital_movement_occurred": {"const": false}}}
+    }
+  ]
+}

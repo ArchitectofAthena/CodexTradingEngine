@@ -1,0 +1,71 @@
+{
+  "artifact_type": "ProposalArtifact",
+  "contract_version": "eve_q_cross_repo_v0.1",
+  "artifact_id": "1111111111111111111111111111111111111111111111111111111111111111",
+  "created_at": "2026-07-11T19:00:00Z",
+  "producer": {
+    "repository": "ArchitectofAthena/CodexTradingEngine",
+    "component": "shadow_cycle_runner.proposal_adapter_v0_1",
+    "commit_sha": "893c2209ca975704dc1f2b4be10677ae6422f93c"
+  },
+  "scope": {
+    "domain": "market_research",
+    "environment": "shadow",
+    "action_class": "propose"
+  },
+  "ttl": {
+    "issued_at": "2026-07-11T19:00:00Z",
+    "expires_at": "2026-07-12T19:00:00Z",
+    "ttl_seconds": 86400
+  },
+  "proposal_id": "proposal:canonical-shadow-001",
+  "bounded_inputs": [
+    {
+      "source_id": "candidate-routes:canonical-shadow-001",
+      "source_kind": "market_snapshot",
+      "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "observed_at": "2026-07-11T19:00:00Z"
+    }
+  ],
+  "assumptions": [
+    "candidate routes are deterministic mock observations",
+    "no live liquidity, wallet, signing, submission, or broadcast surface is present",
+    "shadow results cannot establish production trust or execution authority"
+  ],
+  "simulation_outputs": [
+    {
+      "run_id": "canonical-shadow-001",
+      "receipt_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "status": "passed"
+    }
+  ],
+  "risk_envelope": {
+    "max_notional_usd": 0.0,
+    "max_loss_usd": 0.0,
+    "slippage_bps": 0.0,
+    "confidence": 0.5,
+    "known_failure_modes": [
+      "mock routes do not establish executable liquidity",
+      "ETH-denominated simulation values are not converted to live USD notional",
+      "stale observations must be rejected after TTL expiry"
+    ]
+  },
+  "charity_allocation_candidate": {
+    "enabled": true,
+    "fraction": 0.15,
+    "impact_category": "medical_access",
+    "verified_impact_required": true
+  },
+  "prohibited_actions": [
+    "wallet_access",
+    "signing",
+    "order_submission",
+    "transaction_construction",
+    "transaction_broadcast",
+    "capital_movement",
+    "self_promotion"
+  ],
+  "authority": false,
+  "human_promotion_required": true,
+  "autonomous_capital_movement": false
+}

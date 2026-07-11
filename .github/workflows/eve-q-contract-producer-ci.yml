@@ -1,0 +1,110 @@
+name: EVE_Q++ Contract Producer CI
+
+on:
+  pull_request:
+    paths:
+      - "schemas/proposal_artifact_v0_1.schema.json"
+      - "schemas/evidence_bundle_v0_1.schema.json"
+      - "schemas/gate_decision_v0_1.schema.json"
+      - "schemas/human_promotion_receipt_v0_1.schema.json"
+      - "schemas/registry_entry_v0_1.schema.json"
+      - "schemas/execution_receipt_v0_1.schema.json"
+      - "contracts/eve_q_cross_repo_contract_v0_1.manifest.json"
+      - "contracts/EVE_Q_CROSS_REPO_PINNING_v0_1.md"
+      - "eve_q/contract_bundle.py"
+      - "eve_q/proposal_artifact.py"
+      - "shadow_cycle_runner.py"
+      - "examples/contracts/**"
+      - "tests/test_contract_bundle.py"
+      - "tests/test_contract_schema_mirror.py"
+      - "tests/test_proposal_artifact_v0_1.py"
+      - "requirements-dev.txt"
+      - ".github/workflows/eve-q-contract-producer-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "schemas/proposal_artifact_v0_1.schema.json"
+      - "schemas/evidence_bundle_v0_1.schema.json"
+      - "schemas/gate_decision_v0_1.schema.json"
+      - "schemas/human_promotion_receipt_v0_1.schema.json"
+      - "schemas/registry_entry_v0_1.schema.json"
+      - "schemas/execution_receipt_v0_1.schema.json"
+      - "contracts/eve_q_cross_repo_contract_v0_1.manifest.json"
+      - "contracts/EVE_Q_CROSS_REPO_PINNING_v0_1.md"
+      - "eve_q/contract_bundle.py"
+      - "eve_q/proposal_artifact.py"
+      - "shadow_cycle_runner.py"
+      - "examples/contracts/**"
+      - "tests/test_contract_bundle.py"
+      - "tests/test_contract_schema_mirror.py"
+      - "tests/test_proposal_artifact_v0_1.py"
+      - "requirements-dev.txt"
+      - ".github/workflows/eve-q-contract-producer-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract-producer:
+    name: Producer contract (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Compile contract helpers
+        run: |
+          python -m py_compile \
+            eve_q/contract_bundle.py \
+            eve_q/proposal_artifact.py \
+            shadow_cycle_runner.py
+
+      - name: Run focused producer contract tests
+        run: |
+          # The repository-wide workflow enforces the global coverage floor.
+          # This path-scoped workflow validates only the typed membrane.
+          python -m pytest -q --no-cov \
+            tests/test_contract_bundle.py \
+            tests/test_contract_schema_mirror.py \
+            tests/test_proposal_artifact_v0_1.py
+
+      - name: Verify non-authority language
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          text = "\n".join(
+              [
+                  Path("contracts/EVE_Q_CROSS_REPO_PINNING_v0_1.md").read_text(encoding="utf-8"),
+                  Path("eve_q/contract_bundle.py").read_text(encoding="utf-8"),
+                  Path("eve_q/proposal_artifact.py").read_text(encoding="utf-8"),
+              ]
+          )
+          required = [
+              "human_promotion_required",
+              "may_execute",
+              "may_move_capital",
+              "authority",
+              "autonomous_capital_movement",
+              "self_promotion",
+          ]
+          for phrase in required:
+              assert phrase in text, phrase
+          PY
