@@ -1,0 +1,122 @@
+{
+  "$id": "https://spiralbloom.local/schemas/gate1_resolution_receipt_v0_1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "address_set_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "all_addresses_public": {
+      "const": true
+    },
+    "artifact_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "artifact_is_command": {
+      "const": false
+    },
+    "artifact_type": {
+      "const": "Gate1ResolutionReceipt"
+    },
+    "authority": {
+      "const": false
+    },
+    "contract_version": {
+      "const": "eve_q_gate1_hardening_v0.1"
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "gate_posture": {
+      "additionalProperties": false,
+      "properties": {
+        "gate_0": {
+          "const": "ACTIVE"
+        },
+        "gate_1": {
+          "const": "PILOT_ONLY"
+        },
+        "gate_2_through_6": {
+          "const": "LOCKED"
+        }
+      },
+      "required": [
+        "gate_0",
+        "gate_1",
+        "gate_2_through_6"
+      ],
+      "type": "object"
+    },
+    "human_promotion_required": {
+      "const": true
+    },
+    "may_execute": {
+      "const": false
+    },
+    "may_generate_live_proposal": {
+      "const": false
+    },
+    "may_move_capital": {
+      "const": false
+    },
+    "port": {
+      "const": 443
+    },
+    "producer_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "requested_uri": {
+      "format": "uri",
+      "pattern": "^https://",
+      "type": "string"
+    },
+    "resolved_addresses": {
+      "items": {
+        "format": "ip",
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "resolver_mode": {
+      "const": "system_getaddrinfo_pre_and_post"
+    },
+    "reviewed_host": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "source_id": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "source_id",
+    "requested_uri",
+    "reviewed_host",
+    "port",
+    "resolver_mode",
+    "resolved_addresses",
+    "address_set_sha256",
+    "all_addresses_public",
+    "producer_commit",
+    "gate_posture",
+    "artifact_is_command",
+    "authority",
+    "human_promotion_required",
+    "may_generate_live_proposal",
+    "may_execute",
+    "may_move_capital"
+  ],
+  "title": "EVE_Q++ Gate1ResolutionReceipt v0.1",
+  "type": "object"
+}
