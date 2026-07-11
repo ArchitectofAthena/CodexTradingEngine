@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiralbloom.local/schemas/human_promotion_receipt_v0_1.schema.json",
+  "title": "EVE_Q++ HumanPromotionReceipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "reviewer",
+    "promoted_artifact_sha256",
+    "gate_decision_sha256",
+    "approval_scope",
+    "promotion_status",
+    "approved_at",
+    "expires_at",
+    "reversible_when_required",
+    "records_human_authority",
+    "artifact_authority",
+    "may_execute",
+    "attestations"
+  ],
+  "properties": {
+    "artifact_type": {"const": "HumanPromotionReceipt"},
+    "contract_version": {"const": "eve_q_cross_repo_v0.1"},
+    "artifact_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewer_id", "reviewer_type", "review_method"],
+      "properties": {
+        "reviewer_id": {"type": "string", "minLength": 1},
+        "reviewer_type": {"const": "human"},
+        "review_method": {"enum": ["interactive_review", "signed_review", "manual_external_review"]}
+      }
+    },
+    "promoted_artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "gate_decision_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "approval_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"enum": ["further_simulation", "testnet_trial", "manual_external_consideration", "registry_promotion", "charity_allocation_review"]}
+    },
+    "promotion_status": {"enum": ["approved", "revoked", "expired"]},
+    "approved_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "reversible_when_required": {"type": "boolean"},
+    "records_human_authority": {"const": true},
+    "artifact_authority": {"const": false},
+    "may_execute": {"const": false},
+    "attestations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewed_exact_hashes", "understands_scope", "understands_expiry", "no_self_promotion", "receipt_does_not_execute"],
+      "properties": {
+        "reviewed_exact_hashes": {"const": true},
+        "understands_scope": {"const": true},
+        "understands_expiry": {"const": true},
+        "no_self_promotion": {"const": true},
+        "receipt_does_not_execute": {"const": true}
+      }
+    }
+  }
+}
