@@ -75,13 +75,30 @@ jobs:
             shadow_cycle_runner.py
 
       - name: Run focused producer contract tests
+        id: focused_tests
+        continue-on-error: true
         run: |
-          # The repository-wide workflow enforces the global coverage floor.
-          # This path-scoped workflow validates only the typed membrane.
+          set +e
           python -m pytest -q --no-cov \
             tests/test_contract_bundle.py \
             tests/test_contract_schema_mirror.py \
-            tests/test_proposal_artifact_v0_1.py
+            tests/test_proposal_artifact_v0_1.py \
+            > "producer-contract-${{ matrix.python-version }}.log" 2>&1
+          status=$?
+          cat "producer-contract-${{ matrix.python-version }}.log"
+          exit "$status"
+
+      - name: Upload focused-test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: proposal-artifact-contract-${{ matrix.python-version }}
+          path: producer-contract-${{ matrix.python-version }}.log
+          if-no-files-found: error
+
+      - name: Require focused producer tests
+        if: always()
+        run: test "${{ steps.focused_tests.outcome }}" = "success"
 
       - name: Verify non-authority language
         run: |
