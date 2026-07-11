@@ -1,0 +1,104 @@
+{
+  "acceptance_checks": {
+    "adjacent_gate_only": true,
+    "all_downstream_gates_locked": true,
+    "bounded_live_read_only_soak_passed": false,
+    "live_inputs_content_addressed": false,
+    "malformed_input_rejection_proven": false,
+    "no_execution_surface_introduced": true,
+    "read_only_interfaces_only": true,
+    "replayable_snapshots_retained": false,
+    "rollback_to_simulation_proven": false,
+    "source_outage_behavior_proven": false,
+    "stale_input_rejection_proven": false,
+    "zero_write_capable_secrets": true
+  },
+  "artifact_id": "5a84b864ee9d48bda85a89bb69ebb3f59d6fd67accc51fdf83afcfee1cb94827",
+  "artifact_is_command": false,
+  "artifact_type": "GateDescentProposal",
+  "authority": false,
+  "connector_mode": "read_only",
+  "contract_version": "eve_q_gate_descent_v0.1",
+  "created_at": "2026-07-11T21:00:00Z",
+  "evidence": [
+    {
+      "evidence_type": "baseline_soak",
+      "notes": "Illustrative content hash for the recorded 100-cycle baseline; replace with the verified file hash before review.",
+      "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+      "uri": "repo://docs/testing/results/EVE_Q_SOAK_RESULT_20260711T202544Z.json"
+    },
+    {
+      "evidence_type": "contract_lineage",
+      "notes": "Generation-2 lineage anchor; evidence only.",
+      "sha256": "f2a50e16cbed2ea06d561f2273ff1602ea649ab267d85ef543182b06341c5d8e",
+      "uri": "ipfs://bafkreig352tvdj5m4bimwc6hd256edsqzx32k6vqorpxs73z46eukpgwny"
+    }
+  ],
+  "expires_at": "2026-07-12T21:00:00Z",
+  "gate_states": [
+    {
+      "index": 0,
+      "name": "SIMULATION_ONLY",
+      "status": "ACTIVE"
+    },
+    {
+      "index": 1,
+      "name": "LIVE_READ_ONLY_TELEMETRY",
+      "status": "REQUESTED"
+    },
+    {
+      "index": 2,
+      "name": "LIVE_PROPOSAL_GENERATION",
+      "status": "LOCKED"
+    },
+    {
+      "index": 3,
+      "name": "TESTNET_MANUAL_EXTERNAL",
+      "status": "LOCKED"
+    },
+    {
+      "index": 4,
+      "name": "CAPPED_MANUAL_EXTERNAL",
+      "status": "LOCKED"
+    },
+    {
+      "index": 5,
+      "name": "EXECUTION_ASSISTANCE",
+      "status": "LOCKED"
+    },
+    {
+      "index": 6,
+      "name": "NARROW_AUTOMATION",
+      "status": "LOCKED"
+    }
+  ],
+  "human_promotion_required": true,
+  "may_execute": false,
+  "may_move_capital": false,
+  "prohibited_actions": [
+    "capital_movement",
+    "multi_gate_descent",
+    "order_submission",
+    "self_promotion",
+    "signing",
+    "transaction_broadcast",
+    "transaction_construction",
+    "wallet_access"
+  ],
+  "promotion_eligible": false,
+  "readiness": "DRAFT",
+  "rollback": {
+    "plan_sha256": null,
+    "target_gate": 0,
+    "test_receipt_sha256": null,
+    "tested": false
+  },
+  "transition": {
+    "current_gate": 0,
+    "downstream_inheritance": false,
+    "one_gate_only": true,
+    "requested_gate": 1
+  },
+  "ttl_seconds": 86400,
+  "write_capable_secrets_present": false
+}

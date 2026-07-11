@@ -1,0 +1,337 @@
+{
+  "$id": "https://spiralbloom.local/schemas/gate_descent_proposal_v0_1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "readiness": {
+            "const": "DRAFT"
+          }
+        },
+        "required": [
+          "readiness"
+        ]
+      },
+      "then": {
+        "properties": {
+          "promotion_eligible": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "readiness": {
+            "const": "READY_FOR_HUMAN_REVIEW"
+          }
+        },
+        "required": [
+          "readiness"
+        ]
+      },
+      "then": {
+        "properties": {
+          "promotion_eligible": {
+            "const": true
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "acceptance_checks": {
+      "additionalProperties": false,
+      "properties": {
+        "adjacent_gate_only": {
+          "type": "boolean"
+        },
+        "all_downstream_gates_locked": {
+          "type": "boolean"
+        },
+        "bounded_live_read_only_soak_passed": {
+          "type": "boolean"
+        },
+        "live_inputs_content_addressed": {
+          "type": "boolean"
+        },
+        "malformed_input_rejection_proven": {
+          "type": "boolean"
+        },
+        "no_execution_surface_introduced": {
+          "type": "boolean"
+        },
+        "read_only_interfaces_only": {
+          "type": "boolean"
+        },
+        "replayable_snapshots_retained": {
+          "type": "boolean"
+        },
+        "rollback_to_simulation_proven": {
+          "type": "boolean"
+        },
+        "source_outage_behavior_proven": {
+          "type": "boolean"
+        },
+        "stale_input_rejection_proven": {
+          "type": "boolean"
+        },
+        "zero_write_capable_secrets": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "adjacent_gate_only",
+        "all_downstream_gates_locked",
+        "read_only_interfaces_only",
+        "zero_write_capable_secrets",
+        "live_inputs_content_addressed",
+        "replayable_snapshots_retained",
+        "stale_input_rejection_proven",
+        "malformed_input_rejection_proven",
+        "source_outage_behavior_proven",
+        "rollback_to_simulation_proven",
+        "bounded_live_read_only_soak_passed",
+        "no_execution_surface_introduced"
+      ],
+      "type": "object"
+    },
+    "artifact_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "artifact_is_command": {
+      "const": false
+    },
+    "artifact_type": {
+      "const": "GateDescentProposal"
+    },
+    "authority": {
+      "const": false
+    },
+    "connector_mode": {
+      "const": "read_only"
+    },
+    "contract_version": {
+      "const": "eve_q_gate_descent_v0.1"
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_type": {
+            "enum": [
+              "baseline_soak",
+              "live_read_only_soak",
+              "rollback_test",
+              "threat_model",
+              "contract_lineage",
+              "other"
+            ]
+          },
+          "notes": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "uri": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "evidence_type",
+          "sha256",
+          "uri"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "gate_states": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "maximum": 6,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "name": {
+            "enum": [
+              "SIMULATION_ONLY",
+              "LIVE_READ_ONLY_TELEMETRY",
+              "LIVE_PROPOSAL_GENERATION",
+              "TESTNET_MANUAL_EXTERNAL",
+              "CAPPED_MANUAL_EXTERNAL",
+              "EXECUTION_ASSISTANCE",
+              "NARROW_AUTOMATION"
+            ]
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "REQUESTED",
+              "LOCKED"
+            ]
+          }
+        },
+        "required": [
+          "index",
+          "name",
+          "status"
+        ],
+        "type": "object"
+      },
+      "maxItems": 7,
+      "minItems": 7,
+      "type": "array"
+    },
+    "human_promotion_required": {
+      "const": true
+    },
+    "may_execute": {
+      "const": false
+    },
+    "may_move_capital": {
+      "const": false
+    },
+    "prohibited_actions": {
+      "items": {
+        "enum": [
+          "wallet_access",
+          "signing",
+          "order_submission",
+          "transaction_construction",
+          "transaction_broadcast",
+          "capital_movement",
+          "self_promotion",
+          "multi_gate_descent"
+        ]
+      },
+      "minItems": 8,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "promotion_eligible": {
+      "type": "boolean"
+    },
+    "readiness": {
+      "enum": [
+        "DRAFT",
+        "READY_FOR_HUMAN_REVIEW"
+      ]
+    },
+    "rollback": {
+      "additionalProperties": false,
+      "properties": {
+        "plan_sha256": {
+          "oneOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target_gate": {
+          "const": 0
+        },
+        "test_receipt_sha256": {
+          "oneOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tested": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "target_gate",
+        "tested",
+        "plan_sha256",
+        "test_receipt_sha256"
+      ],
+      "type": "object"
+    },
+    "transition": {
+      "additionalProperties": false,
+      "properties": {
+        "current_gate": {
+          "const": 0
+        },
+        "downstream_inheritance": {
+          "const": false
+        },
+        "one_gate_only": {
+          "const": true
+        },
+        "requested_gate": {
+          "const": 1
+        }
+      },
+      "required": [
+        "current_gate",
+        "requested_gate",
+        "one_gate_only",
+        "downstream_inheritance"
+      ],
+      "type": "object"
+    },
+    "ttl_seconds": {
+      "maximum": 86400,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "write_capable_secrets_present": {
+      "const": false
+    }
+  },
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "expires_at",
+    "ttl_seconds",
+    "readiness",
+    "promotion_eligible",
+    "transition",
+    "gate_states",
+    "connector_mode",
+    "write_capable_secrets_present",
+    "acceptance_checks",
+    "evidence",
+    "rollback",
+    "prohibited_actions",
+    "artifact_is_command",
+    "authority",
+    "human_promotion_required",
+    "may_execute",
+    "may_move_capital"
+  ],
+  "title": "EVE_Q++ GateDescentProposal v0.1",
+  "type": "object"
+}
