@@ -1,0 +1,237 @@
+{
+  "$id": "https://codex.local/schemas/codex_planning_uplift_receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authority": {
+      "const": false
+    },
+    "benchmark_id": {
+      "pattern": "^hybrid-benchmark:",
+      "type": "string"
+    },
+    "benchmark_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "comparisons": {
+      "items": {
+        "properties": {
+          "authority": {
+            "const": false
+          },
+          "uplift_class": {
+            "enum": [
+              "positive",
+              "neutral",
+              "rejected"
+            ]
+          }
+        },
+        "required": [
+          "proposal_id",
+          "route_candidate_id",
+          "adds_route_diversity",
+          "route_energy_gap_to_local_exact",
+          "route_net_log_delta_delta",
+          "robustness_survival_rate_delta",
+          "worst_case_log_delta_delta",
+          "projected_net_profit_delta",
+          "repayment_feasible",
+          "locally_verified",
+          "uplift_class",
+          "authority"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "historical_replay": {
+      "const": true
+    },
+    "human_promotion_required": {
+      "const": true
+    },
+    "local_baseline": {
+      "properties": {
+        "authority": {
+          "const": false
+        },
+        "human_promotion_required": {
+          "const": true
+        },
+        "mode": {
+          "const": "historical_replay"
+        }
+      },
+      "required": [
+        "schema_version",
+        "receipt_id",
+        "benchmark_id",
+        "benchmark_sha256",
+        "snapshot_sha256",
+        "mode",
+        "human_promotion_required",
+        "authority"
+      ],
+      "type": "object"
+    },
+    "negative_or_zero_result_is_valid_evidence": {
+      "const": true
+    },
+    "overall_uplift_class": {
+      "enum": [
+        "positive",
+        "neutral",
+        "no_verified_uplift"
+      ]
+    },
+    "packet_guided_evaluations": {
+      "items": {
+        "properties": {
+          "authority": {
+            "const": false
+          },
+          "flash_model_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "locally_verified": {
+            "type": "boolean"
+          },
+          "route_model_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal",
+          "route_model_sha256",
+          "route_confidence",
+          "route_verification",
+          "calibration",
+          "robustness",
+          "flash_model_sha256",
+          "flash_confidence",
+          "flash_candidate",
+          "flash_verification",
+          "locally_verified",
+          "authority"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "provider_agreement_is_not_truth": {
+      "const": true
+    },
+    "receipt_id": {
+      "pattern": "^planning-uplift:[0-9a-f]{24}$",
+      "type": "string"
+    },
+    "remote_dependency": {
+      "const": false
+    },
+    "schema_version": {
+      "const": "codex-planning-uplift-receipt-v0.1"
+    },
+    "snapshot_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "strategy_packet": {
+      "properties": {
+        "authority": {
+          "const": false
+        },
+        "compiled_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "consumption_id": {
+          "pattern": "^codex-consumption:[0-9a-f]{24}$",
+          "type": "string"
+        },
+        "evidence_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "hints": {
+          "minItems": 1,
+          "type": "array"
+        },
+        "human_promotion_required": {
+          "const": true
+        },
+        "lineage": {
+          "type": "object"
+        },
+        "packet_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "remote_dependency": {
+          "const": false
+        },
+        "request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "codex-strategy-packet-consumption-v0.1"
+        },
+        "successful_evidence_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "task_class": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "consumption_id",
+        "schema_version",
+        "packet_id",
+        "request_sha256",
+        "compiled_at",
+        "expires_at",
+        "task_class",
+        "lineage",
+        "evidence_sha256",
+        "successful_evidence_count",
+        "hints",
+        "remote_dependency",
+        "human_promotion_required",
+        "authority"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "receipt_id",
+    "schema_version",
+    "benchmark_id",
+    "benchmark_sha256",
+    "snapshot_sha256",
+    "strategy_packet",
+    "local_baseline",
+    "packet_guided_evaluations",
+    "comparisons",
+    "overall_uplift_class",
+    "negative_or_zero_result_is_valid_evidence",
+    "provider_agreement_is_not_truth",
+    "remote_dependency",
+    "historical_replay",
+    "human_promotion_required",
+    "authority"
+  ],
+  "title": "Codex Planning Uplift Receipt v0.1",
+  "type": "object"
+}
