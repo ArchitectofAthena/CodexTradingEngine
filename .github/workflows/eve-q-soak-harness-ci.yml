@@ -10,6 +10,8 @@ on:
       - "tests/test_eve_q_soak_launcher_v0_1.py"
       - "docs/testing/EVE_Q_SOAK_HARNESS_v0_1.md"
       - "docs/testing/EVE_Q_SOAK_ACCEPTANCE_v0_1.json"
+      - "docs/testing/results/**"
+      - "vendor/spiralbloom_os_v0_1/**"
       - ".github/workflows/eve-q-soak-harness-ci.yml"
   push:
     branches:
@@ -22,6 +24,8 @@ on:
       - "tests/test_eve_q_soak_launcher_v0_1.py"
       - "docs/testing/EVE_Q_SOAK_HARNESS_v0_1.md"
       - "docs/testing/EVE_Q_SOAK_ACCEPTANCE_v0_1.json"
+      - "docs/testing/results/**"
+      - "vendor/spiralbloom_os_v0_1/**"
       - ".github/workflows/eve-q-soak-harness-ci.yml"
 
 permissions:
@@ -29,6 +33,7 @@ permissions:
 
 env:
   CONTROL_PLANE_COMMIT: 792b002c95916ab1e0d1eef17a1dbf6692359fea
+  OFFLINE_CONTROL_PLANE_ROOT: vendor/spiralbloom_os_v0_1
 
 jobs:
   soak-harness:
@@ -54,21 +59,44 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
 
-      - name: Check out pinned control plane
+      - name: Prepare offline pinned control plane
         run: |
-          git clone --filter=blob:none \
-            https://github.com/ArchitectofAthena/spiralbloom-os.git \
-            "$RUNNER_TEMP/spiralbloom-os"
-          git -C "$RUNNER_TEMP/spiralbloom-os" checkout "$CONTROL_PLANE_COMMIT"
-          echo "SPIRALBLOOM_OS_ROOT=$RUNNER_TEMP/spiralbloom-os" >> "$GITHUB_ENV"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path("vendor/spiralbloom_os_v0_1")
+          manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+
+          assert manifest["source_commit"] == os.environ["CONTROL_PLANE_COMMIT"]
+          assert manifest["source_validator"]["git_blob_sha"] == (
+              "17dd3cd77359154e3ba8f106a5cda69fd9d3b0ce"
+          )
+          assert manifest["source_builders"]["git_blob_sha"] == (
+              "e7979c8b4981dc0f3b25e11bf3e8ea42f3943f1d"
+          )
+          assert manifest["private_repository_checkout_required"] is False
+          assert manifest["authority"] is False
+          assert manifest["may_execute"] is False
+          assert manifest["may_move_capital"] is False
+          assert manifest["human_promotion_required"] is True
+          PY
+
+          mkdir -p "$OFFLINE_CONTROL_PLANE_ROOT/schemas"
+          cp schemas/*_v0_1.schema.json "$OFFLINE_CONTROL_PLANE_ROOT/schemas/"
+          echo "SPIRALBLOOM_OS_ROOT=$GITHUB_WORKSPACE/$OFFLINE_CONTROL_PLANE_ROOT" >> "$GITHUB_ENV"
 
       - name: Compile soak components
         run: |
           python -m py_compile \
             eve_q/soak_harness.py \
-            shadow_cycle_runner.py
+            shadow_cycle_runner.py \
+            vendor/spiralbloom_os_v0_1/control_plane_capsule.py \
+            vendor/spiralbloom_os_v0_1/tools/validate_eve_q_contract_v0_1.py \
+            vendor/spiralbloom_os_v0_1/tests/test_eve_q_cross_repo_contract_v0_1.py
 
-      - name: Run soak unit and cross-repository tests
+      - name: Run soak unit and cross-repository compatibility tests
         run: |
           python -m pytest -q --no-cov \
             tests/test_eve_q_soak_harness_v0_1.py \
