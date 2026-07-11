@@ -1,0 +1,247 @@
+{
+  "$id": "https://spiralbloom.local/schemas/live_read_only_telemetry_snapshot_v0_1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "artifact_is_command": {
+      "const": false
+    },
+    "artifact_type": {
+      "const": "LiveReadOnlyTelemetrySnapshot"
+    },
+    "authority": {
+      "const": false
+    },
+    "contract_version": {
+      "const": "eve_q_live_read_only_telemetry_v0.1"
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "gate_posture": {
+      "additionalProperties": false,
+      "properties": {
+        "gate_0": {
+          "const": "ACTIVE"
+        },
+        "gate_1": {
+          "const": "PILOT_ONLY"
+        },
+        "gate_2_through_6": {
+          "const": "LOCKED"
+        }
+      },
+      "required": [
+        "gate_0",
+        "gate_1",
+        "gate_2_through_6"
+      ],
+      "type": "object"
+    },
+    "hashes": {
+      "additionalProperties": false,
+      "properties": {
+        "normalized_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "raw_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "raw_sha256",
+        "normalized_sha256"
+      ],
+      "type": "object"
+    },
+    "human_promotion_required": {
+      "const": true
+    },
+    "may_execute": {
+      "const": false
+    },
+    "may_generate_live_proposal": {
+      "const": false
+    },
+    "may_move_capital": {
+      "const": false
+    },
+    "normalization": {
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "enum": [
+            "canonical_json",
+            "utf8_text_lf",
+            "head_metadata"
+          ]
+        },
+        "parser_version": {
+          "const": "live-read-only-normalizer-v0.1"
+        }
+      },
+      "required": [
+        "format",
+        "parser_version"
+      ],
+      "type": "object"
+    },
+    "normalized_payload": {},
+    "producer": {
+      "additionalProperties": false,
+      "properties": {
+        "commit_sha": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "component": {
+          "const": "live_read_only_telemetry_v0_1"
+        },
+        "repository": {
+          "const": "ArchitectofAthena/CodexTradingEngine"
+        }
+      },
+      "required": [
+        "repository",
+        "component",
+        "commit_sha"
+      ],
+      "type": "object"
+    },
+    "retrieval": {
+      "additionalProperties": false,
+      "properties": {
+        "content_length": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "content_type": {
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "freshness_ttl_seconds": {
+          "maximum": 86400,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "http_status": {
+          "maximum": 299,
+          "minimum": 200,
+          "type": "integer"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "retrieved_at",
+        "observed_at",
+        "expires_at",
+        "freshness_ttl_seconds",
+        "http_status",
+        "content_type",
+        "content_length"
+      ],
+      "type": "object"
+    },
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "allowlisted_host": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "final_uri": {
+          "format": "uri",
+          "pattern": "^https://",
+          "type": "string"
+        },
+        "method": {
+          "enum": [
+            "GET",
+            "HEAD"
+          ]
+        },
+        "requested_uri": {
+          "format": "uri",
+          "pattern": "^https://",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_kind": {
+          "enum": [
+            "market_snapshot",
+            "onchain_snapshot",
+            "policy_snapshot",
+            "impact_snapshot"
+          ]
+        }
+      },
+      "required": [
+        "source_id",
+        "source_kind",
+        "requested_uri",
+        "final_uri",
+        "allowlisted_host",
+        "method"
+      ],
+      "type": "object"
+    },
+    "storage": {
+      "additionalProperties": false,
+      "properties": {
+        "normalized_relative_path": {
+          "const": "normalized.json"
+        },
+        "raw_relative_path": {
+          "const": "raw.bin"
+        }
+      },
+      "required": [
+        "raw_relative_path",
+        "normalized_relative_path"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "source",
+    "retrieval",
+    "hashes",
+    "normalization",
+    "producer",
+    "storage",
+    "normalized_payload",
+    "gate_posture",
+    "artifact_is_command",
+    "authority",
+    "human_promotion_required",
+    "may_generate_live_proposal",
+    "may_execute",
+    "may_move_capital"
+  ],
+  "title": "EVE_Q++ LiveReadOnlyTelemetrySnapshot v0.1",
+  "type": "object"
+}
