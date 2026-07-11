@@ -63,38 +63,22 @@ jobs:
         run: python -m py_compile eve_q/contract_bundle.py
 
       - name: Build bundle contract
-        id: build_bundle
-        continue-on-error: true
         run: >-
           python -m pytest -vv tests/test_contract_bundle.py
           -k test_build_contract_bundle_is_non_authoritative_and_complete
 
       - name: Mock pin and ledger contract
-        id: mock_pin
-        continue-on-error: true
         run: >-
           python -m pytest -vv tests/test_contract_bundle.py
           -k test_mock_pin_is_verified_and_appends_ledger
 
       - name: Missing-schema fail-closed contract
-        id: missing_schema
-        continue-on-error: true
         run: >-
           python -m pytest -vv tests/test_contract_bundle.py
           -k test_missing_schema_fails_closed
 
       - name: Run schema mirror tests
-        id: schema_mirror
-        continue-on-error: true
         run: python -m pytest -vv tests/test_contract_schema_mirror.py
-
-      - name: Require all isolated contract checks
-        if: always()
-        run: |
-          test "${{ steps.build_bundle.outcome }}" = "success"
-          test "${{ steps.mock_pin.outcome }}" = "success"
-          test "${{ steps.missing_schema.outcome }}" = "success"
-          test "${{ steps.schema_mirror.outcome }}" = "success"
 
       - name: Verify non-authority language
         run: |
