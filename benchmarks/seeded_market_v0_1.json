@@ -1,0 +1,225 @@
+{
+  "schema_version": "hybrid-delta-benchmark-case-v0.1",
+  "benchmark_id": "hybrid-benchmark:seeded-triangle-v0-1",
+  "source_label": "deterministic teaching corpus; synthetic historical replay",
+  "snapshot": {
+    "edges": [
+      {
+        "edge_id": "edge:01-usd-eth",
+        "source_asset": "USD",
+        "target_asset": "ETH",
+        "quoted_rate": 0.0005,
+        "fee_bps": 1.0,
+        "slippage_bps": 1.0,
+        "latency_penalty_bps": 0.5,
+        "venue": "seed-alpha",
+        "authority": false
+      },
+      {
+        "edge_id": "edge:02-eth-btc",
+        "source_asset": "ETH",
+        "target_asset": "BTC",
+        "quoted_rate": 0.05,
+        "fee_bps": 1.0,
+        "slippage_bps": 1.5,
+        "latency_penalty_bps": 0.5,
+        "venue": "seed-beta",
+        "authority": false
+      },
+      {
+        "edge_id": "edge:03-btc-usd",
+        "source_asset": "BTC",
+        "target_asset": "USD",
+        "quoted_rate": 41000.0,
+        "fee_bps": 1.0,
+        "slippage_bps": 1.0,
+        "latency_penalty_bps": 1.0,
+        "venue": "seed-gamma",
+        "authority": false
+      }
+    ],
+    "gas_penalty_log": 0.001,
+    "minimum_log_delta": 0.005,
+    "authority": false
+  },
+  "historical_observations": [
+    {
+      "observation_id": "market-observation:seed-001",
+      "observed_at": "2026-01-01T00:00:00Z",
+      "edges": [
+        {
+          "edge_id": "edge:03-btc-usd",
+          "quoted_rate": 40987.7,
+          "fee_bps": 2.0,
+          "slippage_bps": 2.0,
+          "latency_penalty_bps": 2.0,
+          "authority": false
+        },
+        {
+          "edge_id": "edge:01-usd-eth",
+          "quoted_rate": 0.0004999,
+          "fee_bps": 2.0,
+          "slippage_bps": 2.0,
+          "latency_penalty_bps": 1.0,
+          "authority": false
+        },
+        {
+          "edge_id": "edge:02-eth-btc",
+          "quoted_rate": 0.049995,
+          "fee_bps": 2.0,
+          "slippage_bps": 2.5,
+          "latency_penalty_bps": 1.0,
+          "authority": false
+        }
+      ],
+      "gas_penalty_log": 0.0015,
+      "source_sha256": "afb8d96163a2fa4e880295c2a46717c549b29b8afd7d351b1b479e8938b94386",
+      "authority": false
+    },
+    {
+      "observation_id": "market-observation:seed-002",
+      "observed_at": "2026-01-02T00:00:00Z",
+      "edges": [
+        {
+          "edge_id": "edge:02-eth-btc",
+          "quoted_rate": 0.04998,
+          "fee_bps": 3.0,
+          "slippage_bps": 4.5,
+          "latency_penalty_bps": 1.5,
+          "authority": false
+        },
+        {
+          "edge_id": "edge:03-btc-usd",
+          "quoted_rate": 40975.4,
+          "fee_bps": 3.0,
+          "slippage_bps": 4.0,
+          "latency_penalty_bps": 2.0,
+          "authority": false
+        },
+        {
+          "edge_id": "edge:01-usd-eth",
+          "quoted_rate": 0.00049975,
+          "fee_bps": 3.0,
+          "slippage_bps": 4.0,
+          "latency_penalty_bps": 1.5,
+          "authority": false
+        }
+      ],
+      "gas_penalty_log": 0.002,
+      "source_sha256": "45ca48bde6040f9c915f0c34e7bbf0e4a437426fef0f062265ad725245a4763b",
+      "authority": false
+    },
+    {
+      "observation_id": "market-observation:seed-003",
+      "observed_at": "2026-01-03T00:00:00Z",
+      "edges": [
+        {
+          "edge_id": "edge:01-usd-eth",
+          "quoted_rate": 0.0004994,
+          "fee_bps": 4.0,
+          "slippage_bps": 7.0,
+          "latency_penalty_bps": 2.5,
+          "authority": false
+        },
+        {
+          "edge_id": "edge:03-btc-usd",
+          "quoted_rate": 40942.6,
+          "fee_bps": 4.0,
+          "slippage_bps": 7.0,
+          "latency_penalty_bps": 3.0,
+          "authority": false
+        },
+        {
+          "edge_id": "edge:02-eth-btc",
+          "quoted_rate": 0.04995,
+          "fee_bps": 4.0,
+          "slippage_bps": 7.5,
+          "latency_penalty_bps": 2.5,
+          "authority": false
+        }
+      ],
+      "gas_penalty_log": 0.004,
+      "source_sha256": "2cc751ae433cd567cb4c4d75836dd1de0ad270f17160c7d70c5df449fdd06ad0",
+      "authority": false
+    },
+    {
+      "observation_id": "market-observation:seed-004",
+      "observed_at": "2026-01-04T00:00:00Z",
+      "edges": [
+        {
+          "edge_id": "edge:02-eth-btc",
+          "quoted_rate": 0.0499,
+          "fee_bps": 6.0,
+          "slippage_bps": 11.5,
+          "latency_penalty_bps": 4.5,
+          "authority": false
+        },
+        {
+          "edge_id": "edge:01-usd-eth",
+          "quoted_rate": 0.00049875,
+          "fee_bps": 6.0,
+          "slippage_bps": 11.0,
+          "latency_penalty_bps": 4.0,
+          "authority": false
+        },
+        {
+          "edge_id": "edge:03-btc-usd",
+          "quoted_rate": 40877.0,
+          "fee_bps": 6.0,
+          "slippage_bps": 11.0,
+          "latency_penalty_bps": 5.0,
+          "authority": false
+        }
+      ],
+      "gas_penalty_log": 0.006,
+      "source_sha256": "6a6d949df196f768ff573143a46d9d68e94a0a5ee04f38402842587501f1934f",
+      "authority": false
+    }
+  ],
+  "calibration_policy": {
+    "quantiles": [0.5, 0.8, 0.95],
+    "minimum_observations": 4,
+    "maximum_observations": 128,
+    "max_abs_rate_shift_bps": 250.0,
+    "max_cost_shift_bps": 100.0,
+    "max_gas_shift_log": 0.05,
+    "authority": false
+  },
+  "flash_liquidity": {
+    "providers": [
+      {
+        "provider_id": "flash-provider:seed-a",
+        "fee_bps": 9.0,
+        "capacity_by_asset": {
+          "USD": 5000.0
+        },
+        "authority": false
+      },
+      {
+        "provider_id": "flash-provider:seed-b",
+        "fee_bps": 5.0,
+        "capacity_by_asset": {
+          "USD": 2000.0
+        },
+        "authority": false
+      }
+    ],
+    "buckets": [
+      {
+        "bucket_id": "flash-bucket:usd-0500",
+        "asset": "USD",
+        "principal_amount": 500.0,
+        "authority": false
+      },
+      {
+        "bucket_id": "flash-bucket:usd-1000",
+        "asset": "USD",
+        "principal_amount": 1000.0,
+        "authority": false
+      }
+    ],
+    "minimum_net_profit": 1.0,
+    "authority": false
+  },
+  "authority": false
+}

@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://architectofathena.github.io/CodexTradingEngine/schemas/hybrid_delta_benchmark_case.schema.json",
+  "title": "Hybrid delta benchmark case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "benchmark_id",
+    "source_label",
+    "snapshot",
+    "historical_observations",
+    "calibration_policy",
+    "flash_liquidity",
+    "authority"
+  ],
+  "properties": {
+    "schema_version": {"const": "hybrid-delta-benchmark-case-v0.1"},
+    "benchmark_id": {"type": "string", "pattern": "^hybrid-benchmark:"},
+    "source_label": {"type": "string", "minLength": 1},
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edges", "gas_penalty_log", "minimum_log_delta", "authority"],
+      "properties": {
+        "edges": {
+          "type": "array",
+          "minItems": 3,
+          "items": {"$ref": "#/$defs/marketEdge"}
+        },
+        "gas_penalty_log": {"type": "number", "minimum": 0},
+        "minimum_log_delta": {"type": "number"},
+        "authority": {"const": false}
+      }
+    },
+    "historical_observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/observation"}
+    },
+    "calibration_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quantiles",
+        "minimum_observations",
+        "maximum_observations",
+        "max_abs_rate_shift_bps",
+        "max_cost_shift_bps",
+        "max_gas_shift_log",
+        "authority"
+      ],
+      "properties": {
+        "quantiles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
+        },
+        "minimum_observations": {"type": "integer", "minimum": 1},
+        "maximum_observations": {"type": "integer", "minimum": 1},
+        "max_abs_rate_shift_bps": {"type": "number", "exclusiveMinimum": 0, "maximum": 5000},
+        "max_cost_shift_bps": {"type": "number", "exclusiveMinimum": 0, "maximum": 5000},
+        "max_gas_shift_log": {"type": "number", "exclusiveMinimum": 0},
+        "authority": {"const": false}
+      }
+    },
+    "flash_liquidity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providers", "buckets", "minimum_net_profit", "authority"],
+      "properties": {
+        "providers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/provider"}
+        },
+        "buckets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/bucket"}
+        },
+        "minimum_net_profit": {"type": "number", "minimum": 0},
+        "authority": {"const": false}
+      }
+    },
+    "authority": {"const": false}
+  },
+  "$defs": {
+    "marketEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edge_id",
+        "source_asset",
+        "target_asset",
+        "quoted_rate",
+        "fee_bps",
+        "slippage_bps",
+        "latency_penalty_bps",
+        "venue",
+        "authority"
+      ],
+      "properties": {
+        "edge_id": {"type": "string", "minLength": 1},
+        "source_asset": {"type": "string", "minLength": 1},
+        "target_asset": {"type": "string", "minLength": 1},
+        "quoted_rate": {"type": "number", "exclusiveMinimum": 0},
+        "fee_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+        "slippage_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+        "latency_penalty_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+        "venue": {"type": "string", "minLength": 1},
+        "authority": {"const": false}
+      }
+    },
+    "historicalEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edge_id",
+        "quoted_rate",
+        "fee_bps",
+        "slippage_bps",
+        "latency_penalty_bps",
+        "authority"
+      ],
+      "properties": {
+        "edge_id": {"type": "string", "minLength": 1},
+        "quoted_rate": {"type": "number", "exclusiveMinimum": 0},
+        "fee_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+        "slippage_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+        "latency_penalty_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+        "authority": {"const": false}
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation_id",
+        "observed_at",
+        "edges",
+        "gas_penalty_log",
+        "source_sha256",
+        "authority"
+      ],
+      "properties": {
+        "observation_id": {"type": "string", "pattern": "^market-observation:"},
+        "observed_at": {"type": "string", "minLength": 1},
+        "edges": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"$ref": "#/$defs/historicalEdge"}
+        },
+        "gas_penalty_log": {"type": "number", "minimum": 0},
+        "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "authority": {"const": false}
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider_id", "fee_bps", "capacity_by_asset", "authority"],
+      "properties": {
+        "provider_id": {"type": "string", "pattern": "^flash-provider:"},
+        "fee_bps": {"type": "number", "minimum": 0, "exclusiveMaximum": 10000},
+        "capacity_by_asset": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {"type": "number", "exclusiveMinimum": 0}
+        },
+        "authority": {"const": false}
+      }
+    },
+    "bucket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bucket_id", "asset", "principal_amount", "authority"],
+      "properties": {
+        "bucket_id": {"type": "string", "pattern": "^flash-bucket:"},
+        "asset": {"type": "string", "minLength": 1},
+        "principal_amount": {"type": "number", "exclusiveMinimum": 0},
+        "authority": {"const": false}
+      }
+    }
+  }
+}
