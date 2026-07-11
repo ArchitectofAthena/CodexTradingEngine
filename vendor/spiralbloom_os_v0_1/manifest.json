@@ -1,0 +1,26 @@
+{
+  "capsule_type": "spiralbloom_os_control_plane_compatibility_capsule",
+  "contract_version": "eve_q_cross_repo_v0.1",
+  "source_repository": "ArchitectofAthena/spiralbloom-os",
+  "source_commit": "792b002c95916ab1e0d1eef17a1dbf6692359fea",
+  "source_validator": {
+    "path": "tools/validate_eve_q_contract_v0_1.py",
+    "git_blob_sha": "17dd3cd77359154e3ba8f106a5cda69fd9d3b0ce"
+  },
+  "source_builders": {
+    "path": "tests/test_eve_q_cross_repo_contract_v0_1.py",
+    "git_blob_sha": "e7979c8b4981dc0f3b25e11bf3e8ea42f3943f1d"
+  },
+  "schema_source": {
+    "repository": "ArchitectofAthena/CodexTradingEngine",
+    "manifest": "contracts/eve_q_cross_repo_contract_v0_1.manifest.json",
+    "copy_mode": "workflow_runtime_copy_from_exact_mirror"
+  },
+  "network_requirement": "none",
+  "private_repository_checkout_required": false,
+  "authority": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "human_promotion_required": true,
+  "note": "This is an offline CI compatibility capsule. The full real cross-repository passage and 100-cycle campaign were also executed locally against the checked-out private SpiralBloom OS repository."
+}

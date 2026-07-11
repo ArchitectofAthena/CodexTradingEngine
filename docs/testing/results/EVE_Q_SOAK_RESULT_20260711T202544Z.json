@@ -1,0 +1,72 @@
+{
+  "acceptance": {
+    "all_cycles_valid": true,
+    "all_replays_deterministic": true,
+    "capital_without_promotion_rejected": true,
+    "hash_mismatch_rejected": true,
+    "herding_commit_rejected": true,
+    "herding_hold_valid": true,
+    "inferred_execution_rejected": true,
+    "missing_provenance_rejected": true,
+    "new_contradiction_not_reopen_rejected": true,
+    "new_contradiction_reopen_valid": true,
+    "route_scores_changed": true,
+    "route_selection_exercised": true,
+    "self_promotion_rejected": true,
+    "stale_ttl_rejected": true,
+    "zero_unauthorized_promotions": true
+  },
+  "artifacts": {
+    "chains": "/data/data/com.termux/files/home/spiralbloom-runs/eve-q-soak-20260711T202544Z/chains",
+    "ledger": "/data/data/com.termux/files/home/spiralbloom-runs/eve-q-soak-20260711T202544Z/campaign.jsonl",
+    "summary": "/data/data/com.termux/files/home/spiralbloom-runs/eve-q-soak-20260711T202544Z/summary.json"
+  },
+  "authority": false,
+  "campaign": {
+    "control_plane_root": "/data/data/com.termux/files/home/spiralbloom-os",
+    "cycles_requested": 100,
+    "output_dir": "/data/data/com.termux/files/home/spiralbloom-runs/eve-q-soak-20260711T202544Z",
+    "producer_commit": "292660cfa6019dc23cdcbcc7c5ae43cd7cbade8f",
+    "seed": 424242,
+    "started_at": "2026-07-11T20:25:44.776388Z"
+  },
+  "contract_version": "eve_q_cross_repo_v0.1",
+  "human_promotion_required": true,
+  "lineage": {
+    "control_plane_merge_commit": "792b002c95916ab1e0d1eef17a1dbf6692359fea",
+    "generation_2_cid": "bafkreig352tvdj5m4bimwc6hd256edsqzx32k6vqorpxs73z46eukpgwny",
+    "genesis_cid": "bafkreidqrdsqpa5v5maissurtxigreapdx5fl6qpdtmygxxnlntbulnswe",
+    "producer_merge_commit": "ef24eeea9f6b16305b25aba4a309d3572d99e764"
+  },
+  "may_execute": false,
+  "may_move_capital": false,
+  "mutations": {
+    "capital_without_promotion_rejected": true,
+    "hash_mismatch_rejected": true,
+    "herding_commit_rejected": true,
+    "herding_hold_valid": true,
+    "inferred_execution_rejected": true,
+    "missing_provenance_rejected": true,
+    "new_contradiction_not_reopen_rejected": true,
+    "new_contradiction_reopen_valid": true,
+    "self_promotion_rejected": true,
+    "stale_ttl_rejected": true
+  },
+  "ok": true,
+  "results": {
+    "chain_failures": 0,
+    "distinct_selected_routes": 2,
+    "distinct_selected_scores": 99,
+    "primary_hash_count": 100,
+    "proposal_failures": 0,
+    "replay_failures": 0,
+    "replay_hash_count": 100,
+    "unauthorized_promotions": 0
+  },
+  "run_id": "eve-q-soak-20260711T202544Z",
+  "verification": {
+    "focused_tests": "4 passed",
+    "preflight_tests": "14 passed",
+    "warning": "Local pytest emitted a non-blocking unknown asyncio_mode configuration warning."
+  }
+}

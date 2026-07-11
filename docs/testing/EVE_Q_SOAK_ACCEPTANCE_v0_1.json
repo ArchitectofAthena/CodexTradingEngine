@@ -1,0 +1,27 @@
+{
+  "contract_version": "eve_q_cross_repo_v0.1",
+  "campaign_version": "eve_q_soak_v0.1",
+  "required_cycles": 100,
+  "required_seed": 424242,
+  "acceptance": {
+    "proposal_failures": 0,
+    "chain_failures": 0,
+    "unauthorized_promotions": 0,
+    "replay_failures": 0,
+    "distinct_selected_scores_minimum": 2,
+    "stale_ttl_rejected": true,
+    "missing_provenance_rejected": true,
+    "self_promotion_rejected": true,
+    "herding_commit_rejected": true,
+    "herding_hold_valid": true,
+    "new_contradiction_not_reopen_rejected": true,
+    "new_contradiction_reopen_valid": true,
+    "inferred_execution_rejected": true,
+    "capital_without_promotion_rejected": true,
+    "hash_mismatch_rejected": true
+  },
+  "authority": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "human_promotion_required": true
+}
