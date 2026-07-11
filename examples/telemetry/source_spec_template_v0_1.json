@@ -1,0 +1,11 @@
+{
+  "allowed_hosts": [
+    "data.example.org"
+  ],
+  "freshness_ttl_seconds": 300,
+  "max_response_bytes": 1048576,
+  "source_id": "replace-with-stable-source-id",
+  "source_kind": "market_snapshot",
+  "timeout_seconds": 10.0,
+  "url": "https://data.example.org/replace-with-read-only-endpoint"
+}
