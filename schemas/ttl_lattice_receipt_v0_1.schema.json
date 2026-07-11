@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/codex/ttl_lattice_receipt_v0_1.schema.json",
+  "title": "Codex typed TTL lattice receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "evaluated_at",
+    "manifest_id",
+    "manifest_version",
+    "manifest_sha256",
+    "snapshot_sha256",
+    "current_state",
+    "effective_state",
+    "degraded",
+    "hard_stop",
+    "expired_clocks",
+    "missing_required_clocks",
+    "clock_results",
+    "scope_violations",
+    "denied_capability_hits",
+    "requested_capabilities",
+    "renewal_requested",
+    "renewal_permitted",
+    "human_approval_required",
+    "reasons",
+    "network_calls_made",
+    "mutation_performed",
+    "authority",
+    "execution_authority",
+    "wallet_authority",
+    "signing_authority",
+    "capital_authority",
+    "deployment_authority",
+    "scheduler_authority",
+    "human_promotion_required",
+    "authority_manifest",
+    "hard_invariants"
+  ],
+  "properties": {
+    "schema": {"const": "codex.ttl_lattice_receipt.v0.1"},
+    "version": {"const": "0.1.0"},
+    "evaluated_at": {"type": "string", "format": "date-time"},
+    "manifest_id": {"const": "codex_bounded_authority_manifest_v0.2"},
+    "manifest_version": {"const": "0.2.0"},
+    "manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "current_state": {"$ref": "#/$defs/state"},
+    "effective_state": {"$ref": "#/$defs/state"},
+    "degraded": {"type": "boolean"},
+    "hard_stop": {"type": "boolean"},
+    "expired_clocks": {"$ref": "#/$defs/stringArray"},
+    "missing_required_clocks": {"$ref": "#/$defs/stringArray"},
+    "clock_results": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/clockResult"}
+    },
+    "scope_violations": {"$ref": "#/$defs/stringArray"},
+    "denied_capability_hits": {"$ref": "#/$defs/stringArray"},
+    "requested_capabilities": {"$ref": "#/$defs/stringArray"},
+    "renewal_requested": {"type": "boolean"},
+    "renewal_permitted": {"const": false},
+    "human_approval_required": {"type": "boolean"},
+    "reasons": {"$ref": "#/$defs/stringArray"},
+    "network_calls_made": {"const": false},
+    "mutation_performed": {"const": false},
+    "authority": {"const": false},
+    "execution_authority": {"const": false},
+    "wallet_authority": {"const": false},
+    "signing_authority": {"const": false},
+    "capital_authority": {"const": false},
+    "deployment_authority": {"const": false},
+    "scheduler_authority": {"const": false},
+    "human_promotion_required": {"const": true},
+    "authority_manifest": {"$ref": "#/$defs/authority"},
+    "hard_invariants": {"$ref": "#/$defs/stringArray"}
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "state": {
+      "enum": [
+        "bounded_proposal",
+        "simulation_only",
+        "local_analysis_only",
+        "risk_review_only",
+        "alert_only",
+        "receipt_only",
+        "inert"
+      ]
+    },
+    "stringArray": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "nullableInteger": {
+      "anyOf": [
+        {"type": "integer", "minimum": 0},
+        {"type": "null"}
+      ]
+    },
+    "nullableString": {
+      "anyOf": [
+        {"type": "string", "minLength": 1},
+        {"type": "null"}
+      ]
+    },
+    "clockResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clock",
+        "status",
+        "required",
+        "observed_at",
+        "age_seconds",
+        "requested_ttl_seconds",
+        "effective_ttl_seconds",
+        "ttl_capped",
+        "expired",
+        "expiry_target",
+        "on_expiry"
+      ],
+      "properties": {
+        "clock": {"type": "string", "minLength": 1},
+        "status": {"enum": ["fresh", "expired", "missing"]},
+        "required": {"type": "boolean"},
+        "observed_at": {"$ref": "#/$defs/nullableString"},
+        "age_seconds": {"$ref": "#/$defs/nullableInteger"},
+        "requested_ttl_seconds": {"$ref": "#/$defs/nullableInteger"},
+        "effective_ttl_seconds": {"type": "integer", "minimum": 1},
+        "ttl_capped": {"type": "boolean"},
+        "expired": {"type": "boolean"},
+        "expiry_target": {"$ref": "#/$defs/state"},
+        "on_expiry": {"type": "string", "minLength": 1}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "execution_authority",
+        "wallet_authority",
+        "signing_authority",
+        "capital_authority",
+        "deployment_authority",
+        "scheduler_authority",
+        "human_promotion_required"
+      ],
+      "properties": {
+        "authority": {"const": false},
+        "execution_authority": {"const": false},
+        "wallet_authority": {"const": false},
+        "signing_authority": {"const": false},
+        "capital_authority": {"const": false},
+        "deployment_authority": {"const": false},
+        "scheduler_authority": {"const": false},
+        "human_promotion_required": {"const": true}
+      }
+    }
+  }
+}
