@@ -1,0 +1,101 @@
+name: EVE_Q++ Soak Harness CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/soak_harness.py"
+      - "shadow_cycle_runner.py"
+      - "tests/test_eve_q_soak_harness_v0_1.py"
+      - ".github/workflows/eve-q-soak-harness-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "eve_q/soak_harness.py"
+      - "shadow_cycle_runner.py"
+      - "tests/test_eve_q_soak_harness_v0_1.py"
+      - ".github/workflows/eve-q-soak-harness-ci.yml"
+
+permissions:
+  contents: read
+
+env:
+  CONTROL_PLANE_COMMIT: 792b002c95916ab1e0d1eef17a1dbf6692359fea
+
+jobs:
+  soak-harness:
+    name: Soak harness (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out producer repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Check out pinned control plane
+        run: |
+          git clone --filter=blob:none \
+            https://github.com/ArchitectofAthena/spiralbloom-os.git \
+            "$RUNNER_TEMP/spiralbloom-os"
+          git -C "$RUNNER_TEMP/spiralbloom-os" checkout "$CONTROL_PLANE_COMMIT"
+          echo "SPIRALBLOOM_OS_ROOT=$RUNNER_TEMP/spiralbloom-os" >> "$GITHUB_ENV"
+
+      - name: Compile soak components
+        run: |
+          python -m py_compile \
+            eve_q/soak_harness.py \
+            shadow_cycle_runner.py
+
+      - name: Run soak unit and cross-repository tests
+        run: |
+          python -m pytest -q --no-cov \
+            tests/test_eve_q_soak_harness_v0_1.py
+
+      - name: Run 24-cycle CI campaign
+        run: |
+          python -m eve_q.soak_harness \
+            --cycles 24 \
+            --seed 424242 \
+            --producer-commit "$(git rev-parse HEAD)" \
+            --control-plane-root "$SPIRALBLOOM_OS_ROOT" \
+            --output-dir "$RUNNER_TEMP/eve-q-soak"
+
+      - name: Verify campaign summary
+        run: |
+          python - "$RUNNER_TEMP/eve-q-soak/summary.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          summary = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          assert summary["ok"] is True
+          assert summary["results"]["proposal_failures"] == 0
+          assert summary["results"]["chain_failures"] == 0
+          assert summary["results"]["unauthorized_promotions"] == 0
+          assert summary["results"]["replay_failures"] == 0
+          assert all(summary["mutations"].values())
+          PY
+
+      - name: Upload soak diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eve-q-soak-${{ matrix.python-version }}
+          path: |
+            ${{ runner.temp }}/eve-q-soak/summary.json
+            ${{ runner.temp }}/eve-q-soak/campaign.jsonl
+          if-no-files-found: warn
