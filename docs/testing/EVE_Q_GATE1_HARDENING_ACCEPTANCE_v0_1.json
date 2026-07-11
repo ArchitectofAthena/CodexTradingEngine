@@ -1,0 +1,29 @@
+{
+  "acceptance": {
+    "dns_failure_rejected": true,
+    "dns_preflight_required": true,
+    "dns_postflight_required": true,
+    "ip_literal_host_rejected": true,
+    "mixed_public_private_resolution_rejected": true,
+    "non_public_ipv4_rejected": true,
+    "non_public_ipv6_rejected": true,
+    "non_standard_https_port_rejected": true,
+    "resolution_drift_rejected": true,
+    "rollback_receipt_required_on_failure": true,
+    "rollback_restores_gate_0": true,
+    "rollback_keeps_gate_2_through_6_locked": true
+  },
+  "artifact_is_command": false,
+  "authority": false,
+  "contract_version": "eve_q_gate1_hardening_v0.1",
+  "gate_posture": {
+    "gate_0": "ACTIVE",
+    "gate_1": "PILOT_ONLY",
+    "gate_2_through_6": "LOCKED"
+  },
+  "human_promotion_required": true,
+  "may_execute": false,
+  "may_generate_live_proposal": false,
+  "may_move_capital": false,
+  "status": "implementation_under_review"
+}
