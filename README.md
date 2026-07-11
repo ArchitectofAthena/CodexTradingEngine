@@ -1,22 +1,12 @@
 # CodexTradingEngine
 
-**Simulation-first crypto telemetry and safety research engine for Termux/Python.**
+**Simulation-first crypto telemetry, planning, verification, charity-allocation, and artifact-receipt research for Termux/Python.**
 
-CodexTradingEngine emits proposals, artifact receipts, risk reports, TTL evaluations, CID-backed carrier manifests, charity allocation artifacts, and bounded arbitrage research candidates. It does **not** autonomously move capital.
+CodexTradingEngine is the market-facing metabolic organ in the wider SpiralBloom architecture. It observes bounded inputs, constructs reviewable proposals, tests them against independent verifiers and policy membranes, and emits evidence artifacts.
 
-## Safety Posture
+It does **not** autonomously move capital.
 
-- No wallet signing
-- No autonomous capital movement
-- No scheduler-triggered execution
-- No webhook-triggered execution
-- No reverse execution channel
-- Human promotion required for real capital touchpoints
-- Artifacts are records, not commands
-- Metadata is pointer, not authority
-- CID-backed carrier manifests may point to memory, but keys remain consent
-
-## Core Law
+## Constitutional Posture
 
 ```text
 Agent proposes.
@@ -32,53 +22,178 @@ Policy before runtime.
 Membrane before motion.
 ```
 
-## Current Constitutional Surfaces
+The repository is intentionally:
 
-- `contracts/organ_contract.json` defines the local constitutional membrane.
-- `contracts/ttl_policy.json` defines time-bounded authority and graceful degradation.
-- `contracts/artifact_carrier_manifest.json` defines safe CID-backed carrier manifests.
-- `eve_q/receipt_emitter.py` emits artifact receipts.
-- `eve_q/organ_contract.py` validates receipts against the organ contract.
-- `eve_q/ttl_policy.py` evaluates TTL state without runtime authority.
-- `eve_q/artifact_carrier.py` validates artifact carrier manifests.
+- proposal-only by default;
+- simulation-first;
+- artifact- and receipt-driven;
+- human-gated before any real-world capital touchpoint;
+- explicit about uncertainty, provenance, and model boundaries;
+- unable to convert evidence into authority by itself.
 
-## Allowed Outputs
+Artifacts are records, not commands. Metadata is a pointer, not authority. A successful model, verifier result, hash match, or receipt cannot promote itself.
 
-CodexTradingEngine may produce:
+## What the Engine Does
 
-- artifact receipts
-- safety bridge receipts
-- risk reports
-- simulation summaries
-- drift audits
-- testnet results
-- charity allocation proposals
-- CID-backed carrier manifests
-- QAOA-ready price-delta candidates
-- QAOA confidence receipts
-- Rust exact-repricing evidence
-- perturbed-state robustness receipts
-- flash-liquidity geometry candidates
-- Rust flash-liquidity verification evidence
-- source-bound perturbation calibration receipts
+CodexTradingEngine may:
 
-These outputs are review artifacts. They are not commands.
+- ingest bounded telemetry and historical-replay inputs;
+- construct market graphs and triangular-cycle candidates;
+- build route and route-plus-liquidity QUBOs;
+- run bounded local Qiskit statevector experiments;
+- compare QAOA evidence against exact classical solutions on the identical QUBO;
+- call isolated local Rust verifiers with strict subprocess contracts;
+- calibrate deterministic adverse scenarios from source-bound observations;
+- score perturbed-state robustness;
+- model flash-liquidity provider and amount-bucket geometry;
+- verify capacity, repayment, and minimum-profit arithmetic without borrowing;
+- rank charity-allocation proposals from impact, need, urgency, confidence, and provenance signals;
+- apply anti-monoculture portfolio safeguards;
+- emit canonical simulation summaries, risk reports, and artifact receipts.
 
-## Forbidden Capabilities
+These outputs remain review artifacts with `authority: false`.
+
+## What the Engine Must Not Do
 
 CodexTradingEngine must not perform:
 
-- wallet signing
-- transaction signing
-- autonomous capital movement
-- governance mutation
-- webhook-triggered execution
-- scheduler-triggered execution
-- silent remote command execution
-- self-promotion
-- receipt mutation after emission
+- wallet or transaction signing;
+- autonomous capital movement;
+- flash-loan execution;
+- RPC submission;
+- mempool mutation or interaction;
+- scheduler- or webhook-triggered execution;
+- governance mutation;
+- silent remote command execution;
+- receipt mutation after emission;
+- self-promotion from simulation or evidence into execution authority.
 
-## Artifact Carrier Law
+## Local Constitutional Membrane
+
+The machine-readable organ contract defines the repository's legal surface:
+
+- `contracts/organ_contract.json` — allowed outputs, forbidden capabilities, allowed modes, promotion path, and hard invariants;
+- `eve_q/organ_contract.py` — validates emitted records against that contract;
+- `contracts/ttl_policy.json` and `eve_q/ttl_policy.py` — evaluate time-bounded posture and graceful degradation;
+- `eve_q/receipt_emitter.py` — emits artifact-only receipts compatible with the wider SpiralBloom receipt lane.
+
+The promotion path is:
+
+```text
+simulate
+→ validate
+→ emit receipt
+→ ingest receipt
+→ verify
+→ human review
+→ human promotion
+```
+
+No earlier stage implies the next.
+
+## Charity Geodesic
+
+The charity lane treats profit as throughput rather than destination. Verified positive impact may curve the recommendation landscape, but it never becomes execution authority.
+
+```text
+Verified impact bends the gradient.
+It does not own the gradient.
+No single charity may become the whole definition of good.
+```
+
+`eve_q/allocation/geodesic_policy.py` scores allocation proposals using bounded signals including:
+
+- impact;
+- need;
+- urgency;
+- neglect;
+- funding gap;
+- absorptive capacity;
+- confidence;
+- telemetry-source reliability;
+- provenance.
+
+Every decision keeps `hold_transfer: true`. Missing provenance, low confidence, low source reliability, or limited absorptive capacity raises review flags instead of authorizing a transfer.
+
+`eve_q/allocation/charity_router.py` adds the anti-monoculture portfolio guard:
+
+- a maximum single-charity weight;
+- a reserved exploration budget;
+- concentration-review thresholds;
+- visible residual allocation caused by caps;
+- mandatory human review before promotion.
+
+The default policy caps any single current allocation at `0.45`, reserves `0.10` for exploration, and routes concentrated proposals toward review. The guard degrades concentration gracefully rather than allowing one measurement, charity, or theory of impact to consume the whole definition of good.
+
+## Hybrid Delta Research Lane
+
+```text
+Python constructs graph, QUBO, policy context, and receipts.
+Qiskit samples bounded local candidate geometry.
+Classical exact solving supplies an independent baseline.
+Rust reconstructs and verifies route and repayment arithmetic.
+Python applies policy and emits non-authoritative evidence.
+Human review remains the promotion gate.
+```
+
+### Route construction and QAOA evidence
+
+- `eve_q/qaoa_delta.py` enumerates deterministic triangular cycles and builds QUBO/Ising contracts.
+- `eve_q/qaoa_sampling.py` performs bounded local sampling, deterministic decoding, model hashing, and exact classical comparison.
+- QAOA and classical results are only comparable when bound to the identical QUBO hash.
+
+### Exact Rust repricing
+
+- `eve_q/rust_repricing.py` binds a selected candidate and market snapshot to a strict request.
+- `rust/delta-verifier/` independently reconstructs route identity and verifies fee, slippage, latency, gas, profitability, and declared margin assumptions.
+- The bridge invokes an explicitly selected local binary with `shell=False` and fails closed on schema, identity, output-size, timeout, or authority drift.
+
+### Perturbation and calibration
+
+- `eve_q/delta_robustness.py` reprices a selected candidate across deterministic alternate market states and emits survival evidence.
+- `eve_q/perturbation_calibration.py` converts source-bound historical observations into bounded adverse rate, fee, slippage, latency, and gas scenarios.
+- Dataset, policy, scenario, model, and snapshot hashes preserve provenance.
+- Quantiles describe the supplied corpus; they do not promise recurrence.
+
+### Flash-liquidity geometry
+
+- `eve_q/flash_liquidity.py` expands routes into provider, borrowed-asset, and amount-bucket candidates.
+- `rust/delta-verifier/src/bin/codex-flash-liquidity-verifier.rs` verifies route identity, capacity, provider fee, repayment, and minimum net profit.
+- No provider discovery, borrowing, signing, submission, or capital movement occurs.
+
+### Reproducible benchmark spine
+
+Phase 2E closes the research loop with a deterministic historical-replay instrument:
+
+- `benchmarks/seeded_market_v0_1.json` — versioned synthetic snapshot and observation corpus;
+- `eve_q/hybrid_benchmark.py` — strict loader, canonical hashing, identical-QUBO comparisons, Rust-backed replay, and receipt construction;
+- `schemas/hybrid_delta_benchmark_case.schema.json` — benchmark-input contract;
+- `schemas/hybrid_delta_benchmark_receipt.schema.json` — benchmark-evidence contract;
+- `docs/QAOA_DELTA_PHASE_2E.md` — architecture and interpretation boundary;
+- `.github/workflows/hybrid-benchmark-ci.yml` — Python 3.11/3.13, local Qiskit, compiled Rust replay, deterministic receipt, and artifact-emission validation.
+
+The complete chain is:
+
+```text
+seeded market snapshot
+→ triangular cycles
+→ route QUBO
+→ local QAOA evidence
+→ exact classical comparison on the identical model
+→ Rust exact repricing
+→ source-bound perturbation calibration
+→ Rust-backed robustness evaluation
+→ route/provider/bucket QUBO
+→ local QAOA liquidity evidence
+→ exact classical comparison on the identical model
+→ Rust capacity and repayment verification
+→ canonical simulation_summary envelope
+→ human review
+```
+
+A benchmark must be reconstructible. A source hash binds evidence; it does not make the evidence true. A receipt records the experiment; it does not command the system.
+
+## Artifact and Memory Carrier Lane
 
 ```text
 The image carries the acorn.
@@ -87,122 +202,62 @@ The key is consent.
 The artifact never commands.
 ```
 
-Artifact carrier manifests can point to public, encrypted, or private payloads. Private or encrypted payloads require encryption metadata and human-held or external-vault key custody. Secrets, wallet seeds, private keys, API keys, shell commands, and execution fields are rejected.
+- `contracts/artifact_carrier_manifest.json` defines safe CID-backed carrier manifests.
+- `eve_q/artifact_carrier.py` validates carrier manifests.
+- `eve_q/receipt_carrier_attestation.py` binds receipt identity to carrier evidence.
+- `eve_q/membrane_tool.py` extracts and compares bounded metadata without writing metadata or opening a reverse execution channel.
 
-## Hybrid Arbitrage Research Lane
+Private or encrypted payloads require explicit encryption metadata and human-held or external-vault key custody. Secrets, wallet seeds, private keys, API keys, shell commands, and execution fields are rejected.
 
-```text
-Python constructs the market graph, QUBO, policy context, and receipts.
-Qiskit QAOA triangulates and samples price-delta candidates.
-Rust performs exact route, fee, slippage, latency, gas, and margin verification.
-Classical solvers remain available for fallback, benchmarking, and independent checks.
-```
+## Allowed Output Classes
 
-The implementation is intentionally simulation-only. Qiskit performs bounded local sampling and emits confidence evidence. Python binds that evidence to a strict request and invokes an explicit local Rust verifier with `shell=False`. Rust independently reconstructs candidate identity, reprices the route, and returns `authority: false` evidence.
+The current organ contract permits review artifacts such as:
 
-Phase 2C-1 generates deterministic alternate market states for reserve movement, cost changes, slippage, latency, and gas. Every state is hash-bound and sent through the same Rust verifier. The resulting receipt records survival rate, worst-case delta, median delta, failure reasons, and a declared robustness class. The original included scenario values remain teaching fixtures rather than calibrated probabilities.
+- `artifact_receipt`;
+- `safety_bridge_receipt`;
+- `risk_report`;
+- `charity_allocation_proposal`;
+- `simulation_summary`;
+- `drift_audit`;
+- `testnet_result`.
 
-Phase 2C-2 expands a route into provider, borrowed-asset, and amount-bucket geometry. QAOA may rank complete route-plus-liquidity candidates. A second isolated Rust binary reconstructs the triangular route, verifies declared capacity, calculates provider repayment, and determines whether the complete loop can repay itself above a declared minimum-profit threshold. No borrowing or transaction submission occurs.
+Repository modules also produce typed intermediate evidence including QAOA confidence receipts, exact-repricing evidence, robustness receipts, perturbation-calibration receipts, flash-liquidity candidates, repayment-verification evidence, and hybrid benchmark receipts. These intermediate objects remain non-authoritative and must be wrapped in an allowed artifact class before entering the canonical external receipt lane.
 
-Phase 2D accepts source-bound historical observations and deterministically calibrates adverse rate, fee, slippage, latency, and gas scenarios. Observations are aligned by edge identity, quantiles and clipping limits are explicit policy, and the emitted receipt binds the complete corpus, policy, and scenario set with SHA-256. The scenarios describe the supplied corpus; they do not promise recurrence or authorize execution.
-
-The complete Python → Rust subprocess, robustness, and flash-liquidity paths are exercised in CI against real compiled verifier binaries, including candidate-identity rejection and authority-boundary checks. The calibration path is independently exercised on Python 3.11 and 3.13.
-
-```text
-QAOA discovers the geometry of the opportunity.
-Rust confirms that the geometry still exists.
-History calibrates the pressure test.
-Perturbation tests whether that geometry survives pressure.
-Flash-liquidity verification tests whether temporary capital can be repaid.
-Python controls what may happen with that knowledge.
-Human review remains the promotion gate.
-```
-
-## Status
-
-This repository is an early-stage safety, telemetry, and arbitrage-research project.
-
-It is not a live autonomous trading engine.
-It is not a wallet.
-It is not a transaction signer.
-It is not financial advice.
-
-Human review and explicit human promotion remain required for any real-world capital touchpoint.
-
-<!-- constitutional-surfaces-index:start -->
-
-## Constitutional Surfaces Index
-
-CodexTradingEngine is simulation-first and safety-gated. These surfaces define the current artifact membrane:
+## Current Surface Index
 
 | Surface | File | Purpose |
 | --- | --- | --- |
-| Artifact carrier validator | `eve_q/artifact_carrier.py` | Validates CID-backed carrier manifests without granting execution authority. |
-| Artifact carrier example | `examples/artifact_carrier_manifest.example.json` | Provides a deterministic teaching artifact for safe carrier manifests. |
-| Artifact carrier example docs | `docs/artifact_carrier_manifest_example.md` | Documents the carrier law: the artifact carries memory, not authority. |
-| Receipt carrier attestation validator | `eve_q/receipt_carrier_attestation.py` | Binds a receipt identifier to a carrier manifest digest and CID as a review artifact. |
-| Receipt carrier attestation example | `examples/receipt_carrier_attestation.example.json` | Demonstrates safe receipt-to-carrier attestation. |
-| Receipt carrier attestation docs | `docs/receipt_carrier_attestation_example.md` | Documents attestation drift detection and non-execution boundaries. |
-| Membrane metadata extractor and attestation bridge | `eve_q/membrane_tool.py` | Extracts carrier manifests from PNG Comment metadata, validates carrier law, and can compare receipt attestations without execution authority. |
-| QAOA delta triangulation core | `eve_q/qaoa_delta.py` | Enumerates triangular price deltas, builds QUBO/Ising contracts, and provides a classical fallback with `authority: false`. |
-| QAOA sampling and confidence receipts | `eve_q/qaoa_sampling.py` | Performs bounded local sampling, deterministic decoding, and exact-baseline comparison. |
-| Python-to-Rust repricing bridge | `eve_q/rust_repricing.py` | Binds candidate evidence to a strict subprocess request and fails closed on protocol drift. |
-| Perturbed-state robustness engine | `eve_q/delta_robustness.py` | Reprices a selected candidate across deterministic alternate market states and emits non-authoritative survival evidence. |
-| Market perturbation calibrator | `eve_q/perturbation_calibration.py` | Converts source-bound historical route observations into bounded empirical adverse scenarios and a non-authoritative calibration receipt. |
-| Flash-liquidity geometry | `eve_q/flash_liquidity.py` | Expands routes into provider and amount-bucket choices, builds the combined QUBO, and validates Rust evidence. |
-| Rust exact delta verifier | `rust/delta-verifier/` | Reprices a closed triangular route after fee, slippage, latency, gas, and margin assumptions without network access. |
-| Rust flash-liquidity verifier | `rust/delta-verifier/src/bin/codex-flash-liquidity-verifier.rs` | Verifies route identity, capacity, provider repayment, and minimum net profit without borrowing or network access. |
-| Repricing request schema | `schemas/delta_repricing_request.schema.json` | Defines the strict hash-bound candidate request surface. |
-| Repricing response schema | `schemas/delta_repricing_response.schema.json` | Defines the strict exact-verification response surface. |
-| Robustness receipt schema | `schemas/delta_robustness_receipt.schema.json` | Defines scenario, survival, failure, and authority invariants for robustness evidence. |
-| Perturbation calibration receipt schema | `schemas/perturbation_calibration_receipt.schema.json` | Defines corpus, policy, scenario, clipping, and authority invariants for empirical calibration evidence. |
-| Flash-liquidity request schema | `schemas/flash_liquidity_request.schema.json` | Defines the route, provider, bucket, capacity, and repayment request surface. |
-| Flash-liquidity response schema | `schemas/flash_liquidity_response.schema.json` | Defines exact capacity and repayment verification evidence. |
-| Hybrid delta architecture | `docs/QAOA_DELTA_TRIANGULATION_v0_1.md` | Defines Python, Qiskit, Rust, fallback, and authority boundaries. |
-| Phase 2A architecture | `docs/QAOA_DELTA_PHASE_2A.md` | Defines bounded QAOA sampling and confidence receipts. |
-| Phase 2B architecture | `docs/QAOA_DELTA_PHASE_2B.md` | Defines the isolated Python-to-Rust exact-repricing contract. |
-| Phase 2C-1 architecture | `docs/QAOA_DELTA_PHASE_2C1.md` | Defines deterministic perturbed-state robustness evidence. |
-| Phase 2C-2 architecture | `docs/QAOA_DELTA_PHASE_2C2.md` | Defines route-plus-provider-plus-amount geometry and repayment verification. |
-| Phase 2D architecture | `docs/QAOA_DELTA_PHASE_2D.md` | Defines source-bound historical observation calibration and empirical interpretation boundaries. |
-| Hybrid delta CI | `.github/workflows/hybrid-delta-ci.yml` | Validates Python 3.11/3.13, Qiskit 2.5, stable Rust, exact repricing, robustness, calibration, and flash-liquidity verification. |
+| Organ contract | `contracts/organ_contract.json` | Defines allowed outputs, forbidden capabilities, modes, promotion path, and hard invariants. |
+| Organ validator | `eve_q/organ_contract.py` | Validates records against the local constitutional membrane. |
+| Receipt emitter | `eve_q/receipt_emitter.py` | Emits canonical artifact-only receipts. |
+| Charity geodesic policy | `eve_q/allocation/geodesic_policy.py` | Scores bounded impact/need proposals while holding transfers for review. |
+| Charity diversity guard | `eve_q/allocation/charity_router.py` | Caps concentration, reserves exploration budget, and requires human promotion. |
+| QAOA delta core | `eve_q/qaoa_delta.py` | Enumerates triangular cycles and builds QUBO/Ising models. |
+| QAOA sampling | `eve_q/qaoa_sampling.py` | Emits deterministic confidence evidence and exact classical comparisons. |
+| Rust repricing bridge | `eve_q/rust_repricing.py` | Invokes and validates the isolated exact verifier. |
+| Robustness engine | `eve_q/delta_robustness.py` | Tests selected geometry across alternate market states. |
+| Perturbation calibrator | `eve_q/perturbation_calibration.py` | Derives bounded empirical adverse scenarios from supplied history. |
+| Flash-liquidity geometry | `eve_q/flash_liquidity.py` | Models provider, asset, amount, capacity, fee, and repayment choices. |
+| Exact Rust verifiers | `rust/delta-verifier/` | Verify route and flash-repayment arithmetic without networking or authority. |
+| Hybrid benchmark | `eve_q/hybrid_benchmark.py` | Reconstructs and receipts the complete seeded experiment. |
+| Seeded corpus | `benchmarks/seeded_market_v0_1.json` | Supplies reproducible synthetic historical-replay inputs. |
+| Benchmark CI | `.github/workflows/hybrid-benchmark-ci.yml` | Validates complete replay and canonical artifact emission. |
+| Carrier validator | `eve_q/artifact_carrier.py` | Validates CID-backed memory-carrier manifests. |
+| Membrane tool | `eve_q/membrane_tool.py` | Compares bounded image metadata, manifests, and attestations. |
 
-Membrane bridge:
+## Status
 
-`python -m eve_q.membrane_tool --image <png> --attestation <attestation.json>`
+CodexTradingEngine is an early-stage safety, telemetry, optimization, verification, charity-allocation, and artifact-research project.
 
-Chain:
+It is not:
 
-`image metadata -> carrier manifest -> receipt attestation -> validation result`
+- a live autonomous trading engine;
+- a wallet;
+- a transaction signer;
+- a flash-loan executor;
+- a promise of profit;
+- financial advice.
 
-Hybrid delta chain:
+Current strength is planning and verification under uncertainty—not latency racing. The engine is designed to generate higher-quality, pressure-tested options and route them through explicit evidence and human promotion.
 
-`market snapshot -> triangular cycles -> route QUBO -> QAOA route receipt -> Rust exact repricing -> source-bound historical corpus -> perturbation calibration -> Rust-backed robustness -> route/provider/bucket QUBO -> QAOA liquidity receipt -> Rust capacity and repayment verification -> policy review -> simulation receipt`
-
-Current law:
-
-```text
-Image carries acorn.
-The validator compares.
-The attestation binds.
-The image carries.
-Receipt remembers.
-Carrier points.
-Hash detects drift.
-TTL expires.
-CI guards.
-Human promotes.
-```
-
-Safety boundary:
-
-- no autonomous capital movement
-- no wallet signing
-- no scheduler authority
-- no reverse execution channel
-- no IPFS daemon dependency for validation
-- no image metadata dependency for validation
-- no metadata writing
-- no flash-loan execution
-- no remote quantum execution by default
-
-<!-- constitutional-surfaces-index:end -->
+Human review and explicit human promotion remain required before any real-world capital touchpoint.
