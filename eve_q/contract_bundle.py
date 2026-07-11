@@ -16,7 +16,7 @@ from eve_q.immutable_receipts import (
 from eve_q.ipfs_adapters import DEFAULT_KUBO_API_URL, KuboHttpIpfsWriter
 
 
-CONTRACT_VERSION = "eve_q_cross_repo.v0.1"
+CONTRACT_VERSION = "eve_q_cross_repo_v0.1"
 RECEIPT_TYPE = "eve_q.cross_repo_contract_bundle.v0.1"
 SCHEMA_FILENAMES = (
     "proposal_artifact_v0_1.schema.json",
