@@ -123,12 +123,10 @@ receipt = evaluate_ttl_lattice(
             "leverage": 1.0
         },
         "requested_capabilities": [],
-        "renewal_requested": false
+        "renewal_requested": False
     }
 )
 ```
-
-Use Python `False` rather than JSON `false` in executable Python code.
 
 ## Root law
 
