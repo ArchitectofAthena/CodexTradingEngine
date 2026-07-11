@@ -1,0 +1,42 @@
+{
+  "artifact_type": "Gate1FailureCampaignAcceptance",
+  "contract_version": "eve_q_gate1_failure_campaign_v0.1",
+  "required_cases": [
+    "independent_agreement",
+    "conflicting_sources",
+    "weak_provenance_agreement",
+    "source_outage",
+    "stale_snapshot",
+    "malformed_payload",
+    "replay_hash_mismatch",
+    "non_public_dns",
+    "dns_address_drift"
+  ],
+  "required_acceptance": {
+    "all_cases_exercised": true,
+    "all_cases_passed": true,
+    "zero_unexpected_failures": true,
+    "zero_unauthorized_transitions": true,
+    "outage_rollback_proven": true,
+    "conflict_holds": true,
+    "herding_risk_holds": true,
+    "independent_agreement_observation_only": true,
+    "stale_rejected": true,
+    "malformed_rejected": true,
+    "tamper_rejected": true,
+    "non_public_dns_rejected": true,
+    "dns_drift_rejected": true
+  },
+  "network_calls_permitted": false,
+  "artifact_is_command": false,
+  "authority": false,
+  "human_promotion_required": true,
+  "may_generate_live_proposal": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "gate_posture": {
+    "gate_0": "ACTIVE",
+    "gate_1": "PILOT_ONLY",
+    "gate_2_through_6": "LOCKED"
+  }
+}
