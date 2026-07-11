@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
 from eve_q.proposal_artifact import sha256_hex
-from eve_q.soak_harness import perturbed_routes, run_soak_campaign
+from eve_q.soak_harness import iso_z, perturbed_routes, run_soak_campaign
 from shadow_cycle_runner import run_shadow_cycle
 
 
@@ -32,8 +32,9 @@ def test_route_perturbations_are_seeded_variable_and_bounded():
 
 
 def test_shadow_cycle_replay_has_identical_canonical_proposal_hash(tmp_path: Path):
-    stamp = "2026-07-11T20:30:00Z"
-    completed = "2026-07-11T20:30:00.250000Z"
+    issued = datetime.now(timezone.utc)
+    stamp = iso_z(issued)
+    completed = iso_z(issued + timedelta(milliseconds=250))
     routes = perturbed_routes(3, 424242)
 
     first = run_shadow_cycle(
