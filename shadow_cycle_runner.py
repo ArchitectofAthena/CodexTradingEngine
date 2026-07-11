@@ -80,8 +80,14 @@ def build_shadow_receipt(
     *,
     cycle_id: Optional[str] = None,
     candidate_routes: Optional[List[Dict[str, Any]]] = None,
+    created_at: Optional[str] = None,
+    completed_at: Optional[str] = None,
 ) -> CycleReceipt:
-    """Build a fully populated shadow CycleReceipt from mock route data."""
+    """Build a fully populated shadow CycleReceipt from mock route data.
+
+    Optional timestamps support deterministic soak and replay campaigns. Normal
+    runtime calls keep the existing wall-clock behavior.
+    """
     source_routes = candidate_routes or default_candidate_routes()
     routes = [score_candidate_route(route) for route in source_routes]
     selected = max(routes, key=lambda route: route["score_eth"])
@@ -98,6 +104,9 @@ def build_shadow_receipt(
         slippage_eth=selected["slippage_eth"],
         safety_margin_eth=selected["safety_margin_eth"],
     )
+
+    if created_at is not None:
+        receipt.created_at = created_at
 
     receipt.actual_profit_eth = actual_profit
     receipt.charity_due_eth = receipt.compute_charity_due()
@@ -116,6 +125,11 @@ def build_shadow_receipt(
     receipt.ipfs_success = False
     receipt.ipfs_cid = None
     receipt.trust_increment_allowed = False
+
+    if completed_at is not None:
+        receipt.completed_at = completed_at
+        return receipt
+
     return receipt.finalize()
 
 
@@ -149,12 +163,16 @@ def run_shadow_cycle(
     proof_adapter: Optional[ProofAdapter] = None,
     producer_commit: str = UNKNOWN_COMMIT,
     impact_category: str = "unassigned_verified_impact",
+    created_at: Optional[str] = None,
+    completed_at: Optional[str] = None,
 ) -> ShadowCycleRun:
     """Run one simulated shadow cycle through receipt and proposal gates."""
     failsafe_cfg = failsafe or FailsafeConfig()
     receipt = build_shadow_receipt(
         cycle_id=cycle_id,
         candidate_routes=candidate_routes,
+        created_at=created_at,
+        completed_at=completed_at,
     )
     adapter = proof_adapter or LocalFileProofAdapter(output_dir)
     proof = adapter.publish(receipt)
