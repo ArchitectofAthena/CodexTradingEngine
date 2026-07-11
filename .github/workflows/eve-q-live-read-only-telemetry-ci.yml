@@ -6,10 +6,14 @@ on:
       - "eve_q/live_read_only_telemetry.py"
       - "schemas/live_read_only_telemetry_snapshot_v0_1.schema.json"
       - "examples/telemetry/source_spec_template_v0_1.json"
+      - "examples/telemetry/README.md"
       - "tests/test_live_read_only_telemetry_v0_1.py"
       - "tests/test_gate1_pilot_acceptance_v0_1.py"
+      - "tests/test_gate1_threat_and_rollback_docs_v0_1.py"
       - "docs/telemetry/EVE_Q_LIVE_READ_ONLY_TELEMETRY_v0_1.md"
       - "docs/testing/EVE_Q_GATE1_PILOT_ACCEPTANCE_v0_1.json"
+      - "docs/security/EVE_Q_GATE1_THREAT_MODEL_DRAFT_v0_1.md"
+      - "docs/governance/EVE_Q_GATE1_ROLLBACK_PLAN_DRAFT_v0_1.md"
       - ".github/workflows/eve-q-live-read-only-telemetry-ci.yml"
   push:
     branches:
@@ -18,10 +22,14 @@ on:
       - "eve_q/live_read_only_telemetry.py"
       - "schemas/live_read_only_telemetry_snapshot_v0_1.schema.json"
       - "examples/telemetry/source_spec_template_v0_1.json"
+      - "examples/telemetry/README.md"
       - "tests/test_live_read_only_telemetry_v0_1.py"
       - "tests/test_gate1_pilot_acceptance_v0_1.py"
+      - "tests/test_gate1_threat_and_rollback_docs_v0_1.py"
       - "docs/telemetry/EVE_Q_LIVE_READ_ONLY_TELEMETRY_v0_1.md"
       - "docs/testing/EVE_Q_GATE1_PILOT_ACCEPTANCE_v0_1.json"
+      - "docs/security/EVE_Q_GATE1_THREAT_MODEL_DRAFT_v0_1.md"
+      - "docs/governance/EVE_Q_GATE1_ROLLBACK_PLAN_DRAFT_v0_1.md"
       - ".github/workflows/eve-q-live-read-only-telemetry-ci.yml"
 
 permissions:
@@ -55,11 +63,12 @@ jobs:
         run: |
           python -m py_compile eve_q/live_read_only_telemetry.py
 
-      - name: Run telemetry boundary and acceptance tests
+      - name: Run telemetry boundary, acceptance, and governance tests
         run: |
           python -m pytest -q --no-cov \
             tests/test_live_read_only_telemetry_v0_1.py \
-            tests/test_gate1_pilot_acceptance_v0_1.py
+            tests/test_gate1_pilot_acceptance_v0_1.py \
+            tests/test_gate1_threat_and_rollback_docs_v0_1.py
 
       - name: Verify source template is non-live placeholder
         run: |
