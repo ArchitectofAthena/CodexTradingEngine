@@ -1,0 +1,119 @@
+{
+  "authority": false,
+  "compiled_at": "2026-07-11T02:44:34Z",
+  "evidence_summary": {
+    "agreement_is_not_truth": true,
+    "failed_or_unavailable_count": 0,
+    "observed_provider_count": 1,
+    "positions": {
+      "support": 1
+    },
+    "remote_output_may_not_override_local_scores": true,
+    "requested_provider_count": 1,
+    "successful_evidence_count": 1
+  },
+  "expires_at": "2026-07-11T08:44:34Z",
+  "lineage": {
+    "source_repository_commits": [
+      {
+        "commit": "17d0107ded1148a4b7d118d68068b1664400d3eb",
+        "repository": "ArchitectofAthena/CodexTradingEngine"
+      },
+      {
+        "commit": "b64c3753fca90f869302dca45850256936d80e0f",
+        "repository": "ArchitectofAthena/spiralbloom-os"
+      }
+    ],
+    "source_snapshot_manifest_cid": "bafkreifllgyxq2dluftpa5y6qtalomjonpe3tuwv5g2jnyd4luas52yvna"
+  },
+  "local_fast_path": {
+    "deterministic_revalidation_required": true,
+    "human_promotion_required": true,
+    "offline_behavior": "continue_local",
+    "perturbation_test_required": true,
+    "remote_dependency": false,
+    "rust_arithmetic_verification_required_when_applicable": true,
+    "stale_behavior": "reject"
+  },
+  "packet_id": "c7149542bf79525fdcf6bc37933cf48762b19cdc780066998144cab0e4bf689e",
+  "packet_version": "local_strategy_packet_v0.1",
+  "prohibited_actions": [
+    "autonomous_execution",
+    "capital_movement",
+    "deployment",
+    "git_mutation",
+    "mempool_submission",
+    "rpc_submission",
+    "scheduler_authority",
+    "transaction_signing",
+    "wallet_access"
+  ],
+  "proposals": [
+    {
+      "assumptions": [
+        "The local seeded benchmark case is the sole market state.",
+        "All candidate identities are reconstructed locally."
+      ],
+      "codex_evaluation": {
+        "allowed_bucket_ids": [
+          "flash-bucket:usd-0500",
+          "flash-bucket:usd-1000"
+        ],
+        "allowed_provider_ids": [
+          "flash-provider:seed-a",
+          "flash-provider:seed-b"
+        ],
+        "authority": false,
+        "benchmark_id": "hybrid-benchmark:seeded-triangle-v0-1",
+        "evaluation_mode": "compare_only",
+        "route_candidate_id": "triangle:c75caa8d3b0d0a5134bd"
+      },
+      "local_tests": [
+        "Compare route assignment on the identical local QUBO.",
+        "Run Rust repricing, calibrated perturbation, and repayment checks."
+      ],
+      "proposal_id": "proposal:seeded-triangle-review",
+      "summary": "Evaluate the canonical seeded triangle with both declared providers and amount buckets."
+    }
+  ],
+  "remote_evidence": [
+    {
+      "authority": false,
+      "claims": [
+        "Evaluate the locally reconstructed seeded triangle and compare it with the exact local baseline."
+      ],
+      "created_at": "2026-07-11T02:43:00Z",
+      "estimated_cost_usd": 0.001,
+      "latency_ms": 1405.08,
+      "model": "deepseek-v4-flash",
+      "position": "support",
+      "prompt_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "provider": "deepseek",
+      "response_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "role": "strategy_geometry_reviewer",
+      "status": "ok",
+      "uncertainties": [
+        "The supplied corpus is synthetic and does not establish future market performance."
+      ],
+      "usage": {
+        "input_tokens": 128,
+        "output_tokens": 96
+      }
+    }
+  ],
+  "request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "stores_raw_provider_responses": false,
+  "task": {
+    "constraints": [
+      "historical replay only",
+      "local exact comparison required",
+      "Rust verification required",
+      "authority remains false"
+    ],
+    "data_class": "sanitized",
+    "objective": "Compare one bounded remote strategy geometry against the local seeded exact baseline.",
+    "task_class": "strategy_geometry",
+    "task_id": "seeded-uplift:phase-3a"
+  },
+  "ttl_seconds": 21600
+}
