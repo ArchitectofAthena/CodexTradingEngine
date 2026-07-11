@@ -13,8 +13,10 @@ on:
       - "tests/test_gate1_threat_and_rollback_docs_v0_1.py"
       - "tests/test_gate1_pilot_status_v0_1.py"
       - "tests/test_gate1_read_only_launcher_v0_1.py"
+      - "tests/test_gate1_source_review_checklist_v0_1.py"
       - "docs/telemetry/EVE_Q_LIVE_READ_ONLY_TELEMETRY_v0_1.md"
       - "docs/telemetry/EVE_Q_GATE1_PILOT_STATUS_v0_1.md"
+      - "docs/telemetry/EVE_Q_GATE1_SOURCE_REVIEW_CHECKLIST_v0_1.md"
       - "docs/testing/EVE_Q_GATE1_PILOT_ACCEPTANCE_v0_1.json"
       - "docs/security/EVE_Q_GATE1_THREAT_MODEL_DRAFT_v0_1.md"
       - "docs/governance/EVE_Q_GATE1_ROLLBACK_PLAN_DRAFT_v0_1.md"
@@ -33,8 +35,10 @@ on:
       - "tests/test_gate1_threat_and_rollback_docs_v0_1.py"
       - "tests/test_gate1_pilot_status_v0_1.py"
       - "tests/test_gate1_read_only_launcher_v0_1.py"
+      - "tests/test_gate1_source_review_checklist_v0_1.py"
       - "docs/telemetry/EVE_Q_LIVE_READ_ONLY_TELEMETRY_v0_1.md"
       - "docs/telemetry/EVE_Q_GATE1_PILOT_STATUS_v0_1.md"
+      - "docs/telemetry/EVE_Q_GATE1_SOURCE_REVIEW_CHECKLIST_v0_1.md"
       - "docs/testing/EVE_Q_GATE1_PILOT_ACCEPTANCE_v0_1.json"
       - "docs/security/EVE_Q_GATE1_THREAT_MODEL_DRAFT_v0_1.md"
       - "docs/governance/EVE_Q_GATE1_ROLLBACK_PLAN_DRAFT_v0_1.md"
@@ -79,7 +83,8 @@ jobs:
             tests/test_gate1_pilot_acceptance_v0_1.py \
             tests/test_gate1_threat_and_rollback_docs_v0_1.py \
             tests/test_gate1_pilot_status_v0_1.py \
-            tests/test_gate1_read_only_launcher_v0_1.py
+            tests/test_gate1_read_only_launcher_v0_1.py \
+            tests/test_gate1_source_review_checklist_v0_1.py
 
       - name: Verify source template is non-live placeholder
         run: |
