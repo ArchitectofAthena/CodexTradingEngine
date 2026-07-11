@@ -62,23 +62,30 @@ jobs:
       - name: Compile contract bundle helper
         run: python -m py_compile eve_q/contract_bundle.py
 
-      - name: Build bundle contract
-        run: >-
-          python -m pytest -vv tests/test_contract_bundle.py
-          -k test_build_contract_bundle_is_non_authoritative_and_complete
+      - name: Run producer contract tests and capture output
+        id: producer_tests
+        continue-on-error: true
+        run: |
+          set +e
+          python -m pytest -vv \
+            tests/test_contract_bundle.py \
+            tests/test_contract_schema_mirror.py \
+            > "producer-contract-${{ matrix.python-version }}.log" 2>&1
+          status=$?
+          cat "producer-contract-${{ matrix.python-version }}.log"
+          exit "$status"
 
-      - name: Mock pin and ledger contract
-        run: >-
-          python -m pytest -vv tests/test_contract_bundle.py
-          -k test_mock_pin_is_verified_and_appends_ledger
+      - name: Upload producer contract diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: producer-contract-${{ matrix.python-version }}
+          path: producer-contract-${{ matrix.python-version }}.log
+          if-no-files-found: error
 
-      - name: Missing-schema fail-closed contract
-        run: >-
-          python -m pytest -vv tests/test_contract_bundle.py
-          -k test_missing_schema_fails_closed
-
-      - name: Run schema mirror tests
-        run: python -m pytest -vv tests/test_contract_schema_mirror.py
+      - name: Require producer contract tests
+        if: always()
+        run: test "${{ steps.producer_tests.outcome }}" = "success"
 
       - name: Verify non-authority language
         run: |
