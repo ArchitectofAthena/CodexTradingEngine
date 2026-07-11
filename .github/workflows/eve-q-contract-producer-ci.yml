@@ -62,11 +62,11 @@ jobs:
       - name: Compile contract bundle helper
         run: python -m py_compile eve_q/contract_bundle.py
 
-      - name: Run producer contract tests
-        run: |
-          python -m pytest -q \
-            tests/test_contract_bundle.py \
-            tests/test_contract_schema_mirror.py
+      - name: Run contract bundle tests
+        run: python -m pytest -vv tests/test_contract_bundle.py
+
+      - name: Run schema mirror tests
+        run: python -m pytest -vv tests/test_contract_schema_mirror.py
 
       - name: Verify non-authority language
         run: |
