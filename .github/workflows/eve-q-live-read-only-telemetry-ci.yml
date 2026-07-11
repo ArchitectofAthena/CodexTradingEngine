@@ -1,0 +1,73 @@
+name: EVE_Q++ Live Read-Only Telemetry CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/live_read_only_telemetry.py"
+      - "schemas/live_read_only_telemetry_snapshot_v0_1.schema.json"
+      - "examples/telemetry/source_spec_template_v0_1.json"
+      - "tests/test_live_read_only_telemetry_v0_1.py"
+      - "docs/telemetry/EVE_Q_LIVE_READ_ONLY_TELEMETRY_v0_1.md"
+      - ".github/workflows/eve-q-live-read-only-telemetry-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "eve_q/live_read_only_telemetry.py"
+      - "schemas/live_read_only_telemetry_snapshot_v0_1.schema.json"
+      - "examples/telemetry/source_spec_template_v0_1.json"
+      - "tests/test_live_read_only_telemetry_v0_1.py"
+      - "docs/telemetry/EVE_Q_LIVE_READ_ONLY_TELEMETRY_v0_1.md"
+      - ".github/workflows/eve-q-live-read-only-telemetry-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  telemetry-membrane:
+    name: Read-only telemetry membrane (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Compile membrane
+        run: |
+          python -m py_compile eve_q/live_read_only_telemetry.py
+
+      - name: Run telemetry boundary tests
+        run: |
+          python -m pytest -q --no-cov \
+            tests/test_live_read_only_telemetry_v0_1.py
+
+      - name: Verify source template is non-live placeholder
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          template = json.loads(
+              Path(
+                  "examples/telemetry/source_spec_template_v0_1.json"
+              ).read_text(encoding="utf-8")
+          )
+          assert template["url"].startswith("https://")
+          assert template["allowed_hosts"] == ["data.example.org"]
+          assert "replace-with" in template["url"]
+          PY
