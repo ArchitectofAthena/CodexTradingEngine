@@ -12,8 +12,12 @@ on:
       - "contracts/eve_q_cross_repo_contract_v0_1.manifest.json"
       - "contracts/EVE_Q_CROSS_REPO_PINNING_v0_1.md"
       - "eve_q/contract_bundle.py"
+      - "eve_q/proposal_artifact.py"
+      - "shadow_cycle_runner.py"
+      - "examples/contracts/**"
       - "tests/test_contract_bundle.py"
       - "tests/test_contract_schema_mirror.py"
+      - "tests/test_proposal_artifact_v0_1.py"
       - ".github/workflows/eve-q-contract-producer-ci.yml"
   push:
     branches:
@@ -28,8 +32,12 @@ on:
       - "contracts/eve_q_cross_repo_contract_v0_1.manifest.json"
       - "contracts/EVE_Q_CROSS_REPO_PINNING_v0_1.md"
       - "eve_q/contract_bundle.py"
+      - "eve_q/proposal_artifact.py"
+      - "shadow_cycle_runner.py"
+      - "examples/contracts/**"
       - "tests/test_contract_bundle.py"
       - "tests/test_contract_schema_mirror.py"
+      - "tests/test_proposal_artifact_v0_1.py"
       - ".github/workflows/eve-q-contract-producer-ci.yml"
 
 permissions:
@@ -59,16 +67,21 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Compile contract bundle helper
-        run: python -m py_compile eve_q/contract_bundle.py
+      - name: Compile contract helpers
+        run: |
+          python -m py_compile \
+            eve_q/contract_bundle.py \
+            eve_q/proposal_artifact.py \
+            shadow_cycle_runner.py
 
       - name: Run focused producer contract tests
         run: |
           # The repository-wide workflow enforces the global coverage floor.
-          # This path-scoped contract workflow validates only the membrane files.
+          # This path-scoped workflow validates only the typed membrane.
           python -m pytest -q --no-cov \
             tests/test_contract_bundle.py \
-            tests/test_contract_schema_mirror.py
+            tests/test_contract_schema_mirror.py \
+            tests/test_proposal_artifact_v0_1.py
 
       - name: Verify non-authority language
         run: |
@@ -79,6 +92,7 @@ jobs:
               [
                   Path("contracts/EVE_Q_CROSS_REPO_PINNING_v0_1.md").read_text(encoding="utf-8"),
                   Path("eve_q/contract_bundle.py").read_text(encoding="utf-8"),
+                  Path("eve_q/proposal_artifact.py").read_text(encoding="utf-8"),
               ]
           )
           required = [
@@ -86,6 +100,8 @@ jobs:
               "may_execute",
               "may_move_capital",
               "authority",
+              "autonomous_capital_movement",
+              "self_promotion",
           ]
           for phrase in required:
               assert phrase in text, phrase
