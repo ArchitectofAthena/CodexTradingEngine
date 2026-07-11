@@ -1,0 +1,90 @@
+name: EVE_Q++ Gate 1 Failure Campaign CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/gate1_failure_campaign.py"
+      - "scripts/run_gate1_failure_campaign_v0_1.sh"
+      - "tests/test_gate1_failure_campaign_v0_1.py"
+      - "docs/testing/EVE_Q_GATE1_FAILURE_CAMPAIGN_v0_1.md"
+      - "docs/testing/EVE_Q_GATE1_FAILURE_CAMPAIGN_ACCEPTANCE_v0_1.json"
+      - ".github/workflows/eve-q-gate1-failure-campaign-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "eve_q/gate1_failure_campaign.py"
+      - "scripts/run_gate1_failure_campaign_v0_1.sh"
+      - "tests/test_gate1_failure_campaign_v0_1.py"
+      - "docs/testing/EVE_Q_GATE1_FAILURE_CAMPAIGN_v0_1.md"
+      - "docs/testing/EVE_Q_GATE1_FAILURE_CAMPAIGN_ACCEPTANCE_v0_1.json"
+      - ".github/workflows/eve-q-gate1-failure-campaign-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  failure-campaign:
+    name: Synthetic failure campaign (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Compile and syntax check
+        run: |
+          python -m py_compile eve_q/gate1_failure_campaign.py
+          bash -n scripts/run_gate1_failure_campaign_v0_1.sh
+
+      - name: Run focused tests
+        run: |
+          python -m pytest -q --no-cov \
+            tests/test_gate1_failure_campaign_v0_1.py
+
+      - name: Run deterministic 100-cycle campaign
+        env:
+          CYCLES: "100"
+          SEED: "424243"
+          PRODUCER_COMMIT: ${{ github.sha }}
+          RUN_ROOT: ${{ runner.temp }}/spiralbloom-runs
+          RUN_ID: gate1-failure-ci
+        run: |
+          bash scripts/run_gate1_failure_campaign_v0_1.sh
+
+      - name: Verify acceptance contract remains non-authoritative
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          contract = json.loads(
+              Path(
+                  "docs/testing/EVE_Q_GATE1_FAILURE_CAMPAIGN_ACCEPTANCE_v0_1.json"
+              ).read_text(encoding="utf-8")
+          )
+
+          assert contract["network_calls_permitted"] is False
+          assert contract["artifact_is_command"] is False
+          assert contract["authority"] is False
+          assert contract["human_promotion_required"] is True
+          assert contract["may_generate_live_proposal"] is False
+          assert contract["may_execute"] is False
+          assert contract["may_move_capital"] is False
+          assert contract["gate_posture"]["gate_2_through_6"] == "LOCKED"
+          PY
