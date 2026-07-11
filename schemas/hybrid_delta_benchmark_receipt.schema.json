@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://architectofathena.github.io/CodexTradingEngine/schemas/hybrid_delta_benchmark_receipt.schema.json",
+  "title": "Hybrid delta benchmark receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "benchmark_id",
+    "benchmark_sha256",
+    "snapshot_sha256",
+    "model_identity",
+    "route_confidence",
+    "route_verification",
+    "calibration",
+    "robustness",
+    "flash_confidence",
+    "flash_verification",
+    "mode",
+    "human_promotion_required",
+    "authority"
+  ],
+  "properties": {
+    "schema_version": {"const": "hybrid-delta-benchmark-receipt-v0.1"},
+    "receipt_id": {"type": "string", "pattern": "^hybrid-benchmark-receipt:"},
+    "benchmark_id": {"type": "string", "pattern": "^hybrid-benchmark:"},
+    "benchmark_sha256": {"$ref": "#/$defs/sha256"},
+    "snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "model_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route_model_sha256",
+        "flash_model_sha256",
+        "route_model_identity_verified",
+        "flash_model_identity_verified",
+        "authority"
+      ],
+      "properties": {
+        "route_model_sha256": {"$ref": "#/$defs/sha256"},
+        "flash_model_sha256": {"$ref": "#/$defs/sha256"},
+        "route_model_identity_verified": {"const": true},
+        "flash_model_identity_verified": {"const": true},
+        "authority": {"const": false}
+      }
+    },
+    "route_confidence": {"$ref": "#/$defs/evidence"},
+    "route_verification": {"$ref": "#/$defs/evidence"},
+    "calibration": {"$ref": "#/$defs/evidence"},
+    "robustness": {"$ref": "#/$defs/evidence"},
+    "flash_confidence": {"$ref": "#/$defs/evidence"},
+    "flash_verification": {"$ref": "#/$defs/evidence"},
+    "mode": {"const": "historical_replay"},
+    "human_promotion_required": {"const": true},
+    "authority": {"const": false}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "evidence": {
+      "type": "object",
+      "required": ["authority"],
+      "properties": {"authority": {"const": false}}
+    }
+  }
+}
