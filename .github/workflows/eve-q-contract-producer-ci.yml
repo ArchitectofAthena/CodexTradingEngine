@@ -62,30 +62,13 @@ jobs:
       - name: Compile contract bundle helper
         run: python -m py_compile eve_q/contract_bundle.py
 
-      - name: Run producer contract tests and capture output
-        id: producer_tests
-        continue-on-error: true
+      - name: Run focused producer contract tests
         run: |
-          set +e
-          python -m pytest -vv \
+          # The repository-wide workflow enforces the global coverage floor.
+          # This path-scoped contract workflow validates only the membrane files.
+          python -m pytest -q --no-cov \
             tests/test_contract_bundle.py \
-            tests/test_contract_schema_mirror.py \
-            > "producer-contract-${{ matrix.python-version }}.log" 2>&1
-          status=$?
-          cat "producer-contract-${{ matrix.python-version }}.log"
-          exit "$status"
-
-      - name: Upload producer contract diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: producer-contract-${{ matrix.python-version }}
-          path: producer-contract-${{ matrix.python-version }}.log
-          if-no-files-found: error
-
-      - name: Require producer contract tests
-        if: always()
-        run: test "${{ steps.producer_tests.outcome }}" = "success"
+            tests/test_contract_schema_mirror.py
 
       - name: Verify non-authority language
         run: |
