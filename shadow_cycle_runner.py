@@ -2,8 +2,8 @@
 
 The runner simulates one complete observation cycle without moving capital. It
 emits a shadow-mode CycleReceipt, routes proof through an adapter, validates the
-receipt, writes a receipt JSON file, and confirms that shadow cycles can
-learn/log without expanding trust.
+receipt, writes a receipt JSON file, and emits a non-authoritative
+ProposalArtifact for the cross-repository membrane.
 """
 
 from __future__ import annotations
@@ -14,6 +14,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from eve_q.proposal_artifact import (
+    UNKNOWN_COMMIT,
+    build_proposal_artifact,
+    validate_proposal_semantics,
+    write_proposal_artifact,
+)
 from eveq_failsafe_receipt import (
     CycleReceipt,
     FailsafeConfig,
@@ -31,6 +37,8 @@ class ShadowCycleRun:
     receipt: CycleReceipt
     validation: ValidationResult
     receipt_path: Path
+    proposal_artifact: Dict[str, Any]
+    proposal_path: Path
     failsafe: FailsafeConfig
 
 
@@ -139,8 +147,10 @@ def run_shadow_cycle(
     cycle_id: Optional[str] = None,
     candidate_routes: Optional[List[Dict[str, Any]]] = None,
     proof_adapter: Optional[ProofAdapter] = None,
+    producer_commit: str = UNKNOWN_COMMIT,
+    impact_category: str = "unassigned_verified_impact",
 ) -> ShadowCycleRun:
-    """Run one simulated shadow cycle through the receipt validation gate."""
+    """Run one simulated shadow cycle through receipt and proposal gates."""
     failsafe_cfg = failsafe or FailsafeConfig()
     receipt = build_shadow_receipt(
         cycle_id=cycle_id,
@@ -161,10 +171,27 @@ def run_shadow_cycle(
     else:
         receipt_path = persist_receipt_snapshot(receipt, output_dir)
 
+    proposal_artifact = build_proposal_artifact(
+        receipt,
+        producer_commit=producer_commit,
+        impact_category=impact_category,
+    )
+    semantic_findings = validate_proposal_semantics(proposal_artifact)
+    if semantic_findings:
+        joined = "; ".join(semantic_findings)
+        raise RuntimeError(f"ProposalArtifact semantic validation failed: {joined}")
+
+    proposal_path = write_proposal_artifact(
+        proposal_artifact,
+        Path(output_dir) / "proposal_artifacts",
+    )
+
     return ShadowCycleRun(
         receipt=receipt,
         validation=validation,
         receipt_path=receipt_path,
+        proposal_artifact=proposal_artifact,
+        proposal_path=proposal_path,
         failsafe=failsafe_cfg,
     )
 
@@ -172,5 +199,7 @@ def run_shadow_cycle(
 if __name__ == "__main__":
     run = run_shadow_cycle()
     print(f"Receipt path: {run.receipt_path}")
+    print(f"Proposal path: {run.proposal_path}")
     print(f"Receipt valid: {run.validation.valid}")
     print(f"Trust increment allowed: {run.validation.trust_increment_allowed}")
+    print(f"Proposal authority: {run.proposal_artifact['authority']}")
