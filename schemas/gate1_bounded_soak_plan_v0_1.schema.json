@@ -1,0 +1,183 @@
+{
+  "$id": "https://spiralbloom.local/schemas/gate1_bounded_soak_plan_v0_1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": {
+      "const": "Gate1BoundedSoakPlan"
+    },
+    "contract_version": {
+      "const": "eve_q_gate1_soak_scaffold_v0.1"
+    },
+    "artifact_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "producer_repository": {
+      "const": "ArchitectofAthena/CodexTradingEngine"
+    },
+    "producer_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "source_review_artifact_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_kind": {
+          "enum": [
+            "market_snapshot",
+            "onchain_snapshot",
+            "policy_snapshot",
+            "impact_snapshot"
+          ]
+        },
+        "endpoint_uri": {
+          "format": "uri",
+          "pattern": "^https://",
+          "type": "string"
+        },
+        "allowed_hosts": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "method": {
+          "enum": [
+            "GET",
+            "HEAD"
+          ]
+        },
+        "freshness_ttl_seconds": {
+          "maximum": 86400,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "expected_max_response_bytes": {
+          "maximum": 10485760,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_id",
+        "source_kind",
+        "endpoint_uri",
+        "allowed_hosts",
+        "method",
+        "freshness_ttl_seconds",
+        "expected_max_response_bytes"
+      ],
+      "type": "object"
+    },
+    "schedule": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_count": {
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "interval_seconds": {
+          "maximum": 86400,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "stop_on_first_failure": {
+          "const": true
+        },
+        "kill_switch_checked_before_every_capture": {
+          "const": true
+        }
+      },
+      "required": [
+        "capture_count",
+        "interval_seconds",
+        "stop_on_first_failure",
+        "kill_switch_checked_before_every_capture"
+      ],
+      "type": "object"
+    },
+    "network_mode": {
+      "const": "ADAPTER_INJECTED"
+    },
+    "gate_posture": {
+      "additionalProperties": false,
+      "properties": {
+        "gate_0": {
+          "const": "ACTIVE"
+        },
+        "gate_1": {
+          "const": "PILOT_ONLY"
+        },
+        "gate_2_through_6": {
+          "const": "LOCKED"
+        }
+      },
+      "required": [
+        "gate_0",
+        "gate_1",
+        "gate_2_through_6"
+      ],
+      "type": "object"
+    },
+    "artifact_is_command": {
+      "const": false
+    },
+    "authority": {
+      "const": false
+    },
+    "human_promotion_required": {
+      "const": true
+    },
+    "may_activate_gate_1": {
+      "const": false
+    },
+    "may_generate_live_proposal": {
+      "const": false
+    },
+    "may_execute": {
+      "const": false
+    },
+    "may_move_capital": {
+      "const": false
+    }
+  },
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "producer_repository",
+    "producer_commit",
+    "source_review_artifact_id",
+    "source",
+    "schedule",
+    "network_mode",
+    "gate_posture",
+    "artifact_is_command",
+    "authority",
+    "human_promotion_required",
+    "may_activate_gate_1",
+    "may_generate_live_proposal",
+    "may_execute",
+    "may_move_capital"
+  ],
+  "title": "EVE_Q++ Gate1BoundedSoakPlan v0.1",
+  "type": "object"
+}
