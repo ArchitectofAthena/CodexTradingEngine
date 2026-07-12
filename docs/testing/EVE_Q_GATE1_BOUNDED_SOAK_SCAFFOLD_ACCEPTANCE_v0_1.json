@@ -1,0 +1,33 @@
+{
+  "artifact_is_command": false,
+  "artifact_type": "Gate1BoundedSoakScaffoldAcceptance",
+  "authority": false,
+  "contract_version": "eve_q_gate1_soak_scaffold_v0.1",
+  "gate_posture": {
+    "gate_0": "ACTIVE",
+    "gate_1": "PILOT_ONLY",
+    "gate_2_through_6": "LOCKED"
+  },
+  "human_promotion_required": true,
+  "may_activate_gate_1": false,
+  "may_execute": false,
+  "may_generate_live_proposal": false,
+  "may_move_capital": false,
+  "network_calls_permitted_in_ci": false,
+  "required_acceptance": {
+    "bounded_capture_count": true,
+    "bounded_interval": true,
+    "deterministic_25_capture_replay": true,
+    "eligible_review_required": true,
+    "exact_normalized_bytes_preserved": true,
+    "full_rollback_payload_persisted": true,
+    "kill_switch_checked_before_each_capture": true,
+    "no_live_source_committed": true,
+    "resolution_receipt_required_per_capture": true,
+    "snapshot_replay_required_per_capture": true,
+    "stop_on_first_failure": true,
+    "strict_plan_and_summary_schemas": true,
+    "zero_authority_escalation": true,
+    "zero_live_proposals": true
+  }
+}
