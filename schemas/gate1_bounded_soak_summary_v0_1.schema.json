@@ -1,0 +1,188 @@
+{
+  "$id": "https://spiralbloom.local/schemas/gate1_bounded_soak_summary_v0_1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": {
+      "const": "Gate1BoundedSoakSummary"
+    },
+    "contract_version": {
+      "const": "eve_q_gate1_soak_scaffold_v0.1"
+    },
+    "artifact_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "plan_artifact_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "source_review_artifact_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "producer_repository": {
+      "const": "ArchitectofAthena/CodexTradingEngine"
+    },
+    "producer_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "results": {
+      "additionalProperties": false,
+      "properties": {
+        "captures_requested": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "captures_attempted": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "captures_accepted": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rollbacks": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unauthorized_transitions": {
+          "const": 0
+        },
+        "ledger_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "captures_requested",
+        "captures_attempted",
+        "captures_accepted",
+        "rollbacks",
+        "unauthorized_transitions",
+        "ledger_sha256"
+      ],
+      "type": "object"
+    },
+    "acceptance": {
+      "additionalProperties": false,
+      "properties": {
+        "review_artifact_valid_and_eligible": {
+          "const": true
+        },
+        "capture_count_bounded": {
+          "const": true
+        },
+        "kill_switch_checked_before_every_attempt": {
+          "const": true
+        },
+        "all_accepted_captures_replayed": {
+          "type": "boolean"
+        },
+        "full_rollback_payload_persisted_on_failure": {
+          "const": true
+        },
+        "zero_unauthorized_transitions": {
+          "const": true
+        },
+        "zero_live_proposals": {
+          "const": true
+        },
+        "zero_execution_authority": {
+          "const": true
+        },
+        "zero_capital_authority": {
+          "const": true
+        }
+      },
+      "required": [
+        "review_artifact_valid_and_eligible",
+        "capture_count_bounded",
+        "kill_switch_checked_before_every_attempt",
+        "all_accepted_captures_replayed",
+        "full_rollback_payload_persisted_on_failure",
+        "zero_unauthorized_transitions",
+        "zero_live_proposals",
+        "zero_execution_authority",
+        "zero_capital_authority"
+      ],
+      "type": "object"
+    },
+    "completed_requested_captures": {
+      "type": "boolean"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "gate_posture": {
+      "additionalProperties": false,
+      "properties": {
+        "gate_0": {
+          "const": "ACTIVE"
+        },
+        "gate_1": {
+          "const": "PILOT_ONLY"
+        },
+        "gate_2_through_6": {
+          "const": "LOCKED"
+        }
+      },
+      "required": [
+        "gate_0",
+        "gate_1",
+        "gate_2_through_6"
+      ],
+      "type": "object"
+    },
+    "artifact_is_command": {
+      "const": false
+    },
+    "authority": {
+      "const": false
+    },
+    "human_promotion_required": {
+      "const": true
+    },
+    "may_activate_gate_1": {
+      "const": false
+    },
+    "may_generate_live_proposal": {
+      "const": false
+    },
+    "may_execute": {
+      "const": false
+    },
+    "may_move_capital": {
+      "const": false
+    }
+  },
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "plan_artifact_id",
+    "source_review_artifact_id",
+    "producer_repository",
+    "producer_commit",
+    "results",
+    "acceptance",
+    "completed_requested_captures",
+    "ok",
+    "gate_posture",
+    "artifact_is_command",
+    "authority",
+    "human_promotion_required",
+    "may_activate_gate_1",
+    "may_generate_live_proposal",
+    "may_execute",
+    "may_move_capital"
+  ],
+  "title": "EVE_Q++ Gate1BoundedSoakSummary v0.1",
+  "type": "object"
+}
