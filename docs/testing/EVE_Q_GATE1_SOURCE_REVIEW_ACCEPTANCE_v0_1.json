@@ -1,0 +1,32 @@
+{
+  "artifact_is_command": false,
+  "artifact_type": "Gate1SourceReviewAcceptance",
+  "authority": false,
+  "contract_version": "eve_q_gate1_source_review_v0.1",
+  "gate_posture": {
+    "gate_0": "ACTIVE",
+    "gate_1": "PILOT_ONLY",
+    "gate_2_through_6": "LOCKED"
+  },
+  "human_promotion_required": true,
+  "may_activate_gate_1": false,
+  "may_execute": false,
+  "may_generate_live_proposal": false,
+  "may_move_capital": false,
+  "network_calls_permitted": false,
+  "required_acceptance": {
+    "credential_values_absent": true,
+    "deterministic_artifact_identity": true,
+    "exact_host_allowlist": true,
+    "explicit_observation_eligibility": true,
+    "https_get_or_head_only": true,
+    "legal_terms_disposition_recorded": true,
+    "offline_verification": true,
+    "provenance_and_concentration_reviewed": true,
+    "rollback_and_kill_switch_compatibility_recorded": true,
+    "strict_schema_unknown_properties_rejected": true,
+    "template_remains_hold": true,
+    "transport_residual_risk_recorded": true,
+    "zero_authority_escalation": true
+  }
+}
