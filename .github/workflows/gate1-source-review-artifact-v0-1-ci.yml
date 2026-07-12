@@ -1,0 +1,141 @@
+name: Gate 1 Source Review Artifact v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/gate1_source_review.py"
+      - "schemas/gate1_source_review_artifact_v0_1.schema.json"
+      - "examples/telemetry/source_review_candidate_template_v0_1.json"
+      - "docs/telemetry/EVE_Q_GATE1_SOURCE_REVIEW_ARTIFACT_v0_1.md"
+      - "docs/testing/EVE_Q_GATE1_SOURCE_REVIEW_ACCEPTANCE_v0_1.json"
+      - "tests/test_gate1_source_review_artifact_v0_1.py"
+      - ".github/workflows/gate1-source-review-artifact-v0-1-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "eve_q/gate1_source_review.py"
+      - "schemas/gate1_source_review_artifact_v0_1.schema.json"
+      - "examples/telemetry/source_review_candidate_template_v0_1.json"
+      - "docs/telemetry/EVE_Q_GATE1_SOURCE_REVIEW_ARTIFACT_v0_1.md"
+      - "docs/testing/EVE_Q_GATE1_SOURCE_REVIEW_ACCEPTANCE_v0_1.json"
+      - "tests/test_gate1_source_review_artifact_v0_1.py"
+      - ".github/workflows/gate1-source-review-artifact-v0-1-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  source-review:
+    name: Source review artifact (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Compile source-review module
+        run: |
+          python -m py_compile eve_q/gate1_source_review.py
+
+      - name: Run source-review contract tests
+        run: |
+          python -m pytest -q -o addopts='' \
+            tests/test_gate1_source_review_artifact_v0_1.py
+
+      - name: Prove deterministic template replay
+        run: |
+          set -euo pipefail
+          RUN_A="$(mktemp -d)"
+          RUN_B="$(mktemp -d)"
+          COMMIT="$(git rev-parse HEAD)"
+          CREATED_AT="2026-07-12T01:00:00Z"
+
+          python -m eve_q.gate1_source_review build \
+            --candidate examples/telemetry/source_review_candidate_template_v0_1.json \
+            --producer-commit "$COMMIT" \
+            --created-at "$CREATED_AT" \
+            --output "$RUN_A/artifact.json" \
+            > "$RUN_A/stdout.json"
+
+          python -m eve_q.gate1_source_review build \
+            --candidate examples/telemetry/source_review_candidate_template_v0_1.json \
+            --producer-commit "$COMMIT" \
+            --created-at "$CREATED_AT" \
+            --output "$RUN_B/artifact.json" \
+            > "$RUN_B/stdout.json"
+
+          cmp "$RUN_A/artifact.json" "$RUN_B/artifact.json"
+          cmp "$RUN_A/stdout.json" "$RUN_B/stdout.json"
+
+          python -m eve_q.gate1_source_review verify \
+            --artifact "$RUN_A/artifact.json"
+
+          python - "$RUN_A/artifact.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          artifact = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          assert artifact["review"]["observation_eligibility"] == "HOLD"
+          assert artifact["gate_posture"] == {
+              "gate_0": "ACTIVE",
+              "gate_1": "PILOT_ONLY",
+              "gate_2_through_6": "LOCKED",
+          }
+          assert artifact["artifact_is_command"] is False
+          assert artifact["authority"] is False
+          assert artifact["may_activate_gate_1"] is False
+          assert artifact["may_generate_live_proposal"] is False
+          assert artifact["may_execute"] is False
+          assert artifact["may_move_capital"] is False
+          PY
+
+      - name: Verify acceptance contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          acceptance = json.loads(
+              Path("docs/testing/EVE_Q_GATE1_SOURCE_REVIEW_ACCEPTANCE_v0_1.json")
+              .read_text(encoding="utf-8")
+          )
+          assert all(acceptance["required_acceptance"].values())
+          assert acceptance["network_calls_permitted"] is False
+          assert acceptance["authority"] is False
+          assert acceptance["may_activate_gate_1"] is False
+          assert acceptance["may_generate_live_proposal"] is False
+          assert acceptance["may_execute"] is False
+          assert acceptance["may_move_capital"] is False
+          PY
+
+      - name: Verify non-promotion language
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          text = Path(
+              "docs/telemetry/EVE_Q_GATE1_SOURCE_REVIEW_ARTIFACT_v0_1.md"
+          ).read_text(encoding="utf-8")
+          for phrase in [
+              "ELIGIBLE != Gate 1 activation",
+              "successful verification != source truth",
+              "content address != legal permission",
+              "confidence != authority",
+          ]:
+              assert phrase in text, phrase
+          PY

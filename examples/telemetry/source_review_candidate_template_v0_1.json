@@ -1,0 +1,45 @@
+{
+  "provenance": {
+    "concentration_mitigation": "",
+    "provenance_group": "UNREVIEWED_TEMPLATE",
+    "source_independence_note": "Template only. No source-independence claim has been reviewed.",
+    "upstream_concentration": "UNKNOWN",
+    "upstream_provider": "UNREVIEWED_TEMPLATE"
+  },
+  "review": {
+    "kill_switch_compatible": false,
+    "legal_terms_note": "Terms have not been reviewed. This template is not observation-eligible.",
+    "review_notes": [
+      "Replace all template fields only after human source review."
+    ],
+    "rollback_compatible": false,
+    "terms_disposition": "NOT_REVIEWED",
+    "transport_residual_risk": "UNRESOLVED"
+  },
+  "reviewer_id": "UNASSIGNED",
+  "source": {
+    "allowed_hosts": [
+      "data.example.test"
+    ],
+    "auth_mode": "NONE",
+    "credential_proof_note": null,
+    "credential_reference_name": null,
+    "documented_rate_limit": {
+      "per_seconds": 60,
+      "requests": 1
+    },
+    "endpoint_uri": "https://data.example.test/v1/observation",
+    "expected_content_types": [
+      "application/json"
+    ],
+    "expected_max_response_bytes": 1048576,
+    "freshness_ttl_seconds": 300,
+    "method": "GET",
+    "operator": "UNREVIEWED_TEMPLATE",
+    "outage_expectation": "Unknown until source documentation and observed behavior are reviewed.",
+    "redirect_policy": "EXACT_ALLOWLIST_ONLY",
+    "source_id": "unreviewed-template-source",
+    "source_kind": "market_snapshot",
+    "source_name": "Unreviewed Template Source"
+  }
+}

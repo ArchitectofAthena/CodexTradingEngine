@@ -1,0 +1,327 @@
+{
+  "$id": "https://spiralbloom.local/schemas/gate1_source_review_artifact_v0_1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": {
+      "const": "Gate1SourceReviewArtifact"
+    },
+    "contract_version": {
+      "const": "eve_q_gate1_source_review_v0.1"
+    },
+    "artifact_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "reviewer_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "operator": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_kind": {
+          "enum": [
+            "market_snapshot",
+            "onchain_snapshot",
+            "policy_snapshot",
+            "impact_snapshot"
+          ]
+        },
+        "endpoint_uri": {
+          "format": "uri",
+          "pattern": "^https://",
+          "type": "string"
+        },
+        "allowed_hosts": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^[^*/]+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "method": {
+          "enum": [
+            "GET",
+            "HEAD"
+          ]
+        },
+        "auth_mode": {
+          "enum": [
+            "NONE",
+            "READ_ONLY_CREDENTIAL"
+          ]
+        },
+        "credential_reference_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "credential_proof_note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "documented_rate_limit": {
+          "additionalProperties": false,
+          "properties": {
+            "requests": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "per_seconds": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "requests",
+            "per_seconds"
+          ],
+          "type": "object"
+        },
+        "expected_content_types": {
+          "items": {
+            "enum": [
+              "application/json",
+              "text/plain"
+            ]
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "expected_max_response_bytes": {
+          "maximum": 10485760,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "freshness_ttl_seconds": {
+          "maximum": 86400,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "outage_expectation": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "redirect_policy": {
+          "enum": [
+            "NO_REDIRECTS",
+            "EXACT_ALLOWLIST_ONLY"
+          ]
+        }
+      },
+      "required": [
+        "source_id",
+        "source_name",
+        "operator",
+        "source_kind",
+        "endpoint_uri",
+        "allowed_hosts",
+        "method",
+        "auth_mode",
+        "credential_reference_name",
+        "credential_proof_note",
+        "documented_rate_limit",
+        "expected_content_types",
+        "expected_max_response_bytes",
+        "freshness_ttl_seconds",
+        "outage_expectation",
+        "redirect_policy"
+      ],
+      "type": "object"
+    },
+    "provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "provenance_group": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "upstream_provider": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "upstream_concentration": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "UNKNOWN"
+          ]
+        },
+        "source_independence_note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "concentration_mitigation": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "provenance_group",
+        "upstream_provider",
+        "upstream_concentration",
+        "source_independence_note",
+        "concentration_mitigation"
+      ],
+      "type": "object"
+    },
+    "review": {
+      "additionalProperties": false,
+      "properties": {
+        "terms_disposition": {
+          "enum": [
+            "REVIEWED_COMPATIBLE",
+            "REVIEWED_RESTRICTED",
+            "NOT_REVIEWED"
+          ]
+        },
+        "legal_terms_note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "transport_residual_risk": {
+          "enum": [
+            "ACCEPTED_WITH_CONTROLS",
+            "REJECTED",
+            "UNRESOLVED"
+          ]
+        },
+        "rollback_compatible": {
+          "type": "boolean"
+        },
+        "kill_switch_compatible": {
+          "type": "boolean"
+        },
+        "review_notes": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "observation_eligibility": {
+          "enum": [
+            "ELIGIBLE",
+            "HOLD",
+            "REJECT"
+          ]
+        },
+        "decision_reasons": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "terms_disposition",
+        "legal_terms_note",
+        "transport_residual_risk",
+        "rollback_compatible",
+        "kill_switch_compatible",
+        "review_notes",
+        "observation_eligibility",
+        "decision_reasons"
+      ],
+      "type": "object"
+    },
+    "producer_repository": {
+      "const": "ArchitectofAthena/CodexTradingEngine"
+    },
+    "producer_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "gate_posture": {
+      "additionalProperties": false,
+      "properties": {
+        "gate_0": {
+          "const": "ACTIVE"
+        },
+        "gate_1": {
+          "const": "PILOT_ONLY"
+        },
+        "gate_2_through_6": {
+          "const": "LOCKED"
+        }
+      },
+      "required": [
+        "gate_0",
+        "gate_1",
+        "gate_2_through_6"
+      ],
+      "type": "object"
+    },
+    "artifact_is_command": {
+      "const": false
+    },
+    "authority": {
+      "const": false
+    },
+    "human_promotion_required": {
+      "const": true
+    },
+    "may_activate_gate_1": {
+      "const": false
+    },
+    "may_generate_live_proposal": {
+      "const": false
+    },
+    "may_execute": {
+      "const": false
+    },
+    "may_move_capital": {
+      "const": false
+    }
+  },
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "reviewer_id",
+    "source",
+    "provenance",
+    "review",
+    "producer_repository",
+    "producer_commit",
+    "gate_posture",
+    "artifact_is_command",
+    "authority",
+    "human_promotion_required",
+    "may_activate_gate_1",
+    "may_generate_live_proposal",
+    "may_execute",
+    "may_move_capital"
+  ],
+  "title": "EVE_Q++ Gate1SourceReviewArtifact v0.1",
+  "type": "object"
+}
