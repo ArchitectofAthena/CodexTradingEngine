@@ -1,0 +1,123 @@
+name: Gate 1 Bounded Soak Scaffold v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/gate1_soak_scaffold.py"
+      - "eve_q/gate1_soak_runner.py"
+      - "eve_q/gate1_source_review.py"
+      - "eve_q/gate1_hardening.py"
+      - "eve_q/live_read_only_telemetry.py"
+      - "schemas/gate1_bounded_soak_plan_v0_1.schema.json"
+      - "schemas/gate1_bounded_soak_summary_v0_1.schema.json"
+      - "schemas/gate1_source_review_artifact_v0_1.schema.json"
+      - "schemas/gate1_resolution_receipt_v0_1.schema.json"
+      - "schemas/gate1_rollback_receipt_v0_1.schema.json"
+      - "schemas/live_read_only_telemetry_snapshot_v0_1.schema.json"
+      - "docs/telemetry/EVE_Q_GATE1_BOUNDED_SOAK_SCAFFOLD_v0_1.md"
+      - "docs/testing/EVE_Q_GATE1_BOUNDED_SOAK_SCAFFOLD_ACCEPTANCE_v0_1.json"
+      - "tests/test_gate1_bounded_soak_scaffold_v0_1.py"
+      - ".github/workflows/gate1-bounded-soak-scaffold-v0-1-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "eve_q/gate1_soak_scaffold.py"
+      - "eve_q/gate1_soak_runner.py"
+      - "eve_q/gate1_source_review.py"
+      - "eve_q/gate1_hardening.py"
+      - "eve_q/live_read_only_telemetry.py"
+      - "schemas/gate1_bounded_soak_plan_v0_1.schema.json"
+      - "schemas/gate1_bounded_soak_summary_v0_1.schema.json"
+      - "schemas/gate1_source_review_artifact_v0_1.schema.json"
+      - "schemas/gate1_resolution_receipt_v0_1.schema.json"
+      - "schemas/gate1_rollback_receipt_v0_1.schema.json"
+      - "schemas/live_read_only_telemetry_snapshot_v0_1.schema.json"
+      - "docs/telemetry/EVE_Q_GATE1_BOUNDED_SOAK_SCAFFOLD_v0_1.md"
+      - "docs/testing/EVE_Q_GATE1_BOUNDED_SOAK_SCAFFOLD_ACCEPTANCE_v0_1.json"
+      - "tests/test_gate1_bounded_soak_scaffold_v0_1.py"
+      - ".github/workflows/gate1-bounded-soak-scaffold-v0-1-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  soak-scaffold:
+    name: Bounded soak scaffold (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Compile scaffold and imported boundaries
+        run: |
+          python -m py_compile \
+            eve_q/gate1_soak_scaffold.py \
+            eve_q/gate1_soak_runner.py \
+            eve_q/gate1_source_review.py \
+            eve_q/gate1_hardening.py \
+            eve_q/live_read_only_telemetry.py
+
+      - name: Run focused scaffold controls
+        run: |
+          python -m pytest -q -o addopts='' \
+            tests/test_gate1_bounded_soak_scaffold_v0_1.py
+
+      - name: Verify acceptance contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          acceptance = json.loads(
+              Path(
+                  "docs/testing/EVE_Q_GATE1_BOUNDED_SOAK_SCAFFOLD_ACCEPTANCE_v0_1.json"
+              ).read_text(encoding="utf-8")
+          )
+
+          assert all(acceptance["required_acceptance"].values())
+          assert acceptance["network_calls_permitted_in_ci"] is False
+          assert acceptance["authority"] is False
+          assert acceptance["may_activate_gate_1"] is False
+          assert acceptance["may_generate_live_proposal"] is False
+          assert acceptance["may_execute"] is False
+          assert acceptance["may_move_capital"] is False
+          assert acceptance["gate_posture"] == {
+              "gate_0": "ACTIVE",
+              "gate_1": "PILOT_ONLY",
+              "gate_2_through_6": "LOCKED",
+          }
+          PY
+
+      - name: Verify non-live and non-promotion language
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          text = Path(
+              "docs/telemetry/EVE_Q_GATE1_BOUNDED_SOAK_SCAFFOLD_v0_1.md"
+          ).read_text(encoding="utf-8")
+
+          for phrase in [
+              "No source is selected or committed here",
+              "soak plan != network permission",
+              "accepted observation != proposal",
+              "successful soak != Gate 1 activation",
+              "confidence != authority",
+          ]:
+              assert phrase in text, phrase
+          PY
