@@ -33,7 +33,7 @@ test = [
     "pytest-cov>=4.1.0",
 ]
 quantum = [
-    "qiskit==2.5.0",
+    "qiskit==2.5.1",
 ]
 security = [
     "bandit>=1.7.5",
