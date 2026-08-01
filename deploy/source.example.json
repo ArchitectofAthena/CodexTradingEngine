@@ -1,0 +1,11 @@
+{
+  "source_id": "github-public-rate-limit-observation",
+  "source_kind": "policy_snapshot",
+  "url": "https://api.github.com/rate_limit",
+  "allowed_hosts": [
+    "api.github.com"
+  ],
+  "freshness_ttl_seconds": 300,
+  "timeout_seconds": 10,
+  "max_response_bytes": 1048576
+}
