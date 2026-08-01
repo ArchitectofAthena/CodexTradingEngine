@@ -152,7 +152,10 @@ class MetricsAggregator:
             equity += item.realized_net_profit_usd
             peak = max(peak, equity)
             if peak > 0:
-                max_drawdown = max(max_drawdown, (peak - equity) / peak * Decimal("100"))
+                max_drawdown = max(
+                    max_drawdown,
+                    (peak - equity) / peak * Decimal("100"),
+                )
             if item.submitted and not item.execution_succeeded:
                 consecutive += 1
                 max_consecutive = max(max_consecutive, consecutive)
@@ -166,12 +169,33 @@ class MetricsAggregator:
         return AggregatedMetrics(
             sample_size=len(ordered),
             observation_hours=Decimal(str(elapsed.total_seconds())) / Decimal("3600"),
-            detection_accuracy=Decimal(true_predictions) / Decimal(len(opportunities)) if opportunities else Decimal("0"),
-            execution_success_rate=Decimal(successes) / Decimal(len(submitted)) if submitted else Decimal("0"),
-            false_positive_rate=Decimal(false_positives) / Decimal(len(opportunities)) if opportunities else Decimal("0"),
-            expected_net_profit_usd=sum((item.realized_net_profit_usd for item in ordered), Decimal("0")) / divisor,
+            detection_accuracy=(
+                Decimal(true_predictions) / Decimal(len(opportunities))
+                if opportunities
+                else Decimal("0")
+            ),
+            execution_success_rate=(
+                Decimal(successes) / Decimal(len(submitted))
+                if submitted
+                else Decimal("0")
+            ),
+            false_positive_rate=(
+                Decimal(false_positives) / Decimal(len(opportunities))
+                if opportunities
+                else Decimal("0")
+            ),
+            expected_net_profit_usd=(
+                sum(
+                    (item.realized_net_profit_usd for item in ordered),
+                    Decimal("0"),
+                )
+                / divisor
+            ),
             max_drawdown_pct=max_drawdown,
-            max_failed_attempt_cost_usd=max((item.failed_attempt_cost_usd for item in ordered), default=Decimal("0")),
+            max_failed_attempt_cost_usd=max(
+                (item.failed_attempt_cost_usd for item in ordered),
+                default=Decimal("0"),
+            ),
             daily_gas_burn_usd=max(daily_gas.values(), default=Decimal("0")),
             consecutive_failures=max_consecutive,
             prediction_hit_rate=Decimal(prediction_hits) / divisor,
@@ -222,29 +246,62 @@ class GraduationEvaluator:
         if requested_tier != current_tier + 1:
             failures.append("tier transitions must advance exactly one level")
         checks = {
-            "detection accuracy below minimum": metrics.detection_accuracy >= policy.min_detection_accuracy,
-            "execution success rate below minimum": metrics.execution_success_rate >= policy.min_execution_success_rate,
-            "false-positive rate above maximum": metrics.false_positive_rate <= policy.max_false_positive_rate,
-            "expected net profitability below minimum": metrics.expected_net_profit_usd >= policy.min_expected_net_profit_usd,
-            "drawdown above maximum": metrics.max_drawdown_pct <= policy.max_drawdown_pct,
-            "failed-attempt cost above maximum": metrics.max_failed_attempt_cost_usd <= policy.max_failed_attempt_cost_usd,
-            "daily gas burn above maximum": metrics.daily_gas_burn_usd <= policy.max_daily_gas_burn_usd,
+            "detection accuracy below minimum": (
+                metrics.detection_accuracy >= policy.min_detection_accuracy
+            ),
+            "execution success rate below minimum": (
+                metrics.execution_success_rate >= policy.min_execution_success_rate
+            ),
+            "false-positive rate above maximum": (
+                metrics.false_positive_rate <= policy.max_false_positive_rate
+            ),
+            "expected net profitability below minimum": (
+                metrics.expected_net_profit_usd >= policy.min_expected_net_profit_usd
+            ),
+            "drawdown above maximum": (
+                metrics.max_drawdown_pct <= policy.max_drawdown_pct
+            ),
+            "failed-attempt cost above maximum": (
+                metrics.max_failed_attempt_cost_usd
+                <= policy.max_failed_attempt_cost_usd
+            ),
+            "daily gas burn above maximum": (
+                metrics.daily_gas_burn_usd <= policy.max_daily_gas_burn_usd
+            ),
             "sample size below minimum": metrics.sample_size >= policy.min_sample_size,
-            "observation period below minimum": metrics.observation_hours >= Decimal(policy.min_observation_hours),
-            "restart recovery evidence insufficient": stability.restart_recoveries >= policy.min_restart_recoveries,
-            "network interruption recovery evidence insufficient": stability.network_interruption_recoveries >= policy.min_network_interruption_recoveries,
+            "observation period below minimum": (
+                metrics.observation_hours >= Decimal(policy.min_observation_hours)
+            ),
+            "restart recovery evidence insufficient": (
+                stability.restart_recoveries >= policy.min_restart_recoveries
+            ),
+            "network interruption recovery evidence insufficient": (
+                stability.network_interruption_recoveries
+                >= policy.min_network_interruption_recoveries
+            ),
             "unresolved critical bugs remain": stability.unresolved_critical_bugs == 0,
-            "consecutive failures above maximum": metrics.consecutive_failures <= policy.max_consecutive_failures,
+            "consecutive failures above maximum": (
+                metrics.consecutive_failures <= policy.max_consecutive_failures
+            ),
             "reserve fund below requirement": reserve_fund_usd >= policy.reserve_fund_usd,
         }
         for message, passed in checks.items():
             if not passed:
                 failures.append(message)
-        if requested_tier >= DeploymentTier.LOW_COST_NETWORK and (capabilities is None or not capabilities.ready):
+        if requested_tier >= DeploymentTier.LOW_COST_NETWORK and (
+            capabilities is None or not capabilities.ready
+        ):
             failures.append("network adapter capability checks failed")
-        if requested_tier is DeploymentTier.ETHEREUM_MAINNET and surplus_cash_flow_usd < policy.min_surplus_cash_flow_usd:
+        if (
+            requested_tier is DeploymentTier.ETHEREUM_MAINNET
+            and surplus_cash_flow_usd < policy.min_surplus_cash_flow_usd
+        ):
             failures.append("ongoing surplus cash flow below Ethereum requirement")
-        if requested_tier >= DeploymentTier.LOW_COST_NETWORK and policy.requires_human_approval and not human_approved:
+        if (
+            requested_tier >= DeploymentTier.LOW_COST_NETWORK
+            and policy.requires_human_approval
+            and not human_approved
+        ):
             failures.append("explicit human approval is required for real-funds promotion")
         return GraduationDecision(
             eligible=not failures,
@@ -301,7 +358,9 @@ class RiskGovernor:
         expected_net = expected_gross_profit_usd - costs.total
         reasons: list[str] = []
         if expected_gross_profit_usd <= costs.total + safety_margin_usd:
-            reasons.append("expected gross profit does not exceed total costs plus safety margin")
+            reasons.append(
+                "expected gross profit does not exceed total costs plus safety margin"
+            )
         if daily_loss_usd >= policy.daily_loss_ceiling_usd:
             reasons.append("daily loss ceiling reached")
         if daily_gas_burn_usd >= policy.max_daily_gas_burn_usd:
@@ -320,7 +379,11 @@ class RiskGovernor:
             reasons.append("strategy is disabled")
         if live_mode and not human_approved:
             reasons.append("explicit human approval is required for live submission")
-        return RiskDecision(submit=not reasons, reasons=tuple(reasons), expected_net_profit_usd=expected_net)
+        return RiskDecision(
+            submit=not reasons,
+            reasons=tuple(reasons),
+            expected_net_profit_usd=expected_net,
+        )
 
 
 class AuditSink(Protocol):
@@ -348,11 +411,31 @@ class GraduationStateStore:
 
     def load(self) -> dict[str, Any]:
         if not self.path.exists():
-            return {"current_tier": int(DeploymentTier.LOCAL_SIMULATION), "history": []}
+            return {
+                "current_tier": int(DeploymentTier.LOCAL_SIMULATION),
+                "history": [],
+            }
         return json.loads(self.path.read_text(encoding="utf-8"))
 
-    def record_decision(self, decision: GraduationDecision, *, approved_by: str | None) -> None:
+    def record_decision(
+        self,
+        decision: GraduationDecision,
+        *,
+        approved_by: str | None,
+    ) -> None:
         state = self.load()
+        stored_tier = DeploymentTier(
+            int(state.get("current_tier", int(DeploymentTier.LOCAL_SIMULATION)))
+        )
+        normalized_approver = approved_by.strip() if approved_by else None
+        approval_satisfied = (
+            not decision.human_approval_required or bool(normalized_approver)
+        )
+        state_matches_decision = stored_tier == decision.current_tier
+        promotion_recorded = (
+            decision.eligible and approval_satisfied and state_matches_decision
+        )
+
         event = {
             "timestamp": datetime.now(UTC).isoformat(),
             "decision": {
@@ -360,19 +443,29 @@ class GraduationStateStore:
                 "current_tier": int(decision.current_tier),
                 "requested_tier": int(decision.requested_tier),
                 "failures": list(decision.failures),
+                "human_approval_required": decision.human_approval_required,
                 "authority": False,
             },
-            "approved_by": approved_by,
+            "approved_by": normalized_approver,
+            "state_matches_decision": state_matches_decision,
+            "promotion_recorded": promotion_recorded,
         }
         state.setdefault("history", []).append(event)
-        if decision.eligible and approved_by:
+        if promotion_recorded:
             state["current_tier"] = int(decision.requested_tier)
+
         self.path.parent.mkdir(parents=True, exist_ok=True)
         temp = self.path.with_suffix(self.path.suffix + ".tmp")
-        temp.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        temp.write_text(
+            json.dumps(state, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         temp.replace(self.path)
 
 
 def load_tier_policies(path: Path) -> dict[DeploymentTier, TierPolicy]:
     raw = json.loads(path.read_text(encoding="utf-8"))
-    return {DeploymentTier(int(key)): TierPolicy.from_mapping(value) for key, value in raw["tiers"].items()}
+    return {
+        DeploymentTier(int(key)): TierPolicy.from_mapping(value)
+        for key, value in raw["tiers"].items()
+    }
