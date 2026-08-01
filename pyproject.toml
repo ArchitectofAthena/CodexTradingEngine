@@ -16,6 +16,9 @@ dependencies = [
     "feedparser==6.0.11",
 ]
 
+[project.scripts]
+codex-gate1 = "eve_q.gate1_readonly_runtime:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest==9.1.1",
