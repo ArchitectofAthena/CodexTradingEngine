@@ -1,0 +1,61 @@
+name: Full Simulation Suite
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  full-simulation-suite:
+    name: Python ${{ matrix.python-version }} simulation suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.11"
+          - "3.13"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -e .
+
+      - name: Run complete simulation-safe test suite
+        run: |
+          python -m pytest \
+            -o addopts='' \
+            -ra \
+            --strict-markers \
+            -m "not live" \
+            --cov=eve_q \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --junitxml=test-results.xml \
+            tests/
+
+      - name: Upload simulation test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-test-artifacts-py${{ matrix.python-version }}
+          path: |
+            coverage.xml
+            test-results.xml
+          if-no-files-found: warn
