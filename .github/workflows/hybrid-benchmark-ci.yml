@@ -162,7 +162,7 @@ jobs:
           python -m json.tool artifacts/hybrid_benchmark_receipt.json >/dev/null
           python -m json.tool artifacts/hybrid_benchmark_envelope.json >/dev/null
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: hybrid-delta-benchmark-receipts
           path: artifacts/*.json
