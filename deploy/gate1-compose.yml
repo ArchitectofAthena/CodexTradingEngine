@@ -1,0 +1,28 @@
+services:
+  gate1-capture:
+    build:
+      context: ..
+      dockerfile: Dockerfile.gate1
+    command:
+      - capture
+      - --source
+      - /config/source.json
+      - --output-dir
+      - /artifacts/${CODEX_CAPTURE_ID:-capture}
+      - --producer-commit
+      - ${CODEX_PRODUCER_COMMIT:?Set CODEX_PRODUCER_COMMIT to the reviewed 40-character commit SHA}
+      - --method
+      - ${CODEX_GATE1_METHOD:-GET}
+    environment:
+      EVE_Q_GATE1_KILL_SWITCH: ${EVE_Q_GATE1_KILL_SWITCH:-0}
+    volumes:
+      - ${CODEX_SOURCE_SPEC:-./source.example.json}:/config/source.json:ro
+      - ${CODEX_ARTIFACT_DIR:-./artifacts}:/artifacts
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: "no"
