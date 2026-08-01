@@ -32,7 +32,7 @@ def test_readme_preserves_non_execution_boundary():
         "Human promotes.",
         "The image carries the acorn.",
         "The artifact never commands.",
-        "receipt attestation",
+        "receipt_carrier_attestation.py",
         "human promotion",
     ]
 
