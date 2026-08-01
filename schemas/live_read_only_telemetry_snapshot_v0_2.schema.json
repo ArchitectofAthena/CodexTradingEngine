@@ -1,0 +1,114 @@
+{
+  "$id": "https://spiralbloom.local/schemas/live_read_only_telemetry_snapshot_v0_2.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EVE_Q Gate 1 LiveReadOnlyTelemetrySnapshot v0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "artifact_id",
+    "created_at",
+    "source",
+    "retrieval",
+    "hashes",
+    "normalization",
+    "producer",
+    "storage",
+    "normalized_payload",
+    "gate_posture",
+    "artifact_is_command",
+    "authority",
+    "human_promotion_required",
+    "may_generate_live_proposal",
+    "may_execute",
+    "may_move_capital"
+  ],
+  "properties": {
+    "artifact_type": {"const": "LiveReadOnlyTelemetrySnapshot"},
+    "contract_version": {"const": "eve_q_live_read_only_telemetry_v0.2"},
+    "artifact_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "source_kind", "requested_uri", "final_uri", "allowlisted_host", "method"],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "source_kind": {"enum": ["market_snapshot", "onchain_snapshot", "policy_snapshot", "impact_snapshot"]},
+        "requested_uri": {"type": "string", "format": "uri", "pattern": "^https://"},
+        "final_uri": {"type": "string", "format": "uri", "pattern": "^https://"},
+        "allowlisted_host": {"type": "string", "minLength": 1},
+        "method": {"enum": ["GET", "HEAD"]}
+      }
+    },
+    "retrieval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["retrieved_at", "observed_at", "expires_at", "freshness_ttl_seconds", "http_status", "content_type", "content_length"],
+      "properties": {
+        "retrieved_at": {"type": "string", "format": "date-time"},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "freshness_ttl_seconds": {"type": "integer", "minimum": 1, "maximum": 86400},
+        "http_status": {"type": "integer", "minimum": 200, "maximum": 299},
+        "content_type": {"type": "string"},
+        "content_length": {"type": "integer", "minimum": 0}
+      }
+    },
+    "hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_sha256", "normalized_sha256"],
+      "properties": {
+        "raw_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "normalized_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "normalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "parser_version"],
+      "properties": {
+        "format": {"enum": ["canonical_json", "utf8_text_lf", "head_metadata"]},
+        "parser_version": {"const": "live-read-only-normalizer-v0.1"}
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "component", "commit_sha"],
+      "properties": {
+        "repository": {"const": "ArchitectofAthena/CodexTradingEngine"},
+        "component": {"const": "gate1_readonly_runtime_v0_2"},
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_relative_path", "normalized_relative_path"],
+      "properties": {
+        "raw_relative_path": {"const": "raw.bin"},
+        "normalized_relative_path": {"const": "normalized.json"}
+      }
+    },
+    "normalized_payload": {},
+    "gate_posture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_0", "gate_1", "gate_2_through_6"],
+      "properties": {
+        "gate_0": {"const": "ACTIVE"},
+        "gate_1": {"const": "OPEN_READ_ONLY"},
+        "gate_2_through_6": {"const": "LOCKED"}
+      }
+    },
+    "artifact_is_command": {"const": false},
+    "authority": {"const": false},
+    "human_promotion_required": {"const": true},
+    "may_generate_live_proposal": {"const": false},
+    "may_execute": {"const": false},
+    "may_move_capital": {"const": false}
+  }
+}

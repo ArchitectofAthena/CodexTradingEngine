@@ -1,0 +1,75 @@
+name: Gate 1 Deployable Smoke
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate1-deployable-smoke:
+    name: Gate 1 edge and container smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -e .
+
+      - name: Run Gate 1 adversarial edge tests
+        run: |
+          python -m pytest \
+            -o addopts='' \
+            -q \
+            tests/test_gate1_readonly_runtime_v0_2.py \
+            tests/test_live_read_only_telemetry_v0_1.py \
+            tests/test_deployment_gates.py \
+            tests/test_graduation_state_store.py
+
+      - name: Build Gate 1 image
+        run: docker build -f Dockerfile.gate1 -t codex-gate1:${{ github.sha }} .
+
+      - name: Verify non-root immutable status runtime
+        run: |
+          docker run --rm \
+            --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=16m \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            codex-gate1:${{ github.sha }} status > gate1-status.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("gate1-status.json").read_text(encoding="utf-8"))
+          assert payload["gate_posture"] == {
+              "gate_0": "ACTIVE",
+              "gate_1": "OPEN_READ_ONLY",
+              "gate_2_through_6": "LOCKED",
+          }
+          assert payload["authority"] is False
+          assert payload["may_generate_live_proposal"] is False
+          assert payload["may_execute"] is False
+          assert payload["may_move_capital"] is False
+          PY
+
+      - name: Verify image user and compose contract
+        env:
+          CODEX_PRODUCER_COMMIT: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          CODEX_CAPTURE_ID: ci-contract-only
+        run: |
+          test "$(docker image inspect codex-gate1:${{ github.sha }} --format '{{.Config.User}}')" = "10001:10001"
+          docker compose -f deploy/gate1-compose.yml config > /dev/null

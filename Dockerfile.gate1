@@ -1,0 +1,24 @@
+FROM python:3.13-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+COPY pyproject.toml README.md requirements.txt ./
+COPY eve_q ./eve_q
+COPY schemas ./schemas
+
+RUN python -m pip install --upgrade pip \
+    && python -m pip install . \
+    && groupadd --gid 10001 codex \
+    && useradd --uid 10001 --gid codex --create-home --shell /usr/sbin/nologin codex \
+    && mkdir -p /artifacts \
+    && chown -R codex:codex /artifacts /home/codex
+
+USER 10001:10001
+
+ENTRYPOINT ["codex-gate1"]
+CMD ["status"]
