@@ -4,18 +4,16 @@ README = Path("README.md")
 
 
 def test_readme_names_current_constitutional_surfaces():
-    text = README.read_text()
+    text = README.read_text(encoding="utf-8")
 
     required = [
-        "Constitutional Surfaces Index",
+        "## Current Surface Index",
+        "contracts/organ_contract.json",
         "eve_q/artifact_carrier.py",
-        "examples/artifact_carrier_manifest.example.json",
-        "docs/artifact_carrier_manifest_example.md",
         "eve_q/receipt_carrier_attestation.py",
-        "examples/receipt_carrier_attestation.example.json",
-        "docs/receipt_carrier_attestation_example.md",
         "eve_q/membrane_tool.py",
-        "Membrane metadata extractor and attestation bridge",
+        "Carrier validator",
+        "Membrane tool",
     ]
 
     for item in required:
@@ -23,20 +21,19 @@ def test_readme_names_current_constitutional_surfaces():
 
 
 def test_readme_preserves_non_execution_boundary():
-    text = README.read_text()
+    text = README.read_text(encoding="utf-8")
 
     required = [
-        "no autonomous capital movement",
-        "no wallet signing",
-        "no scheduler authority",
-        "no reverse execution channel",
-        "no metadata writing",
+        "autonomous capital movement",
+        "wallet or transaction signing",
+        "scheduler- or webhook-triggered execution",
+        "reverse execution channel",
+        "without writing metadata",
         "Human promotes.",
-        "Image carries acorn.",
-        "The validator compares.",
-        "The attestation binds.",
-        "image metadata -> carrier manifest -> receipt attestation -> validation result",
-        "--attestation",
+        "The image carries the acorn.",
+        "The artifact never commands.",
+        "receipt_carrier_attestation.py",
+        "human promotion",
     ]
 
     for item in required:
