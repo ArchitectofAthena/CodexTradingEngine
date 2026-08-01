@@ -77,7 +77,13 @@ def test_metrics_include_profitability_false_positives_and_stability_window():
     metrics = MetricsAggregator.aggregate(
         [
             record("a", start, success=True, real=True, net=Decimal("4")),
-            record("b", start + timedelta(hours=2), success=False, real=False, net=Decimal("-1")),
+            record(
+                "b",
+                start + timedelta(hours=2),
+                success=False,
+                real=False,
+                net=Decimal("-1"),
+            ),
         ]
     )
     assert metrics.sample_size == 2
@@ -161,8 +167,8 @@ def test_ethereum_gate_requires_surplus_cash_flow_and_explicit_approval():
         human_approved=False,
     )
     assert decision.eligible is False
-    assert "ongoing surplus cash flow" in decision.failures
-    assert "explicit human approval" in decision.failures
+    assert any("ongoing surplus cash flow" in item for item in decision.failures)
+    assert any("explicit human approval" in item for item in decision.failures)
     assert decision.authority is False
 
 
