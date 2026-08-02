@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.14-slim@sha256:63a4c7f612a00f92042cbdcc7cdc6a306f38485af0a200b9c89de7d9b1607d15
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -11,7 +11,10 @@ COPY pyproject.toml README.md requirements.txt ./
 COPY eve_q ./eve_q
 COPY schemas ./schemas
 
-RUN python -m pip install --upgrade pip \
+RUN python -m pip install --upgrade \
+        pip \
+        "setuptools>=78.1.1" \
+        "msgpack>=1.2.1" \
     && python -m pip install . \
     && groupadd --gid 10001 codex \
     && useradd --uid 10001 --gid codex --create-home --shell /usr/sbin/nologin codex \
