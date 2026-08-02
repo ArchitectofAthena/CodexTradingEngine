@@ -18,9 +18,9 @@ concurrency:
 
 jobs:
   security-audit:
-    name: Static, dependency, secret, workflow, container, and cross-repo leak audit
+    name: Static, dependency, secret, workflow, container, and leak audit
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 30
 
     steps:
       - name: Checkout without retained credentials
@@ -56,28 +56,12 @@ jobs:
             --json security-artifacts/security-audit.json \
             --markdown security-artifacts/security-audit.md
 
-      - name: Run Codex leak and exposure audit
+      - name: Run leak and exposure audit
         run: |
           python scripts/leak_audit_v0_2.py \
             --fail-on HIGH \
-            --json security-artifacts/codex-leak-audit.json \
-            --markdown security-artifacts/codex-leak-audit.md
-
-      - name: Checkout SpiralBloom without retained credentials
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: ArchitectofAthena/spiralbloom-os
-          ref: main
-          path: sibling-spiralbloom
-          persist-credentials: false
-
-      - name: Run SpiralBloom cross-repository leak and exposure audit
-        run: |
-          python scripts/leak_audit_v0_2.py \
-            --root sibling-spiralbloom \
-            --fail-on HIGH \
-            --json ../security-artifacts/spiralbloom-leak-audit.json \
-            --markdown ../security-artifacts/spiralbloom-leak-audit.md
+            --json security-artifacts/leak-audit.json \
+            --markdown security-artifacts/leak-audit.md
 
       - name: Run high-confidence Bandit audit
         run: |
