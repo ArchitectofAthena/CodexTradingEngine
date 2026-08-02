@@ -18,6 +18,7 @@ dependencies = [
 
 [project.scripts]
 codex-gate1 = "eve_q.gate1_readonly_runtime:main"
+omega-context = "omega_telemetry.context_runner:main"
 
 [project.optional-dependencies]
 dev = [
@@ -41,7 +42,7 @@ security = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["eve_q*"]
+include = ["eve_q*", "omega_telemetry*"]
 
 [tool.black]
 line-length = 100
