@@ -11,7 +11,10 @@ COPY pyproject.toml README.md requirements.txt ./
 COPY eve_q ./eve_q
 COPY schemas ./schemas
 
-RUN python -m pip install --upgrade pip \
+RUN python -m pip install --upgrade \
+        pip \
+        "setuptools>=78.1.1" \
+        "msgpack>=1.2.1" \
     && python -m pip install . \
     && groupadd --gid 10001 codex \
     && useradd --uid 10001 --gid codex --create-home --shell /usr/sbin/nologin codex \
