@@ -24,13 +24,19 @@ validated non-authoritative envelope
 - maximum `cat` response: 32 MiB
 - maximum JSON control response: 1 MiB
 - credentials forbidden in the API URL
-- URL query and fragment data forbidden
+- base paths, URL fragments, and out-of-namespace endpoints forbidden
+- redirects forbidden
+- ambient HTTP proxy settings ignored
 - returned identifiers must be CIDv1 base32
 
 A remote Kubo endpoint is rejected unless the operator supplies both a
-non-loopback URL and the explicit `--allow-remote-kubo` flag. That override
-changes transport scope only. It does not grant wallet, signing, execution,
-capital, promotion, or canon authority.
+non-loopback URL and the explicit `--allow-remote-kubo` flag. Remote endpoints
+must use HTTPS. That override changes transport scope only. It does not grant
+wallet, signing, execution, capital, promotion, or canon authority.
+
+The request membrane admits only paths below `/api/v0/`. A configured Kubo base
+URL cannot smuggle a hidden path, credentials, query string, or fragment into
+subsequent calls.
 
 ## Receipt sealer controls
 
