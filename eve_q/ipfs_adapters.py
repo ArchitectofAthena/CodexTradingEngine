@@ -12,6 +12,13 @@ DEFAULT_MAX_ADD_BYTES = 16 * 1024 * 1024
 DEFAULT_MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 DEFAULT_MAX_JSON_RESPONSE_BYTES = 1024 * 1024
 _CIDV1_BASE32 = re.compile(r"^b[a-z2-7]{20,}$")
+_ALLOWED_KUBO_PATHS = frozenset(
+    {
+        "/api/v0/add",
+        "/api/v0/cat",
+        "/api/v0/pin/ls",
+    }
+)
 
 
 class IpfsWriter(Protocol):
@@ -83,12 +90,17 @@ def validate_kubo_api_url(api_url: str, *, allow_remote: bool = False) -> str:
     return api_url.rstrip("/")
 
 
+def _validate_kubo_path(path: str) -> None:
+    if path not in _ALLOWED_KUBO_PATHS:
+        allowed = ", ".join(sorted(_ALLOWED_KUBO_PATHS))
+        raise ValueError(f"unsupported Kubo request path; allowed: {allowed}")
+
+
 def validate_kubo_request_url(url: str, *, allow_remote: bool = False) -> str:
     parsed = parse.urlsplit(url)
     base = parse.urlunsplit((parsed.scheme, parsed.netloc, "", "", ""))
     validate_kubo_api_url(base, allow_remote=allow_remote)
-    if not parsed.path.startswith("/api/v0/"):
-        raise ValueError("Kubo request path must remain under /api/v0/")
+    _validate_kubo_path(parsed.path)
     if parsed.fragment:
         raise ValueError("Kubo request URL must not contain a fragment")
     return url
@@ -115,8 +127,10 @@ class KuboHttpIpfsWriter:
         validate_kubo_api_url(self.api_url, allow_remote=self.allow_remote)
 
     def endpoint(self, path: str) -> str:
-        if not path.startswith("/api/v0/"):
-            raise ValueError("Kubo endpoint path must remain under /api/v0/")
+        parsed = parse.urlsplit(path)
+        if parsed.scheme or parsed.netloc or parsed.fragment:
+            raise ValueError("Kubo endpoint must be a relative API path")
+        _validate_kubo_path(parsed.path)
         base = validate_kubo_api_url(self.api_url, allow_remote=self.allow_remote)
         return base + path
 
