@@ -1,8 +1,10 @@
 {
   "fingerprints": [
-    "92f5273ee03aab59b98d"
+    "92f5273ee03aab59b98d",
+    "3048b2c8e65fdf4dd76a"
   ],
   "review_notes": {
-    "92f5273ee03aab59b98d": "Deliberately fake secret-shaped fixture in tests/test_artifact_carrier_manifest.py; any changed value, location, or new occurrence produces a different fingerprint."
+    "92f5273ee03aab59b98d": "Deliberately fake secret-shaped fixture in tests/test_artifact_carrier_manifest.py; any changed value, location, or new occurrence produces a different fingerprint.",
+    "3048b2c8e65fdf4dd76a": "The exact same inert fixture value appears in .gitleaks.toml solely to prevent a full-history false positive; changed value or location produces a new fingerprint."
   }
 }
