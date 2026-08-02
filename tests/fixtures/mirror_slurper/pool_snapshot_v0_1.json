@@ -1,0 +1,49 @@
+{
+  "amm_model": "constant_product_x_y_k_v0.1",
+  "artifact_is_command": false,
+  "authority": false,
+  "captured_at": "2026-08-02T15:00:00Z",
+  "may_execute": false,
+  "may_generate_live_proposal": false,
+  "may_move_capital": false,
+  "pools": [
+    {
+      "chain": "base",
+      "dex": "uniswap_v2_model",
+      "fee_bps": 30,
+      "pool_id": "base-uniswap-usdc-weth",
+      "reserve0": "2000000",
+      "reserve1": "1000",
+      "token0": "USDC",
+      "token1": "WETH"
+    },
+    {
+      "chain": "base",
+      "dex": "sushi_v2_model",
+      "fee_bps": 30,
+      "pool_id": "base-sushi-weth-dai",
+      "reserve0": "1000",
+      "reserve1": "2100000",
+      "token0": "WETH",
+      "token1": "DAI"
+    },
+    {
+      "chain": "base",
+      "dex": "curve_constant_product_fixture",
+      "fee_bps": 30,
+      "pool_id": "base-curve-dai-usdc",
+      "reserve0": "1000000",
+      "reserve1": "1010000",
+      "token0": "DAI",
+      "token1": "USDC"
+    }
+  ],
+  "snapshot_id": "a722795ceef612ce57ba1c7b882c4210a73900e1eb083c7b133288342388044f",
+  "snapshot_version": "mirror_slurper_pool_snapshot_v0.1",
+  "source": {
+    "kind": "recorded_offline_fixture",
+    "label": "deterministic three-pool cycle",
+    "network_fetch_performed": false,
+    "recorded_offline": true
+  }
+}
