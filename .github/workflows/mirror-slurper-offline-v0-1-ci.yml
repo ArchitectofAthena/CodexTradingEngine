@@ -1,0 +1,74 @@
+name: MirrorSlurper Offline v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/mirror_slurper_offline.py"
+      - "schemas/mirror_slurper_offline_receipt_v0_1.schema.json"
+      - "tests/test_mirror_slurper_offline_v0_1.py"
+      - "tests/fixtures/mirror_slurper/**"
+      - "docs/telemetry/MIRROR_SLURPER_OFFLINE_v0_1.md"
+      - ".github/workflows/mirror-slurper-offline-v0-1-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "eve_q/mirror_slurper_offline.py"
+      - "schemas/mirror_slurper_offline_receipt_v0_1.schema.json"
+      - "tests/test_mirror_slurper_offline_v0_1.py"
+      - "tests/fixtures/mirror_slurper/**"
+      - "docs/telemetry/MIRROR_SLURPER_OFFLINE_v0_1.md"
+      - ".github/workflows/mirror-slurper-offline-v0-1-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-slurper-offline-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  adversarial-replay:
+    name: Recorded snapshot adversarial replay (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Parse contracts and compile evaluator
+        run: |
+          python -m json.tool schemas/mirror_slurper_offline_receipt_v0_1.schema.json >/dev/null
+          python -m json.tool tests/fixtures/mirror_slurper/pool_snapshot_v0_1.json >/dev/null
+          python -m json.tool tests/fixtures/mirror_slurper/candidate_v0_1.json >/dev/null
+          python -m json.tool tests/fixtures/mirror_slurper/stress_policy_v0_1.json >/dev/null
+          python -m py_compile eve_q/mirror_slurper_offline.py
+
+      - name: Run MirrorSlurper invariants
+        run: |
+          python -m pytest -q --no-cov tests/test_mirror_slurper_offline_v0_1.py
+
+      - name: Replay canonical fixture through CLI
+        run: |
+          python -m eve_q.mirror_slurper_offline \
+            tests/fixtures/mirror_slurper/pool_snapshot_v0_1.json \
+            tests/fixtures/mirror_slurper/candidate_v0_1.json \
+            tests/fixtures/mirror_slurper/stress_policy_v0_1.json \
+            --output /tmp/mirror_slurper_receipt.json
+          python -m json.tool /tmp/mirror_slurper_receipt.json >/dev/null
