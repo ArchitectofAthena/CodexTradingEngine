@@ -25,6 +25,21 @@ class IpfsWriter(Protocol):
         pass
 
 
+class _NoRedirectHandler(request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise RuntimeError("Kubo HTTP redirects are forbidden")
+
+
+_NO_REDIRECT_OPENER = request.build_opener(
+    request.ProxyHandler({}),
+    _NoRedirectHandler(),
+)
+
+
+def _open_url(req: request.Request, timeout: float):
+    return _NO_REDIRECT_OPENER.open(req, timeout=timeout)
+
+
 def validate_cid(cid: str) -> str:
     candidate = cid.strip()
     if not _CIDV1_BASE32.fullmatch(candidate):
@@ -32,9 +47,19 @@ def validate_cid(cid: str) -> str:
     return candidate
 
 
+def _is_loopback_host(host: str) -> bool:
+    if host.lower() == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
 def validate_kubo_api_url(api_url: str, *, allow_remote: bool = False) -> str:
     parsed = parse.urlsplit(api_url)
-    if parsed.scheme not in {"http", "https"}:
+    scheme = parsed.scheme.lower()
+    if scheme not in {"http", "https"}:
         raise ValueError("Kubo API URL must use http or https")
     if not parsed.hostname:
         raise ValueError("Kubo API URL must include a hostname")
@@ -42,18 +67,31 @@ def validate_kubo_api_url(api_url: str, *, allow_remote: bool = False) -> str:
         raise ValueError("Kubo API URL must not contain credentials")
     if parsed.query or parsed.fragment:
         raise ValueError("Kubo API URL must not contain query or fragment data")
+    if parsed.path not in {"", "/"}:
+        raise ValueError("Kubo API URL must not contain a base path")
+    try:
+        parsed.port
+    except ValueError as exc:
+        raise ValueError("Kubo API URL contains an invalid port") from exc
 
-    host = parsed.hostname.lower()
-    loopback = host == "localhost"
-    if not loopback:
-        try:
-            loopback = ipaddress.ip_address(host).is_loopback
-        except ValueError:
-            loopback = False
+    loopback = _is_loopback_host(parsed.hostname)
     if not loopback and not allow_remote:
         raise ValueError("Kubo API URL must be loopback unless allow_remote=True")
+    if not loopback and scheme != "https":
+        raise ValueError("remote Kubo API URLs must use https")
 
     return api_url.rstrip("/")
+
+
+def validate_kubo_request_url(url: str, *, allow_remote: bool = False) -> str:
+    parsed = parse.urlsplit(url)
+    base = parse.urlunsplit((parsed.scheme, parsed.netloc, "", "", ""))
+    validate_kubo_api_url(base, allow_remote=allow_remote)
+    if not parsed.path.startswith("/api/v0/"):
+        raise ValueError("Kubo request path must remain under /api/v0/")
+    if parsed.fragment:
+        raise ValueError("Kubo request URL must not contain a fragment")
+    return url
 
 
 @dataclass(frozen=True)
@@ -77,6 +115,8 @@ class KuboHttpIpfsWriter:
         validate_kubo_api_url(self.api_url, allow_remote=self.allow_remote)
 
     def endpoint(self, path: str) -> str:
+        if not path.startswith("/api/v0/"):
+            raise ValueError("Kubo endpoint path must remain under /api/v0/")
         base = validate_kubo_api_url(self.api_url, allow_remote=self.allow_remote)
         return base + path
 
@@ -108,9 +148,12 @@ class KuboHttpIpfsWriter:
             headers=headers,
             timeout_seconds=self.timeout_seconds,
             max_response_bytes=self.max_json_response_bytes,
+            allow_remote=self.allow_remote,
         )
 
         payload = json.loads(response.decode("utf-8"))
+        if not isinstance(payload, dict):
+            raise RuntimeError("Kubo add response must be a JSON object")
         cid = payload.get("Hash")
 
         if not cid:
@@ -129,6 +172,7 @@ class KuboHttpIpfsWriter:
             headers={},
             timeout_seconds=self.timeout_seconds,
             max_response_bytes=self.max_response_bytes,
+            allow_remote=self.allow_remote,
         )
 
     def is_pinned(self, cid: str) -> bool:
@@ -143,11 +187,14 @@ class KuboHttpIpfsWriter:
                 headers={},
                 timeout_seconds=self.timeout_seconds,
                 max_response_bytes=self.max_json_response_bytes,
+                allow_remote=self.allow_remote,
             )
             payload = json.loads(response.decode("utf-8"))
-        except (OSError, UnicodeDecodeError, ValueError, json.JSONDecodeError):
+        except (OSError, UnicodeDecodeError, ValueError, RuntimeError):
             return False
 
+        if not isinstance(payload, dict):
+            return False
         keys = payload.get("Keys", {})
         return isinstance(keys, dict) and validated in keys
 
@@ -158,11 +205,14 @@ def post_bytes(
     headers: dict[str, str],
     timeout_seconds: float,
     max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
+    *,
+    allow_remote: bool = False,
 ) -> bytes:
     if timeout_seconds <= 0:
         raise ValueError("timeout_seconds must be positive")
     if max_response_bytes <= 0:
         raise ValueError("max_response_bytes must be positive")
+    validate_kubo_request_url(url, allow_remote=allow_remote)
 
     req = request.Request(
         url,
@@ -171,7 +221,7 @@ def post_bytes(
         method="POST",
     )
 
-    with request.urlopen(req, timeout=timeout_seconds) as response:
+    with _open_url(req, timeout_seconds) as response:
         content_length = response.headers.get("Content-Length")
         if content_length is not None and int(content_length) > max_response_bytes:
             raise ValueError(
