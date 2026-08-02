@@ -44,7 +44,7 @@ def test_remote_kubo_requires_explicit_https_override():
         api_url="https://kubo.example.test:5001",
         allow_remote=True,
     )
-    assert writer.endpoint("/api/v0/version").startswith(
+    assert writer.endpoint("/api/v0/cat").startswith(
         "https://kubo.example.test:5001/"
     )
 
@@ -63,11 +63,12 @@ def test_kubo_url_rejects_embedded_credentials_and_base_paths():
         KuboHttpIpfsWriter(api_url="http://127.0.0.1:5001/hidden")
 
 
-def test_endpoint_cannot_escape_kubo_api_namespace():
+def test_endpoint_allowlist_blocks_debug_and_shutdown_surfaces():
     writer = KuboHttpIpfsWriter()
 
-    with pytest.raises(ValueError, match="under /api/v0/"):
-        writer.endpoint("/debug/pprof")
+    for path in ("/debug/pprof", "/api/v0/shutdown", "/api/v0/config"):
+        with pytest.raises(ValueError, match="unsupported Kubo request path"):
+            writer.endpoint(path)
 
 
 def test_cid_validation_is_fail_closed():
@@ -140,7 +141,7 @@ def test_content_length_is_checked_before_body_read(monkeypatch):
 
     with pytest.raises(ValueError, match="max_response_bytes=4"):
         post_bytes(
-            "http://127.0.0.1:5001/api/v0/version",
+            "http://127.0.0.1:5001/api/v0/cat",
             b"",
             {},
             timeout_seconds=1,
@@ -151,7 +152,7 @@ def test_content_length_is_checked_before_body_read(monkeypatch):
 def test_direct_post_rejects_remote_target_without_override():
     with pytest.raises(ValueError, match="must be loopback"):
         post_bytes(
-            "https://kubo.example.test/api/v0/version",
+            "https://kubo.example.test/api/v0/cat",
             b"",
             {},
             timeout_seconds=1,
@@ -162,7 +163,14 @@ def test_redirect_handler_fails_closed():
     handler = ipfs_adapters._NoRedirectHandler()
 
     with pytest.raises(RuntimeError, match="redirects are forbidden"):
-        handler.redirect_request(None, None, 302, "Found", {}, "https://example.test")
+        handler.redirect_request(
+            None,
+            None,
+            302,
+            "Found",
+            {},
+            "https://example.test",
+        )
 
 
 def test_pin_check_requires_recursive_key(monkeypatch):
