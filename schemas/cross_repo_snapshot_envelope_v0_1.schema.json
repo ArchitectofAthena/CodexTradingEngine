@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spiralbloom.local/schemas/cross_repo_snapshot_envelope_v0_1.schema.json",
+  "title": "Cross-Repository Snapshot Envelope v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "envelope_id",
+    "producer",
+    "snapshot",
+    "timing",
+    "gate_posture",
+    "artifact_is_command",
+    "authority",
+    "human_review_required",
+    "may_generate_live_proposal",
+    "may_execute",
+    "may_move_capital"
+  ],
+  "properties": {
+    "artifact_type": {"const": "CrossRepoSnapshotEnvelope"},
+    "contract_version": {"const": "cross_repo_snapshot_envelope_v0.1"},
+    "envelope_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit_sha", "component"],
+      "properties": {
+        "repository": {"const": "ArchitectofAthena/CodexTradingEngine"},
+        "commit_sha": {"type": "string", "pattern": "^[a-fA-F0-9]{40}$"},
+        "component": {"const": "live_read_only_telemetry_v0_1"}
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "contract_version",
+        "document_sha256",
+        "source_id",
+        "source_kind",
+        "raw_sha256",
+        "normalized_sha256",
+        "parser_version"
+      ],
+      "properties": {
+        "artifact_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "contract_version": {"const": "eve_q_live_read_only_telemetry_v0.1"},
+        "document_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "source_id": {"type": "string", "minLength": 1},
+        "source_kind": {
+          "enum": [
+            "market_snapshot",
+            "onchain_snapshot",
+            "policy_snapshot",
+            "impact_snapshot"
+          ]
+        },
+        "raw_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "normalized_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "parser_version": {"const": "live-read-only-normalizer-v0.1"}
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observed_at",
+        "captured_at",
+        "expires_at",
+        "freshness_ttl_seconds"
+      ],
+      "properties": {
+        "observed_at": {"type": "string", "format": "date-time"},
+        "captured_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "freshness_ttl_seconds": {"type": "integer", "minimum": 1, "maximum": 86400}
+      }
+    },
+    "gate_posture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_0", "gate_1", "gate_2_through_6"],
+      "properties": {
+        "gate_0": {"const": "ACTIVE"},
+        "gate_1": {"const": "PILOT_ONLY"},
+        "gate_2_through_6": {"const": "LOCKED"}
+      }
+    },
+    "artifact_is_command": {"const": false},
+    "authority": {"const": false},
+    "human_review_required": {"const": true},
+    "may_generate_live_proposal": {"const": false},
+    "may_execute": {"const": false},
+    "may_move_capital": {"const": false}
+  }
+}
