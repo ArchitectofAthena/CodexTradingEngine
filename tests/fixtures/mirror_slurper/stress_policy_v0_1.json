@@ -1,0 +1,27 @@
+{
+  "artifact_is_command": false,
+  "authority": false,
+  "delay_adverse_bps_per_block": 5,
+  "may_execute": false,
+  "may_generate_live_proposal": false,
+  "may_move_capital": false,
+  "minimum_worst_case_profit_start_token": "25",
+  "policy_id": "6eabb787818ed10c2d8d189daaed26acf3670d739e9ef7ddc2af1a5ff22a076e",
+  "policy_version": "mirror_slurper_stress_policy_v0.1",
+  "scenarios": [
+    {
+      "delay_blocks": 1,
+      "gas_multiplier": "1.5",
+      "name": "gas_and_one_block",
+      "reserve_shift_bps": 10,
+      "slippage_bps": 5
+    },
+    {
+      "delay_blocks": 2,
+      "gas_multiplier": "2",
+      "name": "two_block_reserve_drift",
+      "reserve_shift_bps": 25,
+      "slippage_bps": 10
+    }
+  ]
+}

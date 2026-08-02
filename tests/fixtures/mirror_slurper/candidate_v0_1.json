@@ -1,0 +1,32 @@
+{
+  "amount_in": "10000",
+  "artifact_is_command": false,
+  "authority": false,
+  "candidate_id": "156ce83476d3364c4e0160924ee9bd89e73b6efe41c9ac64f2963f98ffeef3e1",
+  "candidate_version": "mirror_slurper_candidate_v0.1",
+  "chain": "base",
+  "failure_reserve_start_token": "1",
+  "flash_fee_bps": 5,
+  "gas_cost_start_token": "2",
+  "may_execute": false,
+  "may_generate_live_proposal": false,
+  "may_move_capital": false,
+  "route": [
+    {
+      "pool_id": "base-uniswap-usdc-weth",
+      "token_in": "USDC",
+      "token_out": "WETH"
+    },
+    {
+      "pool_id": "base-sushi-weth-dai",
+      "token_in": "WETH",
+      "token_out": "DAI"
+    },
+    {
+      "pool_id": "base-curve-dai-usdc",
+      "token_in": "DAI",
+      "token_out": "USDC"
+    }
+  ],
+  "start_token": "USDC"
+}

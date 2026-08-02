@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex.local/schemas/mirror_slurper_offline_receipt_v0_1.schema.json",
+  "title": "MirrorSlurper Offline Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "receipt_id",
+    "snapshot",
+    "candidate",
+    "policy",
+    "evaluation",
+    "gate_posture",
+    "offline_only",
+    "recorded_snapshot_only",
+    "human_review_required",
+    "artifact_is_command",
+    "authority",
+    "may_generate_live_proposal",
+    "may_execute",
+    "may_move_capital"
+  ],
+  "properties": {
+    "artifact_type": {"const": "MirrorSlurperOfflineReceipt"},
+    "contract_version": {"const": "mirror_slurper_offline_v0.1"},
+    "receipt_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot_id", "snapshot_version", "captured_at", "amm_model"],
+      "properties": {
+        "snapshot_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "snapshot_version": {"const": "mirror_slurper_pool_snapshot_v0.1"},
+        "captured_at": {"type": "string", "format": "date-time"},
+        "amm_model": {"const": "constant_product_x_y_k_v0.1"}
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "candidate_version",
+        "chain",
+        "start_token",
+        "amount_in",
+        "route"
+      ],
+      "properties": {
+        "candidate_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "candidate_version": {"const": "mirror_slurper_candidate_v0.1"},
+        "chain": {"type": "string", "minLength": 1},
+        "start_token": {"type": "string", "minLength": 1},
+        "amount_in": {"$ref": "#/$defs/decimal_string"},
+        "route": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/route_leg"}
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_id",
+        "policy_version",
+        "minimum_worst_case_profit_start_token",
+        "delay_adverse_bps_per_block"
+      ],
+      "properties": {
+        "policy_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "policy_version": {"const": "mirror_slurper_stress_policy_v0.1"},
+        "minimum_worst_case_profit_start_token": {"$ref": "#/$defs/decimal_string"},
+        "delay_adverse_bps_per_block": {"type": "integer", "minimum": 0, "maximum": 1000}
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verdict",
+        "baseline_net_profit_start_token",
+        "worst_case_net_profit_start_token",
+        "scenario_count",
+        "failure_modes",
+        "scenario_results"
+      ],
+      "properties": {
+        "verdict": {"enum": ["CANDIDATE", "HOLD", "REJECT"]},
+        "baseline_net_profit_start_token": {"$ref": "#/$defs/signed_decimal_string"},
+        "worst_case_net_profit_start_token": {"$ref": "#/$defs/signed_decimal_string"},
+        "scenario_count": {"type": "integer", "minimum": 2},
+        "failure_modes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "scenario_results": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/scenario_result"}
+        }
+      }
+    },
+    "gate_posture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_0", "gate_1", "gate_2_through_6"],
+      "properties": {
+        "gate_0": {"const": "ACTIVE"},
+        "gate_1": {"const": "PILOT_ONLY"},
+        "gate_2_through_6": {"const": "LOCKED"}
+      }
+    },
+    "offline_only": {"const": true},
+    "recorded_snapshot_only": {"const": true},
+    "human_review_required": {"const": true},
+    "artifact_is_command": {"const": false},
+    "authority": {"const": false},
+    "may_generate_live_proposal": {"const": false},
+    "may_execute": {"const": false},
+    "may_move_capital": {"const": false}
+  },
+  "$defs": {
+    "decimal_string": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+    },
+    "signed_decimal_string": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+    },
+    "route_leg": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pool_id", "token_in", "token_out"],
+      "properties": {
+        "pool_id": {"type": "string", "minLength": 1},
+        "token_in": {"type": "string", "minLength": 1},
+        "token_out": {"type": "string", "minLength": 1}
+      }
+    },
+    "scenario_leg": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "pool_id",
+        "token_in",
+        "token_out",
+        "amount_in",
+        "raw_amount_out",
+        "received_amount_out",
+        "stressed_reserve_in",
+        "stressed_reserve_out"
+      ],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0},
+        "pool_id": {"type": "string", "minLength": 1},
+        "token_in": {"type": "string", "minLength": 1},
+        "token_out": {"type": "string", "minLength": 1},
+        "amount_in": {"$ref": "#/$defs/decimal_string"},
+        "raw_amount_out": {"$ref": "#/$defs/decimal_string"},
+        "received_amount_out": {"$ref": "#/$defs/decimal_string"},
+        "stressed_reserve_in": {"$ref": "#/$defs/decimal_string"},
+        "stressed_reserve_out": {"$ref": "#/$defs/decimal_string"}
+      }
+    },
+    "scenario_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "gas_multiplier",
+        "reserve_shift_bps",
+        "delay_blocks",
+        "delay_adverse_bps",
+        "effective_reserve_shift_bps",
+        "slippage_bps",
+        "final_amount_start_token",
+        "gross_profit_start_token",
+        "flash_fee_start_token",
+        "gas_cost_start_token",
+        "failure_reserve_start_token",
+        "net_profit_start_token",
+        "legs"
+      ],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "gas_multiplier": {"$ref": "#/$defs/decimal_string"},
+        "reserve_shift_bps": {"type": "integer", "minimum": 0},
+        "delay_blocks": {"type": "integer", "minimum": 0},
+        "delay_adverse_bps": {"type": "integer", "minimum": 0},
+        "effective_reserve_shift_bps": {"type": "integer", "minimum": 0, "maximum": 9999},
+        "slippage_bps": {"type": "integer", "minimum": 0, "maximum": 5000},
+        "final_amount_start_token": {"$ref": "#/$defs/decimal_string"},
+        "gross_profit_start_token": {"$ref": "#/$defs/signed_decimal_string"},
+        "flash_fee_start_token": {"$ref": "#/$defs/decimal_string"},
+        "gas_cost_start_token": {"$ref": "#/$defs/decimal_string"},
+        "failure_reserve_start_token": {"$ref": "#/$defs/decimal_string"},
+        "net_profit_start_token": {"$ref": "#/$defs/signed_decimal_string"},
+        "legs": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/scenario_leg"}
+        }
+      }
+    }
+  }
+}
