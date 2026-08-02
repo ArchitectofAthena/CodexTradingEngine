@@ -1,8 +1,18 @@
 log_level: INFO
+http_timeout_seconds: 30
 
 database_path: data/omega_telemetry.sqlite
 health_path: logs/omega_health.json
 health_interval_seconds: 30
+
+boundary:
+  authority: false
+  shadow_mode: true
+  may_execute: false
+  may_execute_trades: false
+  may_sign: false
+  may_broadcast: false
+  may_move_capital: false
 
 observers:
   - name: base_context
@@ -19,7 +29,30 @@ sentiment:
   spike_threshold_count: 5
   sources: []
 
+whale:
+  enabled: false
+  price_timeout_seconds: 15
+  symbol_to_coingecko_id:
+    ETH: ethereum
+    BTC: bitcoin
+  chains:
+    - name: base
+      enabled: false
+      rpc_url: https://rpc.example.invalid
+      rpc_timeout_seconds: 20
+      poll_interval_seconds: 15
+      max_blocks_per_poll: 25
+      cooldown_minutes: 10
+      native_asset:
+        symbol: ETH
+        decimals: 18
+        usd_threshold: "250000"
+      token_usd_threshold: "250000"
+      exchange_labels: {}
+      erc20_tokens: []
+
 alerts:
+  shadow_mode: true
   telegram:
     enabled: false
   discord:
