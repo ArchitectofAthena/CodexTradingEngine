@@ -1,8 +1,8 @@
 import json
-from urllib import request
 
 import pytest
 
+import eve_q.ipfs_adapters as ipfs_adapters
 from eve_q.ipfs_adapters import (
     KuboHttpIpfsWriter,
     post_bytes,
@@ -39,7 +39,7 @@ def test_kubo_url_is_loopback_only_by_default():
         KuboHttpIpfsWriter(api_url="http://192.0.2.10:5001")
 
 
-def test_remote_kubo_requires_explicit_override():
+def test_remote_kubo_requires_explicit_https_override():
     writer = KuboHttpIpfsWriter(
         api_url="https://kubo.example.test:5001",
         allow_remote=True,
@@ -48,10 +48,26 @@ def test_remote_kubo_requires_explicit_override():
         "https://kubo.example.test:5001/"
     )
 
+    with pytest.raises(ValueError, match="must use https"):
+        KuboHttpIpfsWriter(
+            api_url="http://kubo.example.test:5001",
+            allow_remote=True,
+        )
 
-def test_kubo_url_rejects_embedded_credentials():
+
+def test_kubo_url_rejects_embedded_credentials_and_base_paths():
     with pytest.raises(ValueError, match="must not contain credentials"):
         KuboHttpIpfsWriter(api_url="http://user:pass@127.0.0.1:5001")
+
+    with pytest.raises(ValueError, match="must not contain a base path"):
+        KuboHttpIpfsWriter(api_url="http://127.0.0.1:5001/hidden")
+
+
+def test_endpoint_cannot_escape_kubo_api_namespace():
+    writer = KuboHttpIpfsWriter()
+
+    with pytest.raises(ValueError, match="under /api/v0/"):
+        writer.endpoint("/debug/pprof")
 
 
 def test_cid_validation_is_fail_closed():
@@ -63,12 +79,12 @@ def test_cid_validation_is_fail_closed():
 def test_add_rejects_oversized_payload_before_network(monkeypatch):
     called = False
 
-    def fail_urlopen(*args, **kwargs):
+    def fail_open(*args, **kwargs):
         nonlocal called
         called = True
         raise AssertionError("network should not be reached")
 
-    monkeypatch.setattr(request, "urlopen", fail_urlopen)
+    monkeypatch.setattr(ipfs_adapters, "_open_url", fail_open)
     writer = KuboHttpIpfsWriter(max_add_bytes=4)
 
     with pytest.raises(ValueError, match="max_add_bytes=4"):
@@ -79,12 +95,12 @@ def test_add_rejects_oversized_payload_before_network(monkeypatch):
 def test_add_returns_validated_cid(monkeypatch):
     observed = {}
 
-    def fake_urlopen(req, timeout):
+    def fake_open(req, timeout):
         observed["url"] = req.full_url
         observed["timeout"] = timeout
         return FakeResponse(json.dumps({"Hash": CID}).encode())
 
-    monkeypatch.setattr(request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(ipfs_adapters, "_open_url", fake_open)
     writer = KuboHttpIpfsWriter(timeout_seconds=3)
 
     assert writer.add_and_pin(b"receipt") == CID
@@ -95,8 +111,8 @@ def test_add_returns_validated_cid(monkeypatch):
 
 def test_add_rejects_malformed_cid_from_kubo(monkeypatch):
     monkeypatch.setattr(
-        request,
-        "urlopen",
+        ipfs_adapters,
+        "_open_url",
         lambda *args, **kwargs: FakeResponse(b'{"Hash":"malformed"}'),
     )
 
@@ -106,8 +122,8 @@ def test_add_rejects_malformed_cid_from_kubo(monkeypatch):
 
 def test_cat_enforces_response_ceiling(monkeypatch):
     monkeypatch.setattr(
-        request,
-        "urlopen",
+        ipfs_adapters,
+        "_open_url",
         lambda *args, **kwargs: FakeResponse(b"12345"),
     )
 
@@ -117,8 +133,8 @@ def test_cat_enforces_response_ceiling(monkeypatch):
 
 def test_content_length_is_checked_before_body_read(monkeypatch):
     monkeypatch.setattr(
-        request,
-        "urlopen",
+        ipfs_adapters,
+        "_open_url",
         lambda *args, **kwargs: FakeResponse(b"x", content_length=100),
     )
 
@@ -132,6 +148,23 @@ def test_content_length_is_checked_before_body_read(monkeypatch):
         )
 
 
+def test_direct_post_rejects_remote_target_without_override():
+    with pytest.raises(ValueError, match="must be loopback"):
+        post_bytes(
+            "https://kubo.example.test/api/v0/version",
+            b"",
+            {},
+            timeout_seconds=1,
+        )
+
+
+def test_redirect_handler_fails_closed():
+    handler = ipfs_adapters._NoRedirectHandler()
+
+    with pytest.raises(RuntimeError, match="redirects are forbidden"):
+        handler.redirect_request(None, None, 302, "Found", {}, "https://example.test")
+
+
 def test_pin_check_requires_recursive_key(monkeypatch):
     responses = [
         FakeResponse(json.dumps({"Keys": {CID: {"Type": "recursive"}}}).encode()),
@@ -139,8 +172,8 @@ def test_pin_check_requires_recursive_key(monkeypatch):
     ]
 
     monkeypatch.setattr(
-        request,
-        "urlopen",
+        ipfs_adapters,
+        "_open_url",
         lambda *args, **kwargs: responses.pop(0),
     )
     writer = KuboHttpIpfsWriter()
