@@ -1,6 +1,11 @@
 {
   "schema": "spiralbloom.security_audit.allowlist.v0.1",
   "fingerprints": [
-    "5771cbb01645d2411c74"
-  ]
+    "5771cbb01645d2411c74",
+    "f6862e74c9b999fef19d"
+  ],
+  "review_notes": {
+    "5771cbb01645d2411c74": "Deliberately fake secret-shaped fixture in tests/test_artifact_carrier_manifest.py.",
+    "f6862e74c9b999fef19d": "The exact same inert fixture value appears in .gitleaks.toml solely to prevent a full-history false positive; changed value or location produces a new fingerprint."
+  }
 }
