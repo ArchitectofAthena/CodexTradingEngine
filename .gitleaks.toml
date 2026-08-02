@@ -1,0 +1,11 @@
+title = "CodexTradingEngine full-history secret audit"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Exact inert OpenAI-shaped fixture used to prove rejection behavior"
+regexTarget = "match"
+regexes = [
+  '''sk-this-is-not-a-real-key''',
+]
