@@ -58,6 +58,21 @@ The receipt sealer still performs the post-add proof sequence:
 3. compare retrieved bytes to the canonical envelope;
 4. only then append the local ledger event.
 
+## Opt-in live verification
+
+The default suite uses deterministic fake transports and performs no network
+I/O. With an intentionally running local Kubo daemon:
+
+```bash
+EVEQ_LIVE_KUBO_TEST=1 \
+  python -m pytest -q tests/test_kubo_live_integration.py
+```
+
+A non-default local API can be supplied through `EVEQ_KUBO_API_URL`. The live
+test adds and recursively pins a small public fixture, verifies the pin, calls
+`cat`, and compares exact bytes. It does not submit orders, access wallets, or
+move capital.
+
 ## Persistence semantics
 
 ```text
