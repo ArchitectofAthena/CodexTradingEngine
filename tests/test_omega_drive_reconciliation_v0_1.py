@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -33,7 +34,7 @@ def test_archived_event_fields_round_trip_through_sqlite(tmp_path: Path) -> None
         chain=None,
         source="fixture",
         severity="medium",
-        occurred_at="2026-08-02T00:00:00+00:00",
+        occurred_at=datetime.now(timezone.utc).isoformat(),
         dedupe_key="sentiment:fixture:one",
         title="Fixture signal",
         summary="score=4.0",
@@ -47,7 +48,7 @@ def test_archived_event_fields_round_trip_through_sqlite(tmp_path: Path) -> None
     )
 
     database.save_event(event)
-    records = database.recent_events(event_type="sentiment_match", minutes=60 * 24 * 365)
+    records = database.recent_events(event_type="sentiment_match", minutes=60)
 
     assert len(records) == 1
     assert records[0]["post_id"] == "one"
