@@ -1,0 +1,65 @@
+# Kubo Transport Hardening v0.2
+
+## Purpose
+
+Bound the final network inch between EVE_Q++ receipt envelopes and a Kubo IPFS
+node without changing the repository's authority posture.
+
+```text
+validated non-authoritative envelope
+→ bounded HTTP POST
+→ CIDv1 validation
+→ recursive pin check
+→ bounded retrieval
+→ exact-byte comparison
+→ append-only local receipt event
+```
+
+## Default membrane
+
+- API URL: `http://127.0.0.1:5001`
+- loopback required by default
+- request timeout: 10 seconds
+- maximum submitted envelope: 16 MiB
+- maximum `cat` response: 32 MiB
+- maximum JSON control response: 1 MiB
+- credentials forbidden in the API URL
+- URL query and fragment data forbidden
+- returned identifiers must be CIDv1 base32
+
+A remote Kubo endpoint is rejected unless the operator supplies both a
+non-loopback URL and the explicit `--allow-remote-kubo` flag. That override
+changes transport scope only. It does not grant wallet, signing, execution,
+capital, promotion, or canon authority.
+
+## Receipt sealer controls
+
+```bash
+python -m eve_q.receipt_sealer \
+  --receipt artifacts/receipt.json \
+  --ledger artifacts/receipt_ledger.jsonl \
+  --backend kubo \
+  --kubo-api-url http://127.0.0.1:5001 \
+  --kubo-timeout-seconds 10 \
+  --kubo-max-add-bytes 16777216 \
+  --kubo-max-response-bytes 33554432
+```
+
+The receipt sealer still performs the post-add proof sequence:
+
+1. verify recursive pin state;
+2. retrieve the CID;
+3. compare retrieved bytes to the canonical envelope;
+4. only then append the local ledger event.
+
+## Persistence semantics
+
+```text
+CID identity != persistence
+local recursive pin != independent replication
+retrieval success != truth
+receipt seal != execution approval
+```
+
+The Kubo transport is a content-addressed witness. It is not an authority
+source, scheduler, wallet membrane, execution engine, or autonomous promoter.
