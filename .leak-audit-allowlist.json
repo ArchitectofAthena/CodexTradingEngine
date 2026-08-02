@@ -1,0 +1,8 @@
+{
+  "fingerprints": [
+    "92f5273ee03aab59b98d"
+  ],
+  "review_notes": {
+    "92f5273ee03aab59b98d": "Deliberately fake secret-shaped fixture in tests/test_artifact_carrier_manifest.py; any changed value, location, or new occurrence produces a different fingerprint."
+  }
+}
