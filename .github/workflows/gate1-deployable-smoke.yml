@@ -7,21 +7,30 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: gate1-deployable-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   gate1-deployable-smoke:
     name: Gate 1 edge and container smoke
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout without retained credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.13"
           cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
 
       - name: Install project and test dependencies
         run: |
@@ -39,8 +48,20 @@ jobs:
             tests/test_deployment_gates.py \
             tests/test_graduation_state_store.py
 
-      - name: Build Gate 1 image
-        run: docker build -f Dockerfile.gate1 -t codex-gate1:${{ github.sha }} .
+      - name: Build Gate 1 image with bounded registry retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if docker build --pull=false -f Dockerfile.gate1 -t codex-gate1:${{ github.sha }} .; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep $((attempt * 15))
+            fi
+          done
+          echo "Gate 1 image build failed after three bounded attempts" >&2
+          exit 1
 
       - name: Verify non-root immutable status runtime
         run: |
