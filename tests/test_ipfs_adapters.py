@@ -5,6 +5,8 @@ from eve_q.ipfs_adapters import (
     multipart_body,
 )
 
+CID = "b" + "a" * 40
+
 
 def test_multipart_body_contains_receipt_bytes():
     body = multipart_body(
@@ -26,22 +28,25 @@ def test_multipart_body_contains_receipt_bytes():
 def test_kubo_endpoint_normalizes_url():
     writer = KuboHttpIpfsWriter(api_url="http://127.0.0.1:5001/")
 
-    assert writer.endpoint("/api/v0/cat") == ("http://127.0.0.1:5001/api/v0/cat")
+    assert writer.endpoint("/api/v0/cat") == (
+        "http://127.0.0.1:5001/api/v0/cat"
+    )
 
 
 def test_kubo_add_and_pin_uses_hash_response(monkeypatch):
     calls = []
 
-    def fake_post_bytes(url, data, headers, timeout_seconds):
+    def fake_post_bytes(url, data, headers, timeout_seconds, **kwargs):
         calls.append(
             {
                 "url": url,
                 "data": data,
                 "headers": headers,
                 "timeout_seconds": timeout_seconds,
+                **kwargs,
             }
         )
-        return json.dumps({"Hash": "bafy-test-cid"}).encode("utf-8")
+        return json.dumps({"Hash": CID}).encode("utf-8")
 
     monkeypatch.setattr(
         "eve_q.ipfs_adapters.post_bytes",
@@ -51,22 +56,26 @@ def test_kubo_add_and_pin_uses_hash_response(monkeypatch):
     writer = KuboHttpIpfsWriter(api_url="http://127.0.0.1:5001")
     cid = writer.add_and_pin(b'{"receipt":true}')
 
-    assert cid == "bafy-test-cid"
-    assert calls[0]["url"] == ("http://127.0.0.1:5001/api/v0/add?pin=true&cid-version=1")
+    assert cid == CID
+    assert calls[0]["url"] == (
+        "http://127.0.0.1:5001/api/v0/add?pin=true&cid-version=1"
+    )
     assert "multipart/form-data" in calls[0]["headers"]["Content-Type"]
     assert b'{"receipt":true}' in calls[0]["data"]
+    assert calls[0]["allow_remote"] is False
 
 
 def test_kubo_cat_posts_to_local_api(monkeypatch):
     calls = []
 
-    def fake_post_bytes(url, data, headers, timeout_seconds):
+    def fake_post_bytes(url, data, headers, timeout_seconds, **kwargs):
         calls.append(
             {
                 "url": url,
                 "data": data,
                 "headers": headers,
                 "timeout_seconds": timeout_seconds,
+                **kwargs,
             }
         )
         return b"receipt-bytes"
@@ -77,18 +86,20 @@ def test_kubo_cat_posts_to_local_api(monkeypatch):
     )
 
     writer = KuboHttpIpfsWriter()
-    result = writer.cat("bafy-test-cid")
+    result = writer.cat(CID)
 
     assert result == b"receipt-bytes"
-    assert calls[0]["url"] == ("http://127.0.0.1:5001/api/v0/cat?arg=bafy-test-cid")
+    assert calls[0]["url"] == (
+        f"http://127.0.0.1:5001/api/v0/cat?arg={CID}"
+    )
     assert calls[0]["data"] == b""
 
 
 def test_kubo_pin_check_returns_true_when_cid_present(monkeypatch):
-    def fake_post_bytes(url, data, headers, timeout_seconds):
+    def fake_post_bytes(url, data, headers, timeout_seconds, **kwargs):
         payload = {
             "Keys": {
-                "bafy-test-cid": {
+                CID: {
                     "Type": "recursive",
                 }
             }
@@ -102,11 +113,11 @@ def test_kubo_pin_check_returns_true_when_cid_present(monkeypatch):
 
     writer = KuboHttpIpfsWriter()
 
-    assert writer.is_pinned("bafy-test-cid") is True
+    assert writer.is_pinned(CID) is True
 
 
 def test_kubo_pin_check_returns_false_when_cid_missing(monkeypatch):
-    def fake_post_bytes(url, data, headers, timeout_seconds):
+    def fake_post_bytes(url, data, headers, timeout_seconds, **kwargs):
         return json.dumps({"Keys": {}}).encode("utf-8")
 
     monkeypatch.setattr(
@@ -116,11 +127,11 @@ def test_kubo_pin_check_returns_false_when_cid_missing(monkeypatch):
 
     writer = KuboHttpIpfsWriter()
 
-    assert writer.is_pinned("bafy-test-cid") is False
+    assert writer.is_pinned(CID) is False
 
 
 def test_kubo_pin_check_returns_false_on_api_error(monkeypatch):
-    def fake_post_bytes(url, data, headers, timeout_seconds):
+    def fake_post_bytes(url, data, headers, timeout_seconds, **kwargs):
         raise RuntimeError("local daemon unavailable")
 
     monkeypatch.setattr(
@@ -130,4 +141,4 @@ def test_kubo_pin_check_returns_false_on_api_error(monkeypatch):
 
     writer = KuboHttpIpfsWriter()
 
-    assert writer.is_pinned("bafy-test-cid") is False
+    assert writer.is_pinned(CID) is False
