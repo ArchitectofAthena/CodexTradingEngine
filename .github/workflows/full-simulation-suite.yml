@@ -38,7 +38,34 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
-          python -m pip install -e .
+          python -m pip install -e '.[test]'
+          python -m pip install build
+          python -m pip check
+
+      - name: Build and smoke-test the packaged public surface
+        run: |
+          python -m build --wheel --outdir dist
+          python -m venv /tmp/codex-wheel-smoke
+          /tmp/codex-wheel-smoke/bin/python -m pip install --upgrade pip
+          /tmp/codex-wheel-smoke/bin/python -m pip install dist/*.whl
+          /tmp/codex-wheel-smoke/bin/python - <<'PY'
+          import eve_q
+          import eveq_failsafe_receipt
+          import models
+          import omega_telemetry
+          import proof_adapters
+          import shadow_cycle_runner
+          from eve_q.research_cli import main
+
+          assert eve_q is not None
+          assert eveq_failsafe_receipt is not None
+          assert models is not None
+          assert omega_telemetry is not None
+          assert proof_adapters is not None
+          assert shadow_cycle_runner is not None
+          assert main is not None
+          PY
+          /tmp/codex-wheel-smoke/bin/codex-research --help
 
       - name: Test and build isolated Rust verifiers
         run: |
@@ -61,7 +88,7 @@ jobs:
             --junitxml=test-results.xml \
             tests/
 
-      - name: Upload simulation test artifacts
+      - name: Upload simulation test and package artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -69,4 +96,5 @@ jobs:
           path: |
             coverage.xml
             test-results.xml
+            dist/*.whl
           if-no-files-found: warn
