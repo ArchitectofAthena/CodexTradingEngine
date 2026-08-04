@@ -7,6 +7,7 @@ This repository follows the canonical SpiralBloom protocol:
 - **Canonical document:** `docs/HYPHAL_CONSENT_PROVENANCE_v0_1.md`
 - **Canonical payload:** `schemas/hyphal_consent_provenance_v0_1.json`
 - **Canonical SHA-256:** `sha256:1d3c6004a7749d8833e6c38f3e7c23edfda1ebf7c3fdacbadc9789706937c7bd`
+- **Drive mirror:** `https://docs.google.com/document/d/1j20QNto--5dAl9cYpb2egiWH-xgj3aH1qv7WNEfmLes/edit`
 - **Source:** `User: Architect`
 - **Relation:** `derived_pointer`
 - **Authority:** `false`
