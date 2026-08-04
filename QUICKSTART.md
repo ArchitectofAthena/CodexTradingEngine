@@ -90,6 +90,32 @@ Required route fields:
 
 All values are local modeling inputs. They are not fetched prices, executable orders, or promises of recurrence.
 
+## Approved alpha testnet path
+
+The scoped Gate 1A alpha program is now documented for approved testers:
+
+```text
+public testnet observation
+→ bounded capture
+→ offline replay
+→ explicit local fixture
+→ simulation and verification
+→ structured alpha report
+```
+
+Read [`docs/alpha/ALPHA_TESTNET_QUICKSTART_v0_1.md`](docs/alpha/ALPHA_TESTNET_QUICKSTART_v0_1.md).
+
+Current alpha posture:
+
+```text
+Gate 1A TESTNET_READ_ONLY_ALPHA: ACTIVE FOR APPROVED ALPHA RUNS
+Gate 1B MAINNET_READ_ONLY_TELEMETRY: LOCKED
+Gate 2 LIVE_PROPOSAL_GENERATION: LOCKED
+Gate 3 TESTNET_MANUAL_EXTERNAL: LOCKED
+```
+
+Gate 1A requires no wallet, seed phrase, signing key, write credential, or transaction. It uses public testnet observations only and preserves `EXECUTION=LOCKED`.
+
 ## Verify the complete simulation-safe repository
 
 ```bash
@@ -104,7 +130,9 @@ GitHub's **Full Simulation Suite** runs the complete non-live suite on every pul
 
 ## Report a useful failure
 
-Please include:
+For the alpha program, use the **Alpha testnet report** issue form.
+
+For other defects, include:
 
 1. the exact command;
 2. Python and operating-system versions;

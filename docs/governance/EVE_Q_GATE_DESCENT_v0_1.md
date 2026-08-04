@@ -7,7 +7,7 @@ EVE_Q++ is not intended to remain permanently sealed at simulation-only capabili
 The law is:
 
 ```text
-lower one gate
+lower one bounded gate
 → keep every downstream gate closed
 → observe
 → perturb
@@ -23,60 +23,91 @@ Passing one gate never grants authority at another gate.
 | Gate | Name | Meaning |
 |---:|---|---|
 | 0 | `SIMULATION_ONLY` | Deterministic simulation, proposals, evidence, registry, receipts; no live authority. |
-| 1 | `LIVE_READ_ONLY_TELEMETRY` | Live observations may enter through read-only interfaces and become content-addressed snapshots. |
+| 1A | `TESTNET_READ_ONLY_ALPHA` | Approved alpha testers may capture bounded public testnet observations, replay them offline, and translate them explicitly into local simulation fixtures. |
+| 1B | `MAINNET_READ_ONLY_TELEMETRY` | Reviewed live mainnet observations may enter through read-only interfaces and become content-addressed snapshots. |
 | 2 | `LIVE_PROPOSAL_GENERATION` | Live observations may inform non-command proposals for human review. |
 | 3 | `TESTNET_MANUAL_EXTERNAL` | A human may perform a bounded external testnet action after explicit promotion. Artifacts still do not execute. |
 | 4 | `CAPPED_MANUAL_EXTERNAL` | A human may perform a tightly capped live action outside the system after per-action promotion. |
 | 5 | `EXECUTION_ASSISTANCE` | Future unsigned assistance, requiring a separate threat model and constitutional review. |
 | 6 | `NARROW_AUTOMATION` | Future narrowly scoped automation, requiring a separate release contract. |
 
-## v0.1 scope
+## Current posture
 
-This release encodes only the proposed transition:
+On 2026-08-04, the Architect explicitly promoted the scoped Gate 1A alpha lane tracked by issue #116.
 
 ```text
-Gate 0: ACTIVE
-Gate 1: REQUESTED
-Gate 2–6: LOCKED
+Gate 0  SIMULATION_ONLY: ACTIVE
+Gate 1A TESTNET_READ_ONLY_ALPHA: ACTIVE FOR APPROVED ALPHA RUNS
+Gate 1B MAINNET_READ_ONLY_TELEMETRY: LOCKED PENDING #68 / #76
+Gate 2  LIVE_PROPOSAL_GENERATION: LOCKED
+Gate 3  TESTNET_MANUAL_EXTERNAL: LOCKED
+Gate 4–6: LOCKED
 ```
 
-The controller does **not** lower Gate 1. It creates and validates a non-authoritative `GateDescentProposal` that can become eligible for human review only after its evidence requirements are satisfied.
+Gate 1A is not a substitute for the Gate 1B evidence campaign. It narrows the source domain to public testnets and keeps proposal generation, external action, and capital authority closed.
 
-## Required invariants
+## Gate 1A invariants
 
-Every proposal must preserve:
+Every accepted alpha run must preserve:
 
 ```json
 {
   "artifact_is_command": false,
   "authority": false,
-  "human_promotion_required": true,
+  "human_promotion_required_for_next_gate": true,
+  "mainnet_allowed": false,
+  "may_generate_live_proposal": false,
   "may_execute": false,
   "may_move_capital": false,
-  "connector_mode": "read_only",
+  "testnet_read_only_alpha_allowed": true,
   "write_capable_secrets_present": false
 }
 ```
 
-The controller rejects:
+Gate 1A rejects:
 
+- mainnet sources;
 - skipped gates;
-- more than one requested gate;
 - any downstream gate opened early;
 - stale or inconsistent TTL;
 - canonical artifact hash mismatch;
 - write-capable connector mode;
-- write-capable secrets;
+- write-capable secrets or wallet material;
 - missing prohibited actions;
-- premature promotion eligibility;
-- a ready state with incomplete checks;
-- a ready state without the required evidence classes;
-- a ready state without a tested rollback to Gate 0;
-- any authority, execution, or capital-movement leakage.
+- unsupported transport methods;
+- private, loopback, link-local, reserved, or IP-literal source hosts;
+- direct routing from live observation into proposal generation;
+- any authority, execution, transaction, or capital-movement leakage.
 
-## Gate 1 evidence contract
+## Gate 1A alpha evidence contract
 
-`READY_FOR_HUMAN_REVIEW` requires all checks below to be true:
+A run counts toward the alpha evidence set only when:
+
+- the exact producer commit is recorded;
+- the non-live test suite passes first;
+- the source is a public blockchain testnet source compatible with the read-only transport membrane;
+- capture completes through the reviewed launcher;
+- offline replay succeeds;
+- DNS/IP-class postflight verification succeeds;
+- the operator explicitly translates inspected observations into a local fixture;
+- the research report preserves `EXECUTION=LOCKED`;
+- one structured alpha report is filed without secrets or private data.
+
+The alpha workflow is documented in:
+
+```text
+docs/alpha/ALPHA_TESTNET_QUICKSTART_v0_1.md
+```
+
+The human promotion decision is recorded in:
+
+```text
+docs/governance/EVE_Q_GATE1A_ALPHA_PROMOTION_v0_1.md
+```
+
+## Gate 1B evidence contract
+
+Gate 1B remains locked. `READY_FOR_HUMAN_REVIEW` requires all checks below to be true:
 
 - adjacent gate only;
 - all downstream gates locked;
@@ -94,13 +125,13 @@ The controller rejects:
 It also requires content-addressed evidence for:
 
 - the existing simulation baseline soak;
-- a new live-read-only telemetry soak;
+- a live read-only telemetry soak;
 - a rollback test;
 - a threat model.
 
-A ready proposal is still only eligible for **human review**. It remains non-command and non-executing.
+A ready proposal is still only eligible for human review. It remains non-command and non-executing.
 
-## CLI
+## CLI for the original Gate 0 to Gate 1 proposal artifact
 
 Create a draft:
 
@@ -119,8 +150,6 @@ python -m eve_q.gate_descent \
   --now 2026-07-11T21:05:00Z
 ```
 
-## Current posture
+The v0.1 controller still validates the original Gate 0 to Gate 1 proposal object. The scoped Gate 1A decision is a human governance amendment and does not grant the controller self-promotion authority.
 
-Gate 0 remains active. Gate 1 is a requested future capability, not an enabled one.
-
-> The gate opens because evidence and rollback have earned it, not because the previous gate succeeded.
+> The gate opens because its scope is explicit, its rollback is visible, and every larger capability remains separately locked.
