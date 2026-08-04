@@ -1,22 +1,115 @@
-"""Scroll Protocol registry and versioning system.
+"""Declarative Scroll Protocol registry and proposal composer.
 
-Scrolls are Codex-bound trading strategies stored as executable modules or JSON rulesets.
-This module provides registration, versioning, validation, and composition for scrolls.
+A scroll is a versioned JSON ruleset describing a simulation or observation
+strategy. The registry never imports arbitrary implementations and never calls
+an ``execute`` method. It can only emit non-authoritative proposal artifacts for
+separate simulation and human review.
 """
 
 from __future__ import annotations
 
 import hashlib
-from abc import ABC, abstractmethod
+import json
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Mapping, Sequence
+
+SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
+SCROLL_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,127}$")
+ALLOWED_RULE_KEYS = frozenset(
+    {
+        "description",
+        "inputs",
+        "filters",
+        "scoring",
+        "constraints",
+        "outputs",
+        "assumptions",
+    }
+)
+FORBIDDEN_RULE_KEYS = frozenset(
+    {
+        "execute",
+        "callable",
+        "command",
+        "shell",
+        "subprocess",
+        "wallet",
+        "private_key",
+        "sign",
+        "broadcast",
+        "transaction",
+        "order_submission",
+        "move_capital",
+    }
+)
+
+
+def utc_now_iso() -> str:
+    """Return an offset-aware UTC timestamp."""
+
+    return datetime.now(timezone.utc).isoformat()
+
+
+def canonical_json_bytes(document: Any) -> bytes:
+    """Serialize a JSON-compatible document deterministically."""
+
+    return json.dumps(
+        document,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+
+
+def sha256_document(document: Any) -> str:
+    """Hash a JSON-compatible document."""
+
+    return hashlib.sha256(canonical_json_bytes(document)).hexdigest()
+
+
+def semver_key(version: str) -> tuple[int, int, int]:
+    """Return a numeric semantic-version ordering key."""
+
+    match = SEMVER_RE.fullmatch(version)
+    if match is None:
+        raise ValueError("version must be strict MAJOR.MINOR.PATCH")
+    return tuple(int(part) for part in match.groups())
+
+
+def _validate_json_value(value: Any, path: str = "rules") -> None:
+    """Reject callables and non-JSON values recursively."""
+
+    if callable(value):
+        raise TypeError(f"{path} may not contain callables")
+    if value is None or isinstance(value, (str, int, bool)):
+        return
+    if isinstance(value, float):
+        if value != value or value in (float("inf"), float("-inf")):
+            raise ValueError(f"{path} contains a non-finite number")
+        return
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            _validate_json_value(item, f"{path}[{index}]")
+        return
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise TypeError(f"{path} keys must be strings")
+            normalized = key.casefold()
+            if normalized in FORBIDDEN_RULE_KEYS:
+                raise ValueError(f"{path} contains forbidden capability key: {key}")
+            _validate_json_value(item, f"{path}.{key}")
+        return
+    raise TypeError(f"{path} must contain JSON-compatible values only")
 
 
 class ScrollStatus(str, Enum):
-    """Status of a scroll."""
+    """Lifecycle state for a declarative scroll."""
+
     DRAFT = "draft"
     VALIDATED = "validated"
     DEPRECATED = "deprecated"
@@ -24,7 +117,8 @@ class ScrollStatus(str, Enum):
 
 
 class ScrollType(str, Enum):
-    """Type of scroll."""
+    """Research classification for a scroll."""
+
     ARBITRAGE = "arbitrage"
     LIQUIDATION = "liquidation"
     YIELD_FARMING = "yield_farming"
@@ -33,405 +127,349 @@ class ScrollType(str, Enum):
 
 
 @dataclass(frozen=True)
-class ScrollVersion:
-    """A versioned scroll release.
-    
-    Attributes:
-        scroll_id: Unique scroll identifier.
-        version: Semantic version (e.g., "1.0.0").
-        status: Current status of the scroll.
-        checksum: SHA256 checksum of scroll code.
-        chain_compatibility: List of compatible chains.
-        min_trust_level: Minimum trust level required to execute.
-        released_at: Release timestamp.
-        deprecated_at: Deprecation timestamp if applicable.
-        metadata: Additional metadata.
-    """
-    scroll_id: str
-    version: str
-    status: ScrollStatus
-    checksum: str
-    chain_compatibility: List[str] = field(default_factory=list)
-    min_trust_level: int = 1
-    released_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    deprecated_at: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-    def is_compatible_with_chain(self, chain: str) -> bool:
-        """Check if scroll is compatible with a chain.
-        
-        Args:
-            chain: Chain name.
-            
-        Returns:
-            True if compatible.
-        """
-        return chain in self.chain_compatibility or "*" in self.chain_compatibility
-
-    def is_active(self) -> bool:
-        """Check if scroll is active (not deprecated or archived).
-        
-        Returns:
-            True if active.
-        """
-        return self.status in (ScrollStatus.DRAFT, ScrollStatus.VALIDATED)
-
-
-@dataclass(frozen=True)
 class ScrollMetadata:
-    """Metadata for a scroll.
-    
-    Attributes:
-        scroll_id: Unique scroll identifier.
-        name: Human-readable name.
-        description: Description of what the scroll does.
-        scroll_type: Type of scroll.
-        author: Author identifier.
-        tags: List of tags for categorization.
-        risk_level: Risk level (low, medium, high).
-    """
+    """Human-readable metadata for one scroll family."""
+
     scroll_id: str
     name: str
     description: str
     scroll_type: ScrollType
     author: str
-    tags: List[str] = field(default_factory=list)
+    tags: tuple[str, ...] = field(default_factory=tuple)
     risk_level: str = "medium"
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary."""
+    def __post_init__(self) -> None:
+        if not SCROLL_ID_RE.fullmatch(self.scroll_id):
+            raise ValueError("scroll_id must use lowercase letters, digits, '.', '_' or '-'")
+        if not self.name.strip() or not self.description.strip() or not self.author.strip():
+            raise ValueError("name, description, and author are required")
+        if self.risk_level not in {"low", "medium", "high"}:
+            raise ValueError("risk_level must be low, medium, or high")
+        if any(not isinstance(tag, str) or not tag.strip() for tag in self.tags):
+            raise ValueError("tags must be non-empty strings")
+
+    def to_dict(self) -> dict[str, Any]:
         return {
             "scroll_id": self.scroll_id,
             "name": self.name,
             "description": self.description,
             "scroll_type": self.scroll_type.value,
             "author": self.author,
-            "tags": self.tags,
+            "tags": list(self.tags),
             "risk_level": self.risk_level,
         }
 
 
-class Scroll(ABC):
-    """Abstract base class for scrolls.
-    
-    A scroll represents a trading strategy or bot swarm detection protocol.
-    """
+@dataclass(frozen=True)
+class ScrollDefinition:
+    """Immutable declarative ruleset admitted to the registry."""
 
-    def __init__(
-        self,
-        scroll_id: str,
-        metadata: ScrollMetadata,
-        version: str = "1.0.0",
-    ) -> None:
-        """Initialize a scroll.
-        
-        Args:
-            scroll_id: Unique scroll identifier.
-            metadata: Scroll metadata.
-            version: Semantic version.
-        """
-        self.scroll_id = scroll_id
-        self.metadata = metadata
-        self.version = version
-        self.created_at = datetime.now(timezone.utc).isoformat()
+    metadata: ScrollMetadata
+    version: str
+    rules: Mapping[str, Any]
+    chain_compatibility: tuple[str, ...] = ("*",)
 
-    @abstractmethod
-    async def execute(
-        self,
-        signal: str,
-        context: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        """Execute the scroll strategy.
-        
-        Args:
-            signal: Trading signal or trigger.
-            context: Execution context with market data, account state, etc.
-            
-        Returns:
-            Execution result with trades, decisions, or signals.
-        """
-        pass
+    def __post_init__(self) -> None:
+        semver_key(self.version)
+        if not isinstance(self.rules, Mapping):
+            raise TypeError("rules must be a mapping")
+        unknown = set(self.rules) - ALLOWED_RULE_KEYS
+        if unknown:
+            raise ValueError(f"unsupported top-level rule keys: {sorted(unknown)}")
+        _validate_json_value(dict(self.rules))
+        if not self.chain_compatibility or any(
+            not isinstance(chain, str) or not chain.strip()
+            for chain in self.chain_compatibility
+        ):
+            raise ValueError("chain_compatibility must contain non-empty strings")
+        canonical_json_bytes(self.to_payload())
 
-    def get_code_hash(self) -> str:
-        """Get SHA256 hash of scroll code.
-        
-        Returns:
-            Hexadecimal hash string.
-        """
-        code = self.__class__.__module__ + self.__class__.__name__
-        return hashlib.sha256(code.encode()).hexdigest()
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "metadata": self.metadata.to_dict(),
+            "version": self.version,
+            "rules": dict(self.rules),
+            "chain_compatibility": list(self.chain_compatibility),
+        }
+
+    @property
+    def checksum(self) -> str:
+        return sha256_document(self.to_payload())
+
+    def is_compatible_with_chain(self, chain: str) -> bool:
+        return chain in self.chain_compatibility or "*" in self.chain_compatibility
+
+
+@dataclass(frozen=True)
+class ScrollVersion:
+    """Registry receipt for an admitted declarative scroll."""
+
+    scroll_id: str
+    version: str
+    status: ScrollStatus
+    checksum: str
+    chain_compatibility: tuple[str, ...] = field(default_factory=tuple)
+    min_trust_level: int = 1
+    released_at: str = field(default_factory=utc_now_iso)
+    deprecated_at: str | None = None
+    metadata: Mapping[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        semver_key(self.version)
+        if self.min_trust_level < 0:
+            raise ValueError("min_trust_level may not be negative")
+        if not re.fullmatch(r"[0-9a-f]{64}", self.checksum):
+            raise ValueError("checksum must be a lowercase SHA-256 hex digest")
+
+    def is_active(self) -> bool:
+        return self.status in {ScrollStatus.DRAFT, ScrollStatus.VALIDATED}
+
+    def is_compatible_with_chain(self, chain: str) -> bool:
+        return chain in self.chain_compatibility or "*" in self.chain_compatibility
+
+
+@dataclass(frozen=True)
+class ScrollProposal:
+    """Non-authoritative proposal emitted from declarative scrolls."""
+
+    proposal_id: str
+    scroll_refs: tuple[dict[str, str], ...]
+    signal: str
+    context: Mapping[str, Any]
+    proposed_steps: tuple[dict[str, Any], ...]
+    created_at: str = field(default_factory=utc_now_iso)
+    authority: bool = False
+    human_promotion_required: bool = True
+    may_execute: bool = False
+    may_sign: bool = False
+    may_broadcast: bool = False
+    may_move_capital: bool = False
+
+    def __post_init__(self) -> None:
+        if not self.proposal_id.strip() or not self.signal.strip():
+            raise ValueError("proposal_id and signal are required")
+        _validate_json_value(dict(self.context), "context")
+        _validate_json_value(list(self.proposed_steps), "proposed_steps")
+        if any(
+            (
+                self.authority,
+                not self.human_promotion_required,
+                self.may_execute,
+                self.may_sign,
+                self.may_broadcast,
+                self.may_move_capital,
+            )
+        ):
+            raise ValueError("scroll proposals must remain non-authoritative")
+
+    def to_dict(self) -> dict[str, Any]:
+        document = {
+            "artifact_type": "ScrollProposal",
+            "proposal_id": self.proposal_id,
+            "scroll_refs": list(self.scroll_refs),
+            "signal": self.signal,
+            "context": dict(self.context),
+            "proposed_steps": list(self.proposed_steps),
+            "created_at": self.created_at,
+            "authority": self.authority,
+            "human_promotion_required": self.human_promotion_required,
+            "may_execute": self.may_execute,
+            "may_sign": self.may_sign,
+            "may_broadcast": self.may_broadcast,
+            "may_move_capital": self.may_move_capital,
+        }
+        document["artifact_sha256"] = sha256_document(document)
+        return document
 
 
 class ScrollRegistry:
-    """Registry for managing scrolls and versions.
-    
-    Example:
-        >>> registry = ScrollRegistry()
-        >>> registry.register(scroll_metadata, scroll_class)
-        >>> scroll = registry.get("scroll-arbitrage-v1", "1.0.0")
-        >>> result = await scroll.execute("ETH", context)
-    """
+    """Version declarative scrolls and emit pure proposal artifacts."""
 
     def __init__(self) -> None:
-        """Initialize scroll registry."""
-        self.scrolls: Dict[str, ScrollMetadata] = {}
-        self.versions: Dict[str, List[ScrollVersion]] = {}
-        self.implementations: Dict[str, Scroll] = {}
+        self._definitions: dict[str, ScrollDefinition] = {}
+        self._versions: dict[str, list[ScrollVersion]] = {}
 
-    def register(
-        self,
-        metadata: ScrollMetadata,
-        implementation: type,
-        version: str = "1.0.0",
-        chain_compatibility: Optional[List[str]] = None,
-    ) -> ScrollVersion:
-        """Register a new scroll.
-        
-        Args:
-            metadata: Scroll metadata.
-            implementation: Scroll implementation class.
-            version: Semantic version.
-            chain_compatibility: List of compatible chains.
-            
-        Returns:
-            ScrollVersion for the registered scroll.
-        """
-        scroll_id = metadata.scroll_id
-        key = f"{scroll_id}:{version}"
+    def register(self, definition: ScrollDefinition) -> ScrollVersion:
+        """Register one immutable declarative definition."""
 
-        # Instantiate to get code hash
-        instance = implementation(scroll_id, metadata, version)
-        checksum = instance.get_code_hash()
-
-        scroll_version = ScrollVersion(
-            scroll_id=scroll_id,
-            version=version,
+        if not isinstance(definition, ScrollDefinition):
+            raise TypeError("register accepts ScrollDefinition only, never a class or callable")
+        key = f"{definition.metadata.scroll_id}:{definition.version}"
+        if key in self._definitions:
+            raise ValueError(f"scroll version already registered: {key}")
+        receipt = ScrollVersion(
+            scroll_id=definition.metadata.scroll_id,
+            version=definition.version,
             status=ScrollStatus.DRAFT,
-            checksum=checksum,
-            chain_compatibility=chain_compatibility or ["*"],
-            metadata=metadata.to_dict(),
+            checksum=definition.checksum,
+            chain_compatibility=definition.chain_compatibility,
+            metadata=definition.metadata.to_dict(),
         )
+        self._definitions[key] = definition
+        self._versions.setdefault(definition.metadata.scroll_id, []).append(receipt)
+        return receipt
 
-        self.scrolls[scroll_id] = metadata
-        if scroll_id not in self.versions:
-            self.versions[scroll_id] = []
-        self.versions[scroll_id].append(scroll_version)
-        self.implementations[key] = instance
+    def get(self, scroll_id: str, version: str | None = None) -> ScrollDefinition | None:
+        """Retrieve an active definition, choosing the highest numeric semver."""
 
-        return scroll_version
-
-    def get(
-        self,
-        scroll_id: str,
-        version: Optional[str] = None,
-    ) -> Optional[Scroll]:
-        """Retrieve a scroll by ID and version.
-        
-        Args:
-            scroll_id: Scroll identifier.
-            version: Semantic version (latest if not specified).
-            
-        Returns:
-            Scroll instance or None if not found.
-        """
-        if scroll_id not in self.versions:
+        versions = [item for item in self._versions.get(scroll_id, []) if item.is_active()]
+        if not versions:
             return None
+        chosen = version or max(versions, key=lambda item: semver_key(item.version)).version
+        candidate = self._definitions.get(f"{scroll_id}:{chosen}")
+        if candidate is None:
+            return None
+        if not any(item.version == chosen and item.is_active() for item in versions):
+            return None
+        return candidate
 
-        if version is None:
-            # Get latest active version
-            versions = [
-                v for v in self.versions[scroll_id]
-                if v.is_active()
-            ]
-            if not versions:
-                return None
-            version = max(versions, key=lambda v: v.version).version
+    def validate(self, scroll_id: str, version: str, min_trust_level: int = 1) -> bool:
+        """Mark one registered scroll as reviewed for proposal generation."""
 
         key = f"{scroll_id}:{version}"
-        return self.implementations.get(key)
-
-    def validate(
-        self,
-        scroll_id: str,
-        version: str,
-        min_trust_level: int = 1,
-    ) -> bool:
-        """Validate and mark a scroll as validated.
-        
-        Args:
-            scroll_id: Scroll identifier.
-            version: Semantic version.
-            min_trust_level: Minimum required trust level.
-            
-        Returns:
-            True if validation successful.
-        """
-        key = f"{scroll_id}:{version}"
-        if key not in self.implementations:
+        if key not in self._definitions:
             return False
-
-        # Update version status
-        for idx, v in enumerate(self.versions.get(scroll_id, [])):
-            if v.version == version:
-                self.versions[scroll_id][idx] = ScrollVersion(
-                    scroll_id=v.scroll_id,
-                    version=v.version,
+        for index, current in enumerate(self._versions.get(scroll_id, [])):
+            if current.version == version:
+                self._versions[scroll_id][index] = ScrollVersion(
+                    scroll_id=current.scroll_id,
+                    version=current.version,
                     status=ScrollStatus.VALIDATED,
-                    checksum=v.checksum,
-                    chain_compatibility=v.chain_compatibility,
+                    checksum=current.checksum,
+                    chain_compatibility=current.chain_compatibility,
                     min_trust_level=min_trust_level,
-                    released_at=v.released_at,
-                    metadata=v.metadata,
+                    released_at=current.released_at,
+                    metadata=current.metadata,
                 )
                 return True
-
         return False
 
     def deprecate(self, scroll_id: str, version: str) -> bool:
-        """Deprecate a scroll version.
-        
-        Args:
-            scroll_id: Scroll identifier.
-            version: Semantic version.
-            
-        Returns:
-            True if deprecation successful.
-        """
-        for idx, v in enumerate(self.versions.get(scroll_id, [])):
-            if v.version == version:
-                self.versions[scroll_id][idx] = ScrollVersion(
-                    scroll_id=v.scroll_id,
-                    version=v.version,
+        """Deprecate one version without deleting its provenance."""
+
+        for index, current in enumerate(self._versions.get(scroll_id, [])):
+            if current.version == version:
+                self._versions[scroll_id][index] = ScrollVersion(
+                    scroll_id=current.scroll_id,
+                    version=current.version,
                     status=ScrollStatus.DEPRECATED,
-                    checksum=v.checksum,
-                    chain_compatibility=v.chain_compatibility,
-                    min_trust_level=v.min_trust_level,
-                    released_at=v.released_at,
-                    deprecated_at=datetime.now(timezone.utc).isoformat(),
-                    metadata=v.metadata,
+                    checksum=current.checksum,
+                    chain_compatibility=current.chain_compatibility,
+                    min_trust_level=current.min_trust_level,
+                    released_at=current.released_at,
+                    deprecated_at=utc_now_iso(),
+                    metadata=current.metadata,
                 )
                 return True
-
         return False
 
-    def compose(
+    def propose(
         self,
-        composition_id: str,
-        scroll_ids: List[str],
-    ) -> Optional[CompositeScroll]:
-        """Create a composite scroll from multiple scrolls.
-        
-        Args:
-            composition_id: Unique composition identifier.
-            scroll_ids: List of scroll IDs to compose.
-            
-        Returns:
-            CompositeScroll or None if any scroll not found.
-        """
-        scrolls: List[Scroll] = []
-        for scroll_id in scroll_ids:
-            scroll = self.get(scroll_id)
-            if scroll is None:
-                return None
-            scrolls.append(scroll)
-
-        return CompositeScroll(
-            composition_id=composition_id,
-            scrolls=scrolls,
-        )
-
-    def list_by_type(self, scroll_type: ScrollType) -> List[ScrollMetadata]:
-        """List all scrolls of a given type.
-        
-        Args:
-            scroll_type: Type of scroll to filter.
-            
-        Returns:
-            List of matching scroll metadata.
-        """
-        return [
-            m for m in self.scrolls.values()
-            if m.scroll_type == scroll_type
-        ]
-
-    def list_by_chain(self, chain: str) -> List[ScrollMetadata]:
-        """List all scrolls compatible with a chain.
-        
-        Args:
-            chain: Chain name.
-            
-        Returns:
-            List of compatible scroll metadata.
-        """
-        compatible = []
-        for scroll_id, versions in self.versions.items():
-            for v in versions:
-                if v.is_compatible_with_chain(chain) and v.is_active():
-                    if self.scrolls.get(scroll_id):
-                        compatible.append(self.scrolls[scroll_id])
-                    break
-        return compatible
-
-
-class CompositeScroll(Scroll):
-    """Composite scroll that chains multiple scrolls.
-    
-    Example:
-        >>> scrolls = [scroll1, scroll2, scroll3]
-        >>> composite = CompositeScroll("composite-1", scrolls)
-        >>> result = await composite.execute(signal, context)
-    """
-
-    def __init__(
-        self,
-        composition_id: str,
-        scrolls: List[Scroll],
-    ) -> None:
-        """Initialize composite scroll.
-        
-        Args:
-            composition_id: Unique composition identifier.
-            scrolls: List of scrolls to compose.
-        """
-        self.composition_id = composition_id
-        self.scrolls = scrolls
-        metadata = ScrollMetadata(
-            scroll_id=composition_id,
-            name=f"Composite[{len(scrolls)}]",
-            description=f"Composition of {len(scrolls)} scrolls",
-            scroll_type=ScrollType.CUSTOM,
-            author="composite",
-        )
-        super().__init__(composition_id, metadata, "1.0.0")
-
-    async def execute(
-        self,
+        scroll_id: str,
         signal: str,
-        context: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        """Execute all scrolls in sequence.
-        
-        Args:
-            signal: Trading signal.
-            context: Execution context.
-            
-        Returns:
-            Aggregated results from all scrolls.
-        """
-        results: Dict[str, Any] = {
-            "composition_id": self.composition_id,
-            "steps": [],
+        context: Mapping[str, Any],
+        version: str | None = None,
+    ) -> ScrollProposal:
+        """Convert one ruleset into a review proposal without executing it."""
+
+        definition = self.get(scroll_id, version)
+        if definition is None:
+            raise KeyError(f"active scroll not found: {scroll_id}:{version or 'latest'}")
+        step = {
+            "scroll_id": definition.metadata.scroll_id,
+            "version": definition.version,
+            "checksum": definition.checksum,
+            "rules": dict(definition.rules),
         }
+        proposal_seed = {
+            "scroll": f"{definition.metadata.scroll_id}:{definition.version}",
+            "signal": signal,
+            "context": dict(context),
+            "step": step,
+        }
+        return ScrollProposal(
+            proposal_id=f"scroll-proposal-{sha256_document(proposal_seed)[:24]}",
+            scroll_refs=(
+                {
+                    "scroll_id": definition.metadata.scroll_id,
+                    "version": definition.version,
+                    "checksum": definition.checksum,
+                },
+            ),
+            signal=signal,
+            context=dict(context),
+            proposed_steps=(step,),
+        )
 
-        current_context = context.copy()
-        for i, scroll in enumerate(self.scrolls):
-            result = await scroll.execute(signal, current_context)
-            results["steps"].append({
-                "scroll_id": scroll.scroll_id,
-                "version": scroll.version,
-                "result": result,
-            })
-            # Update context with results for next scroll
-            current_context["previous_result"] = result
+    def compose(self, composition_id: str, scroll_ids: Sequence[str]) -> "CompositeScroll":
+        """Compose definitions into a pure proposal sequence."""
 
-        return results
+        definitions: list[ScrollDefinition] = []
+        for scroll_id in scroll_ids:
+            definition = self.get(scroll_id)
+            if definition is None:
+                raise KeyError(f"active scroll not found: {scroll_id}")
+            definitions.append(definition)
+        return CompositeScroll(composition_id, tuple(definitions))
+
+    def list_by_type(self, scroll_type: ScrollType) -> list[ScrollMetadata]:
+        seen: dict[str, ScrollMetadata] = {}
+        for definition in self._definitions.values():
+            if definition.metadata.scroll_type == scroll_type:
+                seen[definition.metadata.scroll_id] = definition.metadata
+        return sorted(seen.values(), key=lambda item: item.scroll_id)
+
+    def list_by_chain(self, chain: str) -> list[ScrollMetadata]:
+        compatible: dict[str, ScrollMetadata] = {}
+        for scroll_id in self._versions:
+            definition = self.get(scroll_id)
+            if definition is not None and definition.is_compatible_with_chain(chain):
+                compatible[scroll_id] = definition.metadata
+        return sorted(compatible.values(), key=lambda item: item.scroll_id)
+
+
+@dataclass(frozen=True)
+class CompositeScroll:
+    """Ordered declarative composition that emits one combined proposal."""
+
+    composition_id: str
+    scrolls: tuple[ScrollDefinition, ...]
+
+    def __post_init__(self) -> None:
+        if not self.composition_id.strip():
+            raise ValueError("composition_id is required")
+        if not self.scrolls:
+            raise ValueError("a composite scroll requires at least one definition")
+
+    def propose(self, signal: str, context: Mapping[str, Any]) -> ScrollProposal:
+        steps = tuple(
+            {
+                "sequence": index,
+                "scroll_id": definition.metadata.scroll_id,
+                "version": definition.version,
+                "checksum": definition.checksum,
+                "rules": dict(definition.rules),
+            }
+            for index, definition in enumerate(self.scrolls, start=1)
+        )
+        refs = tuple(
+            {
+                "scroll_id": definition.metadata.scroll_id,
+                "version": definition.version,
+                "checksum": definition.checksum,
+            }
+            for definition in self.scrolls
+        )
+        seed = {
+            "composition_id": self.composition_id,
+            "signal": signal,
+            "context": dict(context),
+            "steps": list(steps),
+        }
+        return ScrollProposal(
+            proposal_id=f"scroll-composite-{sha256_document(seed)[:24]}",
+            scroll_refs=refs,
+            signal=signal,
+            context=dict(context),
+            proposed_steps=steps,
+        )

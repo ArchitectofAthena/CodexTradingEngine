@@ -4,20 +4,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "CodexTradingEngine"
-version = "2.0.0"
+version = "2.1.0"
 description = "Simulation-first crypto telemetry, arbitrage research, receipt, and safety engine for Termux and Python."
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = "MIT"
 authors = [{name = "ArchitectofAthena"}]
 
 dependencies = [
     "aiohttp==3.14.3",
     "PyYAML==6.0.3",
     "feedparser==6.0.14",
+    "jsonschema>=4.26.0,<5",
+    "pydantic>=2.13.4,<3",
 ]
 
 [project.scripts]
 codex-gate1 = "eve_q.gate1_readonly_runtime:main"
+codex-research = "eve_q.research_cli:main"
 omega-context = "omega_telemetry.context_runner:main"
 
 [project.optional-dependencies]
@@ -41,8 +44,15 @@ security = [
     "pip-audit>=2.6.0",
 ]
 
+[tool.setuptools]
+py-modules = [
+    "eveq_failsafe_receipt",
+    "proof_adapters",
+    "shadow_cycle_runner",
+]
+
 [tool.setuptools.packages.find]
-include = ["eve_q*", "omega_telemetry*"]
+include = ["eve_q*", "models*", "omega_telemetry*"]
 
 [tool.black]
 line-length = 100
@@ -60,7 +70,7 @@ select = [
     "UP",
     "ASYNC",
 ]
-ignore = ["E501"]  # Line too long (handled by black)
+ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.11"

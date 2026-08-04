@@ -27,7 +27,19 @@ sentiment:
   min_score: 3.0
   spike_window_minutes: 15
   spike_threshold_count: 5
-  sources: []
+  # Every enabled source must use HTTPS, list its exact allowed host,
+  # disable redirect dependence, and keep timeout/body limits bounded.
+  sources:
+    # - name: reviewed_public_feed
+    #   type: json
+    #   url: https://feeds.example.org/signals.json
+    #   allowed_hosts:
+    #     - feeds.example.org
+    #   items_path:
+    #     - items
+    #   timeout_seconds: 10
+    #   max_response_bytes: 1048576
+    []
 
 whale:
   enabled: false
