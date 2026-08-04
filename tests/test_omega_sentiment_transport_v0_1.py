@@ -70,10 +70,16 @@ def test_feed_url_requires_exact_host_not_suffix_match():
 
 
 def test_private_and_loopback_ip_literals_are_rejected():
-    for value in ["127.0.0.1", "10.0.0.1", "169.254.1.1", "::1"]:
+    cases = [
+        ("127.0.0.1", "https://127.0.0.1/signals.json"),
+        ("10.0.0.1", "https://10.0.0.1/signals.json"),
+        ("169.254.1.1", "https://169.254.1.1/signals.json"),
+        ("::1", "https://[::1]/signals.json"),
+    ]
+    for value, url in cases:
         assert ip_is_public(value) is False
         with pytest.raises(FeedBoundaryError, match="not public"):
-            validate_feed_url(f"https://{value}/signals.json", [value])
+            validate_feed_url(url, [value])
 
 
 def test_source_policy_requires_bounds_and_allowlist():
