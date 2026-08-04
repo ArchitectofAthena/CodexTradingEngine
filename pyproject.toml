@@ -7,7 +7,7 @@ name = "CodexTradingEngine"
 version = "2.1.0"
 description = "Simulation-first crypto telemetry, arbitrage research, receipt, and safety engine for Termux and Python."
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = "MIT"
 authors = [{name = "ArchitectofAthena"}]
 
 dependencies = [
