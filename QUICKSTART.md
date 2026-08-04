@@ -12,6 +12,8 @@ install
 
 It never opens a wallet, signs a transaction, submits an order, broadcasts data to a chain, or moves capital.
 
+Before describing or testing the larger vision, read [`docs/public/CURRENT_STATE_AND_TARGET_ARCHITECTURE_v0_1.md`](docs/public/CURRENT_STATE_AND_TARGET_ARCHITECTURE_v0_1.md). It separates implemented capability from target architecture, clarifies the experimental role of QAOA, and records which wallet, flash-loan, charity-transfer, and mainnet surfaces remain locked.
+
 ## Install
 
 Python 3.11 or 3.13 is recommended.
