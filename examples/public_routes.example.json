@@ -1,0 +1,18 @@
+[
+  {
+    "route": "mock-base-weth-usdc-weth",
+    "chain": "base",
+    "expected_profit_eth": "0.020000000000000000",
+    "gas_cost_eth": "0.005000000000000000",
+    "slippage_eth": "0.001000000000000000",
+    "safety_margin_eth": "0.002000000000000000"
+  },
+  {
+    "route": "mock-base-weth-dai-weth",
+    "chain": "base",
+    "expected_profit_eth": "0.012000000000000000",
+    "gas_cost_eth": "0.004500000000000000",
+    "slippage_eth": "0.001500000000000000",
+    "safety_margin_eth": "0.002000000000000000"
+  }
+]
