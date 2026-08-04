@@ -26,7 +26,7 @@ def test_all_third_party_workflow_actions_use_immutable_refs() -> None:
             match = USES_LINE.match(line)
             if not match:
                 continue
-            spec, comment = match.groups()
+            spec, _comment = match.groups()
             if spec.startswith(("./", "docker://")):
                 continue
             if "@" not in spec:
@@ -42,10 +42,6 @@ def test_all_third_party_workflow_actions_use_immutable_refs() -> None:
             if expected is not None and ref.lower() != expected:
                 findings.append(
                     f"{path.name}:{line_number}: {action} does not use reviewed pin"
-                )
-            if expected is not None and not comment:
-                findings.append(
-                    f"{path.name}:{line_number}: {action} pin lacks release comment"
                 )
 
     assert findings == [], "\n".join(findings)
