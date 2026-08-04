@@ -46,9 +46,7 @@ class ReceiptIngestionConfig:
         if self.governance_gate_url is not None:
             parsed = urlparse(self.governance_gate_url)
             if parsed.scheme != "http" or parsed.hostname not in {"127.0.0.1", "localhost"}:
-                raise ValueError(
-                    "governance_gate_url must be an explicit loopback HTTP endpoint"
-                )
+                raise ValueError("governance_gate_url must be an explicit loopback HTTP endpoint")
             if parsed.username or parsed.password:
                 raise ValueError("governance_gate_url may not contain credentials")
 
@@ -91,15 +89,11 @@ class ReceiptValidator:
 
         cycle_id = receipt_dict.get("cycle_id")
         if not isinstance(cycle_id, str) or not SAFE_RECEIPT_ID.fullmatch(cycle_id):
-            errors.append(
-                "cycle_id must match ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
-            )
+            errors.append("cycle_id must match ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
         valid_modes = {"shadow", "dry_run", "paper", "simulation", "live"}
         if receipt_dict.get("mode") not in valid_modes:
-            errors.append(
-                f"Invalid mode: {receipt_dict.get('mode')}. Must be one of {valid_modes}"
-            )
+            errors.append(f"Invalid mode: {receipt_dict.get('mode')}. Must be one of {valid_modes}")
 
         if self.config.require_production_eligible and not receipt_dict.get(
             "proof_production_trust_eligible", False
@@ -110,21 +104,13 @@ class ReceiptValidator:
             actual_profit = Decimal(str(receipt_dict.get("actual_profit_eth", 0)))
             charity_due = Decimal(str(receipt_dict.get("charity_due_eth", 0)))
             expected_charity = actual_profit * Decimal("0.15")
-            if actual_profit > 0 and abs(charity_due - expected_charity) > Decimal(
-                "0.0001"
-            ):
-                errors.append(
-                    f"Charity mismatch: expected {expected_charity}, got {charity_due}"
-                )
+            if actual_profit > 0 and abs(charity_due - expected_charity) > Decimal("0.0001"):
+                errors.append(f"Charity mismatch: expected {expected_charity}, got {charity_due}")
         except (ValueError, TypeError, ArithmeticError) as exc:
             errors.append(f"Invalid profit/charity values: {exc}")
 
-        if receipt_dict.get("execution_success") and not receipt_dict.get(
-            "charity_success", False
-        ):
-            errors.append(
-                "Execution succeeded but charity distribution failed (unsafe state)"
-            )
+        if receipt_dict.get("execution_success") and not receipt_dict.get("charity_success", False):
+            errors.append("Execution succeeded but charity distribution failed (unsafe state)")
 
         return errors
 
@@ -179,18 +165,14 @@ class ReceiptValidator:
         if root_hash is not None and not isinstance(root_hash, str):
             errors.append("Merkle proof root_hash must be a string")
         if path is not None and (
-            not isinstance(path, list)
-            or not all(isinstance(item, str) for item in path)
+            not isinstance(path, list) or not all(isinstance(item, str) for item in path)
         ):
             errors.append("Merkle proof path must be a list of strings")
         if indices is not None and (
-            not isinstance(indices, list)
-            or not all(index in (0, 1) for index in indices)
+            not isinstance(indices, list) or not all(index in (0, 1) for index in indices)
         ):
             errors.append("Merkle proof indices must be a list containing only 0 or 1")
-        if isinstance(path, list) and isinstance(indices, list) and len(path) != len(
-            indices
-        ):
+        if isinstance(path, list) and isinstance(indices, list) and len(path) != len(indices):
             errors.append("Merkle proof path and indices must have equal length")
 
         if (
@@ -199,9 +181,7 @@ class ReceiptValidator:
             and isinstance(root_hash, str)
             and root_hash != merkle_root
         ):
-            errors.append(
-                f"Merkle root mismatch: proof has {root_hash}, receipt has {merkle_root}"
-            )
+            errors.append(f"Merkle root mismatch: proof has {root_hash}, receipt has {merkle_root}")
 
         return errors
 
@@ -259,9 +239,7 @@ class CrossRepoReceiptIngestor:
 
             if self.config.governance_gate_url and not self.config.shadow_mode:
                 result.governance_gate_queried = True
-                result.governance_gate_approved = self._query_governance_gate(
-                    receipt_dict
-                )
+                result.governance_gate_approved = self._query_governance_gate(receipt_dict)
                 if result.governance_gate_approved is not True:
                     target_path.unlink(missing_ok=True)
                     result.target_path = None
@@ -311,9 +289,7 @@ class CrossRepoReceiptIngestor:
 
         loop = asyncio.new_event_loop()
         try:
-            return loop.run_until_complete(
-                self._post_governance_request(governance_request)
-            )
+            return loop.run_until_complete(self._post_governance_request(governance_request))
         finally:
             loop.close()
 
@@ -337,9 +313,7 @@ class CrossRepoReceiptIngestor:
         except (aiohttp.ClientError, asyncio.TimeoutError, ValueError, TypeError):
             return False
 
-    def generate_ingestion_report(
-        self, results: list[ReceiptIngestionResult]
-    ) -> str:
+    def generate_ingestion_report(self, results: list[ReceiptIngestionResult]) -> str:
         """Generate a human-readable ingestion report."""
 
         lines = [
@@ -365,9 +339,7 @@ class CrossRepoReceiptIngestor:
                 lines.append("- Errors:")
                 lines.extend(f"  - {error}" for error in result.validation_errors)
             if result.governance_gate_queried:
-                lines.append(
-                    f"- Governance gate approved: {result.governance_gate_approved}"
-                )
+                lines.append(f"- Governance gate approved: {result.governance_gate_approved}")
             if result.telemetry_event_emitted:
                 lines.append("- Telemetry: event emitted")
 
