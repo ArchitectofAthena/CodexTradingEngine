@@ -290,6 +290,12 @@ class WhaleWatcher:
                 usd_value = amount * price.usd
                 if usd_value < self.token_usd_threshold:
                     continue
+                raw_log_index = log.get("logIndex")
+                log_index = (
+                    None
+                    if raw_log_index is None
+                    else hex_to_int(str(raw_log_index))
+                )
                 self._persist_transfer(
                     event_source="erc20_logs",
                     threshold=self.token_usd_threshold,
@@ -305,6 +311,7 @@ class WhaleWatcher:
                     ),
                     block_number=block_number,
                     contract=token.contract,
+                    log_index=log_index,
                 )
 
     def _persist_transfer(
@@ -320,6 +327,7 @@ class WhaleWatcher:
         tx_hash: str | None,
         block_number: int,
         contract: str | None = None,
+        log_index: int | None = None,
     ) -> WhaleEvent | None:
         from_label = self.exchange_labels.get(from_address)
         to_label = self.exchange_labels.get(to_address)
@@ -328,9 +336,14 @@ class WhaleWatcher:
             event_type = "exchange_deposit"
         elif from_label and not to_label:
             event_type = "exchange_withdrawal"
+        dedupe_identity = str(tx_hash or block_number)
+        if contract is not None:
+            dedupe_identity += f":contract:{normalize_address(contract)}"
+        if log_index is not None:
+            dedupe_identity += f":log:{log_index}"
         dedupe_key = (
             f"{self.chain_name}:{event_type}:"
-            f"{tx_hash or block_number}:{asset_symbol}"
+            f"{dedupe_identity}:{asset_symbol}"
         )
         if self.db.is_duplicate(dedupe_key, self.cooldown_minutes):
             return None
@@ -352,6 +365,8 @@ class WhaleWatcher:
         }
         if contract is not None:
             data["contract"] = contract
+        if log_index is not None:
+            data["log_index"] = log_index
         event = WhaleEvent(
             event_type=event_type,
             chain=self.chain_name,
