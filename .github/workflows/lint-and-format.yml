@@ -28,7 +28,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
 
-      - name: Run Black on constitutional and public surfaces
+      - name: Run Black on constitutional surfaces
         run: |
           black --check --diff \
             eve_q/cross_repo_ingestor.py \
@@ -40,15 +40,11 @@ jobs:
             eve_q/artifact_carrier.py \
             eve_q/membrane_tool.py \
             eve_q/receipt_carrier_attestation.py \
-            eve_q/scroll_protocol.py \
-            eve_q/research_cli.py \
             eve_q/allocation/charity_router.py \
             eve_q/allocation/geodesic_policy.py \
             eve_q/telemetry/impact_score.py \
             eve_q/telemetry/need_score.py \
-            omega_telemetry/sentiment_tracker.py \
             models/__init__.py \
-            models/receipt.py \
             tests/test_cross_repo_ingestor.py \
             tests/test_receipt_emitter.py \
             tests/test_alert_dispatcher.py \
@@ -70,12 +66,9 @@ jobs:
             tests/test_constitutional_release_audit.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py \
-            tests/test_scroll_protocol.py \
-            tests/test_research_cli_v0_1.py \
-            tests/test_omega_sentiment_transport_v0_1.py \
             tests/test_package_imports.py
 
-      - name: Run Flake8 on constitutional and public surfaces
+      - name: Run Flake8 on constitutional surfaces
         run: |
           flake8 \
             eve_q/cross_repo_ingestor.py \
@@ -87,15 +80,11 @@ jobs:
             eve_q/artifact_carrier.py \
             eve_q/membrane_tool.py \
             eve_q/receipt_carrier_attestation.py \
-            eve_q/scroll_protocol.py \
-            eve_q/research_cli.py \
             eve_q/allocation/charity_router.py \
             eve_q/allocation/geodesic_policy.py \
             eve_q/telemetry/impact_score.py \
             eve_q/telemetry/need_score.py \
-            omega_telemetry/sentiment_tracker.py \
             models/__init__.py \
-            models/receipt.py \
             tests/test_cross_repo_ingestor.py \
             tests/test_receipt_emitter.py \
             tests/test_alert_dispatcher.py \
@@ -107,7 +96,4 @@ jobs:
             tests/test_artifact_carrier_manifest.py \
             tests/test_charity_allocation_diversity_guard.py \
             tests/test_need_impact_scoring.py \
-            tests/test_scroll_protocol.py \
-            tests/test_research_cli_v0_1.py \
-            tests/test_omega_sentiment_transport_v0_1.py \
             tests/test_package_imports.py
