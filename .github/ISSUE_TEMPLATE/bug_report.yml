@@ -1,0 +1,88 @@
+name: Reproducible bug report
+description: Report a simulation, verification, packaging, or boundary defect.
+title: "[BUG] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing CodexTradingEngine. Do not include secrets, wallet material, credentials, private fixtures, or exploit details. Security-sensitive findings belong in the private path described by `SECURITY.md`.
+
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or branch
+      description: The exact commit SHA or branch tested.
+      placeholder: 40-character commit SHA
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Python version, and installation method.
+      placeholder: Termux / Android 16, Python 3.13, editable install
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command
+      description: Paste the smallest command that reproduces the behavior.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Minimal synthetic fixture
+      description: Provide the smallest safe route, receipt, or configuration needed to reproduce. Remove private data.
+      render: json
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Primary surface
+      options:
+        - Simulation mechanics
+        - Receipt or proof verification
+        - Provenance or freshness
+        - Network or telemetry boundary
+        - Packaging or installation
+        - CLI or human-readable report
+        - Execution-lock enforcement
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I removed secrets, credentials, wallet material, personally identifying data, and private logs.
+          required: true
+        - label: I reproduced this only against systems and data I own or am authorized to test.
+          required: true
+        - label: This public issue does not contain sensitive exploit details that belong in private vulnerability reporting.
+          required: true
