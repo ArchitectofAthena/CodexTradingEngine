@@ -1,86 +1,19 @@
 name: Lint and Format
 
 on:
-  push:
-    paths:
-      - 'eve_q/cross_repo_ingestor.py'
-      - 'eve_q/receipt_emitter.py'
-      - 'eve_q/alert_dispatcher.py'
-      - 'eve_q/risk_management.py'
-      - 'eve_q/organ_contract.py'
-      - 'eve_q/ttl_policy.py'
-      - 'eve_q/artifact_carrier.py'
-      - 'eve_q/allocation/**'
-      - 'eve_q/telemetry/**'
-      - 'contracts/**'
-      - 'tests/test_cross_repo_ingestor.py'
-      - 'tests/test_receipt_emitter.py'
-      - 'tests/test_alert_dispatcher.py'
-      - 'tests/test_risk_management.py'
-      - 'tests/test_organ_contract_scaffold.py'
-      - 'tests/test_organ_contract_enforcement.py'
-      - 'tests/test_ttl_policy_scaffold.py'
-      - 'tests/test_ttl_policy_evaluator.py'
-      - 'tests/test_artifact_carrier_manifest.py'
-      - 'tests/test_artifact_carrier_example.py'
-      - 'tests/test_receipt_carrier_attestation.py'
-      - 'tests/test_receipt_carrier_attestation_example.py'
-      - 'tests/test_readme_constitutional_surface_index.py'
-      - 'tests/test_receipt_carrier_attestation_cli.py'
-      - 'tests/test_artifact_carrier_cli.py'
-      - 'tests/test_membrane_tool.py'
-      - 'tests/test_membrane_tool_usage_docs.py'
-      - 'tests/test_constitutional_membrane_checkpoint.py'
-      - 'tests/test_constitutional_release_audit.py'
-      - 'docs/constitutional_release_audit.md'
-      - 'docs/constitutional_membrane_checkpoint.md'
-      - 'docs/membrane_tool_usage.md'
-      - 'eve_q/membrane_tool.py'
-      - 'README.md'
-      - 'examples/receipt_carrier_attestation.example.json'
-      - 'docs/receipt_carrier_attestation_example.md'
-      - 'eve_q/receipt_carrier_attestation.py'
-      - 'examples/artifact_carrier_manifest.example.json'
-      - 'docs/artifact_carrier_manifest_example.md'
-      - 'tests/test_charity_allocation_diversity_guard.py'
-      - 'tests/test_need_impact_scoring.py'
-      - 'requirements.txt'
-      - 'requirements-dev.txt'
-      - 'pyproject.toml'
-      - '.flake8'
-      - '.github/workflows/lint-and-format.yml'
   pull_request:
-    paths:
-      - 'eve_q/cross_repo_ingestor.py'
-      - 'eve_q/receipt_emitter.py'
-      - 'eve_q/alert_dispatcher.py'
-      - 'eve_q/risk_management.py'
-      - 'eve_q/organ_contract.py'
-      - 'eve_q/ttl_policy.py'
-      - 'eve_q/artifact_carrier.py'
-      - 'eve_q/allocation/**'
-      - 'eve_q/telemetry/**'
-      - 'contracts/**'
-      - 'tests/test_cross_repo_ingestor.py'
-      - 'tests/test_receipt_emitter.py'
-      - 'tests/test_alert_dispatcher.py'
-      - 'tests/test_risk_management.py'
-      - 'tests/test_organ_contract_scaffold.py'
-      - 'tests/test_organ_contract_enforcement.py'
-      - 'tests/test_ttl_policy_scaffold.py'
-      - 'tests/test_ttl_policy_evaluator.py'
-      - 'tests/test_artifact_carrier_manifest.py'
-      - 'tests/test_charity_allocation_diversity_guard.py'
-      - 'tests/test_need_impact_scoring.py'
-      - 'requirements.txt'
-      - 'requirements-dev.txt'
-      - 'pyproject.toml'
-      - '.flake8'
-      - '.github/workflows/lint-and-format.yml'
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   lint-and-format:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -88,29 +21,34 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          python -m pip install -r requirements-dev.txt
 
-      - name: Run black on constitutional scope
+      - name: Run Black on constitutional and public surfaces
         run: |
-          black --check \
+          black --check --diff \
             eve_q/cross_repo_ingestor.py \
             eve_q/receipt_emitter.py \
             eve_q/alert_dispatcher.py \
             eve_q/risk_management.py \
             eve_q/organ_contract.py \
-          eve_q/ttl_policy.py \
-          eve_q/artifact_carrier.py \
-          eve_q/membrane_tool.py \
-          eve_q/receipt_carrier_attestation.py \
+            eve_q/ttl_policy.py \
+            eve_q/artifact_carrier.py \
+            eve_q/membrane_tool.py \
+            eve_q/receipt_carrier_attestation.py \
+            eve_q/scroll_protocol.py \
+            eve_q/research_cli.py \
             eve_q/allocation/charity_router.py \
             eve_q/allocation/geodesic_policy.py \
             eve_q/telemetry/impact_score.py \
             eve_q/telemetry/need_score.py \
+            omega_telemetry/sentiment_tracker.py \
+            models/__init__.py \
+            models/receipt.py \
             tests/test_cross_repo_ingestor.py \
             tests/test_receipt_emitter.py \
             tests/test_alert_dispatcher.py \
@@ -118,22 +56,26 @@ jobs:
             tests/test_organ_contract_scaffold.py \
             tests/test_organ_contract_enforcement.py \
             tests/test_ttl_policy_scaffold.py \
-          tests/test_ttl_policy_evaluator.py \
-          tests/test_artifact_carrier_manifest.py \
-          tests/test_artifact_carrier_example.py \
-          tests/test_receipt_carrier_attestation.py \
-          tests/test_receipt_carrier_attestation_example.py \
-          tests/test_readme_constitutional_surface_index.py \
-          tests/test_receipt_carrier_attestation_cli.py \
-          tests/test_artifact_carrier_cli.py \
-          tests/test_membrane_tool.py \
-          tests/test_membrane_tool_usage_docs.py \
-          tests/test_constitutional_membrane_checkpoint.py \
-          tests/test_constitutional_release_audit.py \
+            tests/test_ttl_policy_evaluator.py \
+            tests/test_artifact_carrier_manifest.py \
+            tests/test_artifact_carrier_example.py \
+            tests/test_receipt_carrier_attestation.py \
+            tests/test_receipt_carrier_attestation_example.py \
+            tests/test_readme_constitutional_surface_index.py \
+            tests/test_receipt_carrier_attestation_cli.py \
+            tests/test_artifact_carrier_cli.py \
+            tests/test_membrane_tool.py \
+            tests/test_membrane_tool_usage_docs.py \
+            tests/test_constitutional_membrane_checkpoint.py \
+            tests/test_constitutional_release_audit.py \
             tests/test_charity_allocation_diversity_guard.py \
-            tests/test_need_impact_scoring.py
+            tests/test_need_impact_scoring.py \
+            tests/test_scroll_protocol.py \
+            tests/test_research_cli_v0_1.py \
+            tests/test_omega_sentiment_transport_v0_1.py \
+            tests/test_package_imports.py
 
-      - name: Run flake8 on constitutional scope
+      - name: Run Flake8 on constitutional and public surfaces
         run: |
           flake8 \
             eve_q/cross_repo_ingestor.py \
@@ -141,12 +83,19 @@ jobs:
             eve_q/alert_dispatcher.py \
             eve_q/risk_management.py \
             eve_q/organ_contract.py \
-          eve_q/ttl_policy.py \
-          eve_q/artifact_carrier.py \
+            eve_q/ttl_policy.py \
+            eve_q/artifact_carrier.py \
+            eve_q/membrane_tool.py \
+            eve_q/receipt_carrier_attestation.py \
+            eve_q/scroll_protocol.py \
+            eve_q/research_cli.py \
             eve_q/allocation/charity_router.py \
             eve_q/allocation/geodesic_policy.py \
             eve_q/telemetry/impact_score.py \
             eve_q/telemetry/need_score.py \
+            omega_telemetry/sentiment_tracker.py \
+            models/__init__.py \
+            models/receipt.py \
             tests/test_cross_repo_ingestor.py \
             tests/test_receipt_emitter.py \
             tests/test_alert_dispatcher.py \
@@ -154,7 +103,11 @@ jobs:
             tests/test_organ_contract_scaffold.py \
             tests/test_organ_contract_enforcement.py \
             tests/test_ttl_policy_scaffold.py \
-          tests/test_ttl_policy_evaluator.py \
-          tests/test_artifact_carrier_manifest.py \
+            tests/test_ttl_policy_evaluator.py \
+            tests/test_artifact_carrier_manifest.py \
             tests/test_charity_allocation_diversity_guard.py \
-            tests/test_need_impact_scoring.py
+            tests/test_need_impact_scoring.py \
+            tests/test_scroll_protocol.py \
+            tests/test_research_cli_v0_1.py \
+            tests/test_omega_sentiment_transport_v0_1.py \
+            tests/test_package_imports.py
