@@ -149,12 +149,13 @@ async def read_bounded_body(
     declared = response.headers.get("Content-Length")
     if declared is not None:
         try:
-            if int(declared) > max_response_bytes:
-                raise FeedBoundaryError(
-                    f"sentiment feed response exceeds {max_response_bytes} bytes"
-                )
+            declared_size = int(declared)
         except ValueError as exc:
             raise FeedBoundaryError("invalid Content-Length from sentiment feed") from exc
+        if declared_size > max_response_bytes:
+            raise FeedBoundaryError(
+                f"sentiment feed response exceeds {max_response_bytes} bytes"
+            )
 
     body = bytearray()
     async for chunk in response.content.iter_chunked(65_536):
