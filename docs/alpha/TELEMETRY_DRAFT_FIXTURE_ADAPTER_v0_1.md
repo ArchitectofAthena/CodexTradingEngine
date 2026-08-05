@@ -23,11 +23,26 @@ A build requires:
 - an explicit mapping document;
 - a separate operator-assumptions document.
 
-The canonical registry currently contains zero eligible sources. Until a source review lands, a real build correctly stops on HOLD.
+The canonical registry now contains one time-bounded eligible source:
+
+```text
+ethereum-sepolia-blockscout-stats-v0-1
+Review expires 2026-09-04T01:12:00Z
+```
+
+Its exact source-specific inputs are:
+
+```text
+registry/source_specs/ethereum_sepolia_blockscout_stats_v0_1.json
+examples/alpha/sepolia_blockscout_stats_mapping_v0_1.json
+examples/alpha/sepolia_blockscout_stats_assumptions_v0_1.json
+```
+
+The mapping preserves one provider-reported gas-price observation. Route economics remain separately labeled test-only assumptions.
 
 ## Mapping contract
 
-Template:
+Generic template:
 
 ```text
 examples/alpha/telemetry_mapping_template_v0_1.json
@@ -50,7 +65,7 @@ The adapter records the original value and any transformed value separately. An 
 
 ## Assumptions contract
 
-Template:
+Generic template:
 
 ```text
 examples/alpha/modeling_assumptions_template_v0_1.json
@@ -73,13 +88,15 @@ The adapter never supplies hidden defaults. It explicitly reports missing values
 - bridge cost;
 - safety margin.
 
-## Build an unreviewed draft
+## Build an unreviewed Sepolia draft
+
+After one explicit capture has produced a bundle:
 
 ```bash
 codex-telemetry-draft build \
-  --bundle "$HOME/codex-alpha-runs/<RUN_ID>" \
-  --mapping artifacts/alpha-mapping.json \
-  --assumptions artifacts/alpha-assumptions.json \
+  --bundle "$HOME/codex-alpha-runs/<RUN_ID>/snapshot" \
+  --mapping examples/alpha/sepolia_blockscout_stats_mapping_v0_1.json \
+  --assumptions examples/alpha/sepolia_blockscout_stats_assumptions_v0_1.json \
   --output-dir artifacts/<RUN_ID>-draft
 ```
 
@@ -87,11 +104,11 @@ For deterministic freshness testing, an explicit evaluation time may be supplied
 
 ```bash
 codex-telemetry-draft build \
-  --bundle "$HOME/codex-alpha-runs/<RUN_ID>" \
-  --mapping artifacts/alpha-mapping.json \
-  --assumptions artifacts/alpha-assumptions.json \
+  --bundle "$HOME/codex-alpha-runs/<RUN_ID>/snapshot" \
+  --mapping examples/alpha/sepolia_blockscout_stats_mapping_v0_1.json \
+  --assumptions examples/alpha/sepolia_blockscout_stats_assumptions_v0_1.json \
   --output-dir artifacts/<RUN_ID>-draft \
-  --now 2026-08-05T00:31:00Z
+  --now <UTC-DATE-TIME>
 ```
 
 The output directory contains:
@@ -121,7 +138,7 @@ codex-telemetry-draft review \
   --expected-draft-hash <64-character-draft-hash> \
   --decision REVIEWED_FOR_LOCAL_SIMULATION \
   --reviewer "Architect" \
-  --reviewed-at 2026-08-05T00:32:00Z \
+  --reviewed-at <UTC-DATE-TIME> \
   --note "Exact draft reviewed for local simulation only." \
   --output-dir artifacts/<RUN_ID>-reviewed
 ```
@@ -136,6 +153,24 @@ REJECTED
 `REVIEWED_FOR_LOCAL_SIMULATION` is refused when any required economic assumption remains missing. The review hash must exactly match the immutable draft material.
 
 A successful review changes only local simulation eligibility. It does not authorize `codex-research` invocation automatically and does not create a live proposal.
+
+## First live rehearsal result
+
+The reviewed Sepolia source completed the entire bounded path in GitHub Actions:
+
+```text
+DNS/IP preflight: PASS
+one HTTPS GET: PASS
+offline replay: PASS
+post-capture resolution verification: PASS
+draft translation: PASS
+exact-hash local-simulation review: PASS
+one-run local simulation: PASS
+execution: LOCKED
+capital: LOCKED
+```
+
+This result proves the workflow completed once under its recorded bounds. It does not establish production reliability, recurring profitability, or permission for autonomous capture.
 
 ## Fail-closed conditions
 
