@@ -1,0 +1,52 @@
+{
+  "packet_type": "Gate1SourceConsensusPacket",
+  "schema_version": "0.1",
+  "evaluation_id": "independent-gas-observation-example-v0-1",
+  "evaluated_at": "2026-08-05T02:30:00Z",
+  "comparison_unit": "gwei",
+  "absolute_tolerance": "0.5",
+  "observations": [
+    {
+      "source_id": "reviewed-source-a",
+      "registry_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "provenance_group": "provider-a-independent-backend",
+      "operator": "Provider A",
+      "value": "10",
+      "unit": "gwei",
+      "decimals": 9,
+      "comparison_unit": "gwei",
+      "conversion": {
+        "kind": "identity"
+      },
+      "observed_at": "2026-08-05T02:29:00Z",
+      "expires_at": "2026-08-05T02:31:00Z",
+      "review_status": "ELIGIBLE",
+      "review_expires_at": "2026-09-04T00:00:00Z",
+      "authority": false
+    },
+    {
+      "source_id": "reviewed-source-b",
+      "registry_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "provenance_group": "provider-b-independent-backend",
+      "operator": "Provider B",
+      "value": "10100000000",
+      "unit": "wei",
+      "decimals": 18,
+      "comparison_unit": "gwei",
+      "conversion": {
+        "kind": "decimal_scale",
+        "factor": "0.000000001"
+      },
+      "observed_at": "2026-08-05T02:29:10Z",
+      "expires_at": "2026-08-05T02:31:10Z",
+      "review_status": "ELIGIBLE",
+      "review_expires_at": "2026-09-04T00:00:00Z",
+      "authority": false
+    }
+  ],
+  "unresolved_questions": [
+    "Does either provider ultimately derive this field from the same upstream node fleet?",
+    "Should a future live review admit a second provider for bounded corroboration?"
+  ],
+  "authority": false
+}
