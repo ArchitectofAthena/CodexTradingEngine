@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/telemetry_fixture_mapping_v0_1.schema.json",
+  "title": "Codex Gate 1A Telemetry Fixture Mapping v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mapping_id",
+    "schema_version",
+    "source_id",
+    "network_name",
+    "chain_id",
+    "route_id",
+    "observations",
+    "authority",
+    "may_generate_live_proposal",
+    "may_execute",
+    "may_sign",
+    "may_submit_transaction",
+    "may_move_capital"
+  ],
+  "properties": {
+    "mapping_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$"
+    },
+    "schema_version": {"const": "0.1"},
+    "source_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$"
+    },
+    "network_name": {"type": "string", "minLength": 1},
+    "chain_id": {"type": "string", "minLength": 1},
+    "route_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/observation"}
+    },
+    "authority": {"const": false},
+    "may_generate_live_proposal": {"const": false},
+    "may_execute": {"const": false},
+    "may_sign": {"const": false},
+    "may_submit_transaction": {"const": false},
+    "may_move_capital": {"const": false}
+  },
+  "$defs": {
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_field",
+        "source_pointer",
+        "source_unit",
+        "target_unit",
+        "transform"
+      ],
+      "properties": {
+        "target_field": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{1,63}$"
+        },
+        "source_pointer": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "source_unit": {"type": "string", "minLength": 1},
+        "target_unit": {"type": "string", "minLength": 1},
+        "transform": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind"],
+              "properties": {"kind": {"const": "identity"}}
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "factor"],
+              "properties": {
+                "kind": {"const": "decimal_scale"},
+                "factor": {
+                  "type": "string",
+                  "pattern": "^-?[0-9]+(?:\\.[0-9]+)?$"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
