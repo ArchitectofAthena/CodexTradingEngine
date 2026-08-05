@@ -1,9 +1,9 @@
 {
   "registry_id": "codex.gate1a.testnet-source-registry.v0.1",
   "schema_version": "0.1",
-  "reviewed_at": "2026-08-05T00:17:00Z",
-  "producer_commit": "53abf673afac5df137acd18faaa53d03b2502dc0",
-  "review_note": "No public testnet source has yet earned ELIGIBLE status. Gate 1A capture remains on HOLD until a source review is completed and merged.",
+  "reviewed_at": "2026-08-05T01:12:00Z",
+  "producer_commit": "6e1a4e547267db90f9f512bfe2927f38f2962f04",
+  "review_note": "Ethereum Sepolia Blockscout stats has earned time-bounded Gate 1A eligibility for one explicit GET per approved alpha run. Eligibility expires on 2026-09-04 and returns to HOLD on host, schema, terms, rate-limit, deprecation, or network-identity drift.",
   "authority": false,
   "gate_posture": {
     "gate_0": "ACTIVE",
@@ -13,5 +13,51 @@
     "gate_3": "LOCKED",
     "gate_4_through_6": "LOCKED"
   },
-  "sources": []
+  "sources": [
+    {
+      "source_id": "ethereum-sepolia-blockscout-stats-v0-1",
+      "disposition": "ELIGIBLE",
+      "network_name": "Ethereum Sepolia",
+      "network_class": "testnet",
+      "chain_id": "11155111",
+      "host": "eth-sepolia.blockscout.com",
+      "url": "https://eth-sepolia.blockscout.com/api/v2/stats",
+      "endpoint_class": "explorer_api",
+      "source_operator": "Blockscout",
+      "allowed_methods": [
+        "GET"
+      ],
+      "freshness_ttl_seconds": 120,
+      "max_response_bytes": 131072,
+      "units": {
+        "quantity": "Sepolia chain counters and gas statistics",
+        "decimals": null,
+        "notes": "Fields use provider-defined units. gas_prices values are observational context only. coin_price and market_cap are not executable quotes and may not support production profitability claims."
+      },
+      "terms_review": {
+        "status": "reviewed",
+        "reference": "docs/source-reviews/ETHEREUM_SEPOLIA_BLOCKSCOUT_STATS_v0_1.md",
+        "reviewed_at": "2026-08-05T01:12:00Z"
+      },
+      "rate_limit_notes": "Blockscout documents a default unauthenticated limit of 300 requests per minute. This Gate 1A profile permits one GET per explicit approved run and no automatic recurrence.",
+      "provenance_group": "blockscout-sepolia-per-instance-v2",
+      "concentration_risk_note": "Single explorer instance and provider. Blockscout has announced future deprecation of per-instance endpoints in favor of its PRO API. Re-review by 2026-09-04 or immediately on host, schema, terms, rate-limit, deprecation, or network-identity drift.",
+      "review_evidence": [
+        "https://ethereum.org/developers/docs/networks/",
+        "https://github.com/eth-clients/sepolia",
+        "https://docs.blockscout.com/devs/apis/rest",
+        "https://docs.blockscout.com/api-reference/get-stats-counters",
+        "https://docs.blockscout.com/devs/apis/requests-and-limits",
+        "docs/source-reviews/ETHEREUM_SEPOLIA_BLOCKSCOUT_STATS_v0_1.md"
+      ],
+      "reviewed_at": "2026-08-05T01:12:00Z",
+      "review_expires_at": "2026-09-04T01:12:00Z",
+      "authority": false,
+      "mainnet": false,
+      "wallet_required": false,
+      "signing_required": false,
+      "transaction_submission": false,
+      "capital_movement": false
+    }
+  ]
 }
