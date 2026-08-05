@@ -1,0 +1,56 @@
+{
+  "artifact_type": "ViVRecursiveCorrectionReceipt",
+  "version": "v0.1",
+  "created_at": "2026-08-05T17:33:00-05:00",
+  "repository": "ArchitectofAthena/CodexTradingEngine",
+  "base_commit": "970232f3cfb1cc3cfbd524c0d8efcf8b83e102d4",
+  "trigger": "Architect request: Run recursive correction runs",
+  "correction_runs": [
+    {
+      "id": "runtime_receipt_proof",
+      "finding": "The original ViV CI lane compiled code, validated static JSON, and ran focused tests, but did not execute the installed gauntlet CLI as an independent runtime proof.",
+      "correction": "Generate a deterministic baseline artifact, execute codex-viv-gauntlet for seeds 0, 7331, and 424242 on Python 3.11 and 3.13, then validate every emitted receipt and fail on any escape or mutation of the baseline."
+    },
+    {
+      "id": "manual_recursion_entry",
+      "finding": "The dedicated workflow could not be invoked manually.",
+      "correction": "Add workflow_dispatch while preserving pull-request and main-branch path gates."
+    },
+    {
+      "id": "documentation_state_sync",
+      "finding": "The operator document still described the ViV organ as a candidate after pull request 139 merged.",
+      "correction": "Record the merged bounded implementation and document the recursive runtime proof lane without implying certification."
+    },
+    {
+      "id": "source_hold_separation",
+      "finding": "SpiralBloom OS issue 84 remains an incomplete Viv source intake while the separate bounded adversarial role has been implemented in CodexTradingEngine.",
+      "correction": "Preserve the distinction: the adversarial organ does not freeze or complete the narrative, finance, Stargazer, or draconic-renewal ontology in issue 84."
+    }
+  ],
+  "expected_runtime_matrix": {
+    "python_versions": [
+      "3.11",
+      "3.13"
+    ],
+    "root_seeds": [
+      0,
+      7331,
+      424242
+    ],
+    "receipts_per_runtime": 3,
+    "configured_mutations_per_receipt": 9,
+    "required_escaped_count": 0
+  },
+  "authority": {
+    "artifact_is_command": false,
+    "authority": false,
+    "human_promotion_required": true,
+    "may_merge": false,
+    "may_deploy": false,
+    "may_execute": false,
+    "may_sign": false,
+    "may_broadcast": false,
+    "may_access_wallet": false,
+    "may_move_capital": false
+  }
+}
