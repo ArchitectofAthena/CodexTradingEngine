@@ -1,0 +1,17 @@
+{
+  "registry_id": "codex.gate1a.testnet-source-registry.v0.1",
+  "schema_version": "0.1",
+  "reviewed_at": "2026-08-05T00:17:00Z",
+  "producer_commit": "53abf673afac5df137acd18faaa53d03b2502dc0",
+  "review_note": "No public testnet source has yet earned ELIGIBLE status. Gate 1A capture remains on HOLD until a source review is completed and merged.",
+  "authority": false,
+  "gate_posture": {
+    "gate_0": "ACTIVE",
+    "gate_1a": "ACTIVE_FOR_APPROVED_ALPHA_RUNS",
+    "gate_1b": "LOCKED",
+    "gate_2": "LOCKED",
+    "gate_3": "LOCKED",
+    "gate_4_through_6": "LOCKED"
+  },
+  "sources": []
+}

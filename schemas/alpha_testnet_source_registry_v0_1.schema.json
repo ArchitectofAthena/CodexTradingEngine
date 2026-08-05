@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/alpha_testnet_source_registry_v0_1.schema.json",
+  "title": "CodexTradingEngine Gate 1A Public Testnet Source Registry v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "registry_id",
+    "schema_version",
+    "reviewed_at",
+    "producer_commit",
+    "review_note",
+    "authority",
+    "gate_posture",
+    "sources"
+  ],
+  "properties": {
+    "registry_id": {
+      "const": "codex.gate1a.testnet-source-registry.v0.1"
+    },
+    "schema_version": {
+      "const": "0.1"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "review_note": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority": {
+      "const": false
+    },
+    "gate_posture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate_0",
+        "gate_1a",
+        "gate_1b",
+        "gate_2",
+        "gate_3",
+        "gate_4_through_6"
+      ],
+      "properties": {
+        "gate_0": {"const": "ACTIVE"},
+        "gate_1a": {"const": "ACTIVE_FOR_APPROVED_ALPHA_RUNS"},
+        "gate_1b": {"const": "LOCKED"},
+        "gate_2": {"const": "LOCKED"},
+        "gate_3": {"const": "LOCKED"},
+        "gate_4_through_6": {"const": "LOCKED"}
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/source"},
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "disposition",
+        "network_name",
+        "network_class",
+        "chain_id",
+        "host",
+        "url",
+        "endpoint_class",
+        "source_operator",
+        "allowed_methods",
+        "freshness_ttl_seconds",
+        "max_response_bytes",
+        "units",
+        "terms_review",
+        "rate_limit_notes",
+        "provenance_group",
+        "concentration_risk_note",
+        "review_evidence",
+        "reviewed_at",
+        "authority",
+        "mainnet",
+        "wallet_required",
+        "signing_required",
+        "transaction_submission",
+        "capital_movement"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$"
+        },
+        "disposition": {
+          "enum": ["ELIGIBLE", "HOLD", "REJECT"]
+        },
+        "network_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "network_class": {
+          "const": "testnet"
+        },
+        "chain_id": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 253
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "endpoint_class": {
+          "enum": [
+            "explorer_api",
+            "market_snapshot",
+            "onchain_snapshot",
+            "policy_snapshot",
+            "status_api"
+          ]
+        },
+        "source_operator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowed_methods": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["GET", "HEAD"]
+          }
+        },
+        "freshness_ttl_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "max_response_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10485760
+        },
+        "units": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["quantity", "decimals", "notes"],
+          "properties": {
+            "quantity": {
+              "type": "string",
+              "minLength": 1
+            },
+            "decimals": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 36
+            },
+            "notes": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "terms_review": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "reference", "reviewed_at"],
+          "properties": {
+            "status": {
+              "enum": ["reviewed", "pending", "rejected"]
+            },
+            "reference": {
+              "type": ["string", "null"]
+            },
+            "reviewed_at": {
+              "type": ["string", "null"],
+              "format": "date-time"
+            }
+          }
+        },
+        "rate_limit_notes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provenance_group": {
+          "type": "string",
+          "minLength": 1
+        },
+        "concentration_risk_note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "review_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "reviewed_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "authority": {"const": false},
+        "mainnet": {"const": false},
+        "wallet_required": {"const": false},
+        "signing_required": {"const": false},
+        "transaction_submission": {"const": false},
+        "capital_movement": {"const": false}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "disposition": {"const": "ELIGIBLE"}
+            },
+            "required": ["disposition"]
+          },
+          "then": {
+            "properties": {
+              "chain_id": {"type": "string", "minLength": 1},
+              "terms_review": {
+                "properties": {
+                  "status": {"const": "reviewed"},
+                  "reference": {"type": "string", "minLength": 1},
+                  "reviewed_at": {"type": "string", "format": "date-time"}
+                }
+              },
+              "review_evidence": {"minItems": 1},
+              "reviewed_at": {"type": "string", "format": "date-time"}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,90 @@
+name: Alpha Doctor v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/alpha_doctor.py"
+      - "registry/alpha_testnet_sources_v0_1.json"
+      - "schemas/alpha_testnet_source_registry_v0_1.schema.json"
+      - "tests/test_alpha_doctor_v0_1.py"
+      - "docs/alpha/ALPHA_DOCTOR_AND_SOURCE_REGISTRY_v0_1.md"
+      - "pyproject.toml"
+      - ".github/workflows/alpha-doctor-v0-1-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alpha-doctor-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  alpha-doctor:
+    name: Alpha doctor (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Checkout without retained credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test,dev]'
+
+      - name: Compile doctor
+        run: python -m py_compile eve_q/alpha_doctor.py
+
+      - name: Run focused tests
+        run: |
+          python -m pytest \
+            -o addopts='' \
+            -q \
+            --strict-markers \
+            tests/test_alpha_doctor_v0_1.py
+
+      - name: Run lint on focused surfaces
+        run: |
+          python -m ruff check \
+            eve_q/alpha_doctor.py \
+            tests/test_alpha_doctor_v0_1.py
+
+      - name: Exercise summary-first CLI
+        run: |
+          codex-alpha-doctor \
+            --acknowledge-dirty \
+            --json \
+            --output alpha-doctor-result.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("alpha-doctor-result.json").read_text(encoding="utf-8"))
+          assert payload["status"] == "READY_WITH_WARNINGS"
+          assert payload["source_registry"]["valid"] is True
+          assert payload["source_registry"]["eligible_source_count"] == 0
+          assert payload["gate_posture"]["gate_1a"] == "ACTIVE_FOR_APPROVED_ALPHA_RUNS"
+          assert payload["gate_posture"]["gate_2"] == "LOCKED"
+          assert payload["authority"]["authority"] is False
+          assert payload["authority"]["network_capture_allowed"] is False
+          assert payload["authority"]["may_generate_live_proposal"] is False
+          assert payload["authority"]["may_execute"] is False
+          assert payload["authority"]["may_sign"] is False
+          assert payload["authority"]["may_submit_transaction"] is False
+          assert payload["authority"]["may_move_capital"] is False
+          PY

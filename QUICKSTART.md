@@ -31,6 +31,24 @@ On Termux, activate with:
 source .venv/bin/activate
 ```
 
+## Explain the Gate 1A alpha environment
+
+Before any public testnet observation, run:
+
+```bash
+codex-alpha-doctor
+```
+
+For machine-readable output:
+
+```bash
+codex-alpha-doctor --json
+```
+
+The doctor reports `READY`, `READY_WITH_WARNINGS`, or `HOLD` while keeping Gate 2, execution, signing, transactions, and capital locked. The initial reviewed registry intentionally contains zero eligible public testnet sources, so `READY_WITH_WARNINGS` is the expected result until a source review is completed and merged.
+
+Read [`docs/alpha/ALPHA_DOCTOR_AND_SOURCE_REGISTRY_v0_1.md`](docs/alpha/ALPHA_DOCTOR_AND_SOURCE_REGISTRY_v0_1.md).
+
 ## Run the deterministic built-in example
 
 ```bash
