@@ -136,6 +136,37 @@ Gate 3 TESTNET_MANUAL_EXTERNAL: LOCKED
 
 Gate 1A requires no wallet, seed phrase, signing key, write credential, or transaction. It uses public testnet observations only and preserves `EXECUTION=LOCKED`.
 
+## Translate telemetry into a reviewed local draft
+
+After a source has earned `ELIGIBLE` status and a Gate 1A bundle has passed replay, build a deterministic draft:
+
+```bash
+codex-telemetry-draft build \
+  --bundle "$HOME/codex-alpha-runs/<RUN_ID>" \
+  --mapping artifacts/alpha-mapping.json \
+  --assumptions artifacts/alpha-assumptions.json \
+  --output-dir artifacts/<RUN_ID>-draft
+```
+
+The output keeps observed values, deterministic transformations, operator assumptions, and missing economic inputs in separate compartments. The first result remains `DRAFT_UNREVIEWED`, `LOCAL SIMULATION ELIGIBLE=false`, and `EXECUTION=LOCKED`.
+
+An operator may review only the exact immutable draft hash:
+
+```bash
+codex-telemetry-draft review \
+  --draft artifacts/<RUN_ID>-draft/draft.json \
+  --expected-draft-hash <64-character-draft-hash> \
+  --decision REVIEWED_FOR_LOCAL_SIMULATION \
+  --reviewer "Architect" \
+  --reviewed-at 2026-08-05T00:32:00Z \
+  --note "Exact draft reviewed for local simulation only." \
+  --output-dir artifacts/<RUN_ID>-reviewed
+```
+
+This review grants only local simulation eligibility. It does not invoke `codex-research`, create Gate 2 authority, sign anything, submit a transaction, or move capital.
+
+Read [`docs/alpha/TELEMETRY_DRAFT_FIXTURE_ADAPTER_v0_1.md`](docs/alpha/TELEMETRY_DRAFT_FIXTURE_ADAPTER_v0_1.md).
+
 ## Verify the complete simulation-safe repository
 
 ```bash
