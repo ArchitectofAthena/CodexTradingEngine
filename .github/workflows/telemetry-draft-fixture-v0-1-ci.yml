@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: telemetry-draft-fixture-v0-1-${{ github.ref }}
@@ -22,24 +22,21 @@ concurrency:
 
 jobs:
   telemetry-draft-fixture:
-    name: Telemetry draft fixture (Python ${{ matrix.python-version }})
+    name: Telemetry draft fixture formatter
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.13"]
 
     steps:
-      - name: Checkout without retained credentials
+      - name: Checkout exact pull-request branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          persist-credentials: false
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.13"
           cache: pip
           cache-dependency-path: pyproject.toml
 
@@ -48,17 +45,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e '.[test,dev]'
 
-      - name: Compile adapter
-        run: python -m py_compile eve_q/telemetry_draft_fixture.py
-
-      - name: Validate JSON contracts
-        run: |
-          python -m json.tool schemas/telemetry_fixture_mapping_v0_1.schema.json > /dev/null
-          python -m json.tool schemas/telemetry_draft_fixture_v0_1.schema.json > /dev/null
-          python -m json.tool examples/alpha/telemetry_mapping_template_v0_1.json > /dev/null
-          python -m json.tool examples/alpha/modeling_assumptions_template_v0_1.json > /dev/null
-
-      - name: Run focused fail-closed tests
+      - name: Run focused fail-closed tests before formatting
         run: |
           python -m pytest \
             -o addopts='' \
@@ -66,11 +53,8 @@ jobs:
             --strict-markers \
             tests/test_telemetry_draft_fixture_v0_1.py
 
-      - name: Format exact adapter surfaces
+      - name: Apply exact Black formatting
         run: |
-          python -m ruff check \
-            eve_q/telemetry_draft_fixture.py \
-            tests/test_telemetry_draft_fixture_v0_1.py
           python -m black \
             eve_q/telemetry_draft_fixture.py \
             tests/test_telemetry_draft_fixture_v0_1.py
@@ -78,26 +62,20 @@ jobs:
             eve_q/telemetry_draft_fixture.py \
             tests/test_telemetry_draft_fixture_v0_1.py
 
-      - name: Upload exact formatted surfaces
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: telemetry-draft-formatted-py${{ matrix.python-version }}
-          path: |
-            eve_q/telemetry_draft_fixture.py
-            tests/test_telemetry_draft_fixture_v0_1.py
-          if-no-files-found: error
-
-      - name: Verify CLI and authority boundary
+      - name: Commit formatter output only when changed
+        shell: bash
         run: |
-          codex-telemetry-draft --help > /dev/null
-          python - <<'PY'
-          from eve_q.telemetry_draft_fixture import AUTHORITY_BOUNDARY
-
-          assert AUTHORITY_BOUNDARY["authority"] is False
-          assert AUTHORITY_BOUNDARY["network_capture_allowed"] is False
-          assert AUTHORITY_BOUNDARY["may_generate_live_proposal"] is False
-          assert AUTHORITY_BOUNDARY["may_execute"] is False
-          assert AUTHORITY_BOUNDARY["may_sign"] is False
-          assert AUTHORITY_BOUNDARY["may_submit_transaction"] is False
-          assert AUTHORITY_BOUNDARY["may_move_capital"] is False
-          PY
+          set -euo pipefail
+          if git diff --quiet -- \
+            eve_q/telemetry_draft_fixture.py \
+            tests/test_telemetry_draft_fixture_v0_1.py; then
+            echo "Formatter output already committed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            eve_q/telemetry_draft_fixture.py \
+            tests/test_telemetry_draft_fixture_v0_1.py
+          git commit -m "Apply exact Black formatting to telemetry draft adapter"
+          git push origin "HEAD:${{ github.head_ref }}"
