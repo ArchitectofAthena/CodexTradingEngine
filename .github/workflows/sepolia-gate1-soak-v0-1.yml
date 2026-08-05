@@ -4,30 +4,34 @@ on:
   pull_request:
     paths:
       - "eve_q/sepolia_soak_campaign.py"
+      - "schemas/gate1_sepolia_soak_summary_v0_1.schema.json"
       - "tests/test_sepolia_soak_campaign_v0_1.py"
+      - "registry/alpha_testnet_sources_v0_1.json"
+      - "registry/source_specs/ethereum_sepolia_blockscout_stats_v0_1.json"
+      - "docs/source-reviews/ETHEREUM_SEPOLIA_BLOCKSCOUT_STATS_v0_1.md"
+      - "docs/alpha/SEPOLIA_GATE1_SOAK_CAMPAIGN_v0_1.md"
       - "pyproject.toml"
       - ".github/workflows/sepolia-gate1-soak-v0-1.yml"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: sepolia-gate1-soak-v0-1-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  soak-formatter:
-    name: Sepolia soak formatter
+  bounded-soak:
+    name: One explicit 25-capture Sepolia soak
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout exact pull-request branch
+      - name: Checkout without retained credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.head_ref }}
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
@@ -41,7 +45,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e '.[test,dev]'
 
-      - name: Run synthetic suite before formatting
+      - name: Compile and validate contracts
+        run: |
+          python -m py_compile eve_q/sepolia_soak_campaign.py
+          python -m json.tool schemas/gate1_sepolia_soak_summary_v0_1.schema.json > /dev/null
+          python -m json.tool registry/alpha_testnet_sources_v0_1.json > /dev/null
+          python -m json.tool registry/source_specs/ethereum_sepolia_blockscout_stats_v0_1.json > /dev/null
+
+      - name: Run synthetic fail-closed campaign suite
         run: |
           python -m pytest \
             -o addopts='' \
@@ -50,14 +61,8 @@ jobs:
             tests/test_sepolia_soak_campaign_v0_1.py \
             tests/test_sepolia_blockscout_source_v0_1.py
 
-      - name: Apply exact Ruff and Black formatting
+      - name: Run focused lint and format checks
         run: |
-          python -m ruff check --fix \
-            eve_q/sepolia_soak_campaign.py \
-            tests/test_sepolia_soak_campaign_v0_1.py
-          python -m black \
-            eve_q/sepolia_soak_campaign.py \
-            tests/test_sepolia_soak_campaign_v0_1.py
           python -m ruff check \
             eve_q/sepolia_soak_campaign.py \
             tests/test_sepolia_soak_campaign_v0_1.py
@@ -65,29 +70,85 @@ jobs:
             eve_q/sepolia_soak_campaign.py \
             tests/test_sepolia_soak_campaign_v0_1.py
 
-      - name: Re-run synthetic suite
+      - name: Execute one fixed-count live-read-only campaign
+        env:
+          EVE_Q_GATE1_PILOT: "1"
+          EVE_Q_GATE1_KILL_SWITCH: "0"
         run: |
-          python -m pytest \
-            -o addopts='' \
-            -q \
-            --strict-markers \
-            tests/test_sepolia_soak_campaign_v0_1.py \
-            tests/test_sepolia_blockscout_source_v0_1.py
+          codex-gate1-soak25 run \
+            --source-spec registry/source_specs/ethereum_sepolia_blockscout_stats_v0_1.json \
+            --producer-commit "${{ github.sha }}" \
+            --count 25 \
+            --interval 12 \
+            --output-dir artifacts/sepolia-gate1-soak-v0-1
 
-      - name: Commit formatter output only when changed
-        shell: bash
+      - name: Verify complete soak evidence and locked authority
         run: |
-          set -euo pipefail
-          if git diff --quiet -- \
-            eve_q/sepolia_soak_campaign.py \
-            tests/test_sepolia_soak_campaign_v0_1.py; then
-            echo "Formatter output already committed."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            eve_q/sepolia_soak_campaign.py \
-            tests/test_sepolia_soak_campaign_v0_1.py
-          git commit -m "Apply exact formatting to Sepolia soak surfaces"
-          git push origin "HEAD:${{ github.head_ref }}"
+          codex-gate1-soak25 verify-summary \
+            --summary artifacts/sepolia-gate1-soak-v0-1/summary.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("artifacts/sepolia-gate1-soak-v0-1")
+          summary = json.loads((root / "summary.json").read_text(encoding="utf-8"))
+          results = summary["results"]
+
+          assert summary["status"] == "PASS"
+          assert summary["source"]["source_id"] == (
+              "ethereum-sepolia-blockscout-stats-v0-1"
+          )
+          assert summary["source"]["chain_id"] == "11155111"
+          assert summary["source"]["host"] == "eth-sepolia.blockscout.com"
+          assert summary["source"]["method"] == "GET"
+          assert summary["campaign"]["capture_count"] == 25
+          assert summary["campaign"]["interval_seconds"] == 12
+          assert summary["campaign"]["maximum_requests_per_minute"] == 5
+          assert summary["campaign"]["automatic_recurrence"] is False
+          assert results["captures_requested"] == 25
+          assert results["captures_attempted"] == 25
+          assert results["captures_accepted"] == 25
+          assert results["captures_rejected"] == 0
+          assert results["rollbacks"] == 0
+          assert results["corpus_replayed"] == 25
+          assert results["all_accepted_snapshots_replayed"] is True
+          assert len(summary["accepted_evidence"]) == 25
+          assert len(summary["replay_records"]) == 25
+          assert all(item["valid"] for item in summary["replay_records"])
+          assert all(value == 0 for value in summary["counts"].values())
+
+          boundary = summary["authority"]
+          assert boundary["authority"] is False
+          assert boundary["artifact_is_command"] is False
+          assert boundary["network_capture_allowed_outside_campaign"] is False
+          assert boundary["may_generate_live_proposal"] is False
+          assert boundary["may_execute"] is False
+          assert boundary["may_sign"] is False
+          assert boundary["may_submit_transaction"] is False
+          assert boundary["may_move_capital"] is False
+
+          captures = sorted((root / "captures").glob("*/snapshot.json"))
+          assert len(captures) == 25
+          for path in captures:
+              snapshot = json.loads(path.read_text(encoding="utf-8"))
+              assert snapshot["source"]["source_id"] == (
+                  "ethereum-sepolia-blockscout-stats-v0-1"
+              )
+              assert snapshot["source"]["method"] == "GET"
+              assert snapshot["source"]["allowlisted_host"] == (
+                  "eth-sepolia.blockscout.com"
+              )
+              assert snapshot["authority"] is False
+              assert snapshot["may_generate_live_proposal"] is False
+              assert snapshot["may_execute"] is False
+              assert snapshot["may_move_capital"] is False
+          PY
+
+      - name: Upload bounded soak corpus
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: sepolia-gate1-soak-v0-1
+          path: artifacts/sepolia-gate1-soak-v0-1
+          if-no-files-found: warn
+          retention-days: 14
