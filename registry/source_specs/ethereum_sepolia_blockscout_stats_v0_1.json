@@ -1,0 +1,11 @@
+{
+  "allowed_hosts": [
+    "eth-sepolia.blockscout.com"
+  ],
+  "freshness_ttl_seconds": 120,
+  "max_response_bytes": 131072,
+  "source_id": "ethereum-sepolia-blockscout-stats-v0-1",
+  "source_kind": "onchain_snapshot",
+  "timeout_seconds": 10.0,
+  "url": "https://eth-sepolia.blockscout.com/api/v2/stats"
+}
