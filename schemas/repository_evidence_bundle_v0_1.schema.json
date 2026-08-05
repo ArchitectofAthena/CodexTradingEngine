@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://architectofathena.example/schemas/repository_evidence_bundle_v0_1.schema.json",
+  "title": "Repository Evidence Bundle v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "producer",
+    "repository",
+    "base_ref",
+    "head_ref",
+    "head_sha",
+    "generated_at",
+    "authority",
+    "changed_files",
+    "manifest_hashes",
+    "redaction",
+    "diff",
+    "bundle_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "repository.evidence_bundle.v0.1"},
+    "producer": {"type": "string", "minLength": 1, "maxLength": 128},
+    "repository": {"type": "string", "minLength": 1, "maxLength": 256},
+    "base_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "head_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_is_command",
+        "human_promotion_required",
+        "may_merge",
+        "may_write_repository",
+        "may_deploy",
+        "may_execute",
+        "may_sign",
+        "may_broadcast",
+        "may_move_capital"
+      ],
+      "properties": {
+        "artifact_is_command": {"const": false},
+        "human_promotion_required": {"const": true},
+        "may_merge": {"const": false},
+        "may_write_repository": {"const": false},
+        "may_deploy": {"const": false},
+        "may_execute": {"const": false},
+        "may_sign": {"const": false},
+        "may_broadcast": {"const": false},
+        "may_move_capital": {"const": false}
+      }
+    },
+    "changed_files": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "path"],
+        "properties": {
+          "status": {"type": "string", "pattern": "^[ACDMRTUXB?](?:[0-9]{1,3})?$"},
+          "path": {"type": "string", "minLength": 1, "maxLength": 4096}
+        }
+      }
+    },
+    "manifest_hashes": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "size_bytes"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "size_bytes": {"type": "integer", "minimum": 0, "maximum": 10485760}
+        }
+      }
+    },
+    "redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["secret_shaped_lines", "excluded_paths", "truncated"],
+      "properties": {
+        "secret_shaped_lines": {"type": "integer", "minimum": 0},
+        "excluded_paths": {"type": "integer", "minimum": 0},
+        "truncated": {"type": "boolean"}
+      }
+    },
+    "diff": {"type": "string", "maxLength": 300000},
+    "bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
