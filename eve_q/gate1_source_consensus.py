@@ -15,13 +15,12 @@ import json
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
 from jsonschema import Draft202012Validator, FormatChecker
-
 
 CONTRACT_VERSION = "codex-gate1-source-consensus-v0.1"
 ARTIFACT_TYPE = "Gate1SourceConsensusDecision"
@@ -133,7 +132,7 @@ def parse_utc(value: str, field: str) -> datetime:
         raise SourceConsensusError(f"invalid date-time at {field}") from exc
     if parsed.tzinfo is None:
         raise SourceConsensusError(f"date-time must include timezone at {field}")
-    return parsed.astimezone(timezone.utc)
+    return parsed.astimezone(UTC)
 
 
 def decimal_value(value: Any, field: str) -> Decimal:
@@ -170,9 +169,7 @@ def _schema_errors(document: Any, schema: Mapping[str, Any]) -> tuple[str, ...]:
 def require_schema(document: Any, schema: Mapping[str, Any], label: str) -> None:
     errors = _schema_errors(document, schema)
     if errors:
-        raise SourceConsensusError(
-            f"{label} schema validation failed: " + "; ".join(errors[:8])
-        )
+        raise SourceConsensusError(f"{label} schema validation failed: " + "; ".join(errors[:8]))
 
 
 def _load_json(path: Path) -> Any:
@@ -206,9 +203,7 @@ def normalize_observation(
         factor = Decimal("1")
         factor_text = "1"
         if unit != comparison_unit:
-            raise SourceConsensusError(
-                f"{source_id} identity conversion cannot change units"
-            )
+            raise SourceConsensusError(f"{source_id} identity conversion cannot change units")
     elif kind == "decimal_scale":
         factor = decimal_value(factor_text, f"{source_id}.conversion.factor")
     else:
@@ -277,9 +272,7 @@ def _decision(
             "observed_min": decimal_string(values[0]) if values else None,
             "observed_max": decimal_string(values[-1]) if values else None,
             "conflict_magnitude": (
-                decimal_string(conflict_magnitude)
-                if conflict_magnitude is not None
-                else None
+                decimal_string(conflict_magnitude) if conflict_magnitude is not None else None
             ),
             "aggregate_value": None,
             "aggregation_performed": False,
@@ -471,7 +464,9 @@ def verify_decision(
         findings.append("aggregation_performed must remain false")
     counts = decision.get("counts", {})
     if any(counts.get(key) != 0 for key in ZERO_COUNTS):
-        findings.append("all proposal, signing, transaction, execution, and capital counts must be zero")
+        findings.append(
+            "all proposal, signing, transaction, execution, and capital counts must be zero"
+        )
     authority = decision.get("authority", {})
     for key, expected in AUTHORITY_BOUNDARY.items():
         if authority.get(key) is not expected:

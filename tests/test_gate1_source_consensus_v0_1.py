@@ -11,7 +11,6 @@ from eve_q.gate1_source_consensus import (
     verify_decision,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PACKET_SCHEMA = json.loads(
     (ROOT / "schemas" / "gate1_source_consensus_packet_v0_1.schema.json").read_text(
