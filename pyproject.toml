@@ -27,6 +27,7 @@ codex-gate1-consensus = "eve_q.gate1_source_consensus:main"
 codex-gate1-soak25 = "eve_q.sepolia_soak_campaign:main"
 codex-research = "eve_q.research_cli:main"
 codex-telemetry-draft = "eve_q.telemetry_draft_fixture:main"
+codex-viv-gauntlet = "eve_q.viv_adversarial:main"
 omega-context = "omega_telemetry.context_runner:main"
 
 [project.optional-dependencies]
