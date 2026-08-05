@@ -37,9 +37,9 @@ jobs:
         python-version: ['3.11', '3.13']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -108,28 +108,48 @@ jobs:
 
           from eve_q.viv_adversarial import validate_viv_receipt
 
+          expected_receipt_ids = {
+              0: "sha256:e2f10ca5fc6c24e0a688b7e48b6a66104572e78793c769ddc70cfe85124645f6",
+              7331: "sha256:3643d36d35811df70b7b83842918fdda55f39624fba4f0168d694b9bc333fd08",
+              424242: "sha256:3572a57af6571402e2ff9bd15ced378a04efa22bd04d42390730a234abbd893c",
+          }
           summaries = []
           receipt_paths = sorted(Path("artifacts/viv").glob("viv-receipt-*.json"))
-          if len(receipt_paths) != 3:
-              raise SystemExit(f"expected 3 runtime receipts, found {len(receipt_paths)}")
+          if len(receipt_paths) != len(expected_receipt_ids):
+              raise SystemExit(
+                  f"expected {len(expected_receipt_ids)} runtime receipts, found {len(receipt_paths)}"
+              )
 
+          observed_seeds = set()
           for path in receipt_paths:
               receipt = json.loads(path.read_text(encoding="utf-8"))
               validate_viv_receipt(receipt)
+              seed = receipt["seed"]
+              observed_seeds.add(seed)
               if receipt["overall_outcome"] != "pass":
                   raise SystemExit(f"{path}: correction run did not pass")
               if receipt["blocked_count"] != receipt["case_count"]:
                   raise SystemExit(f"{path}: not every configured mutation was blocked")
               if receipt["escaped_count"] != 0 or receipt["repair_required"] is not False:
                   raise SystemExit(f"{path}: escaped mutation or repair flag detected")
+              if receipt["receipt_id"] != expected_receipt_ids.get(seed):
+                  raise SystemExit(
+                      f"{path}: receipt digest drift for seed {seed}: {receipt['receipt_id']}"
+                  )
               summaries.append(
                   {
-                      "seed": receipt["seed"],
+                      "seed": seed,
                       "receipt_id": receipt["receipt_id"],
                       "blocked_count": receipt["blocked_count"],
                       "escaped_count": receipt["escaped_count"],
                       "candidate_unchanged": receipt["candidate_unchanged"],
                   }
+              )
+
+          if observed_seeds != set(expected_receipt_ids):
+              raise SystemExit(
+                  f"seed coverage mismatch: expected {sorted(expected_receipt_ids)}, "
+                  f"observed {sorted(observed_seeds)}"
               )
 
           print(json.dumps({"ok": True, "recursive_runs": summaries}, sort_keys=True))
