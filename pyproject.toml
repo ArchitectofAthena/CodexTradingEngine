@@ -22,6 +22,7 @@ dependencies = [
 codex-alpha-doctor = "eve_q.alpha_doctor:main"
 codex-gate1 = "eve_q.gate1_readonly_runtime:main"
 codex-research = "eve_q.research_cli:main"
+codex-telemetry-draft = "eve_q.telemetry_draft_fixture:main"
 omega-context = "omega_telemetry.context_runner:main"
 
 [project.optional-dependencies]
@@ -72,7 +73,7 @@ select = [
     "ASYNC",
 ]
 ignore = ["E501"]
-per-file-ignores = { "eve_q/alpha_doctor.py" = ["I001", "UP035"], "tests/test_alpha_doctor_v0_1.py" = ["I001"] }
+per-file-ignores = { "eve_q/alpha_doctor.py" = ["I001", "UP035"], "tests/test_alpha_doctor_v0_1.py" = ["I001"], "eve_q/telemetry_draft_fixture.py" = ["I001", "UP017"], "tests/test_telemetry_draft_fixture_v0_1.py" = ["I001", "UP017"] }
 
 [tool.mypy]
 python_version = "3.11"

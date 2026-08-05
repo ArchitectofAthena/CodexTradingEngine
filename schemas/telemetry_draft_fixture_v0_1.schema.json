@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/telemetry_draft_fixture_v0_1.schema.json",
+  "title": "Codex Gate 1A Telemetry Draft Fixture v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "adapter_version",
+    "schema_version",
+    "draft_id",
+    "draft_hash",
+    "draft_material",
+    "freshness",
+    "operator_review",
+    "local_simulation_eligible",
+    "authority"
+  ],
+  "properties": {
+    "artifact_type": {"const": "TelemetryDraftFixture"},
+    "adapter_version": {"const": "codex-telemetry-draft-v0.1"},
+    "schema_version": {"const": "0.1"},
+    "draft_id": {"type": "string", "pattern": "^draft-[0-9a-f]{24}$"},
+    "draft_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "draft_material": {"$ref": "#/$defs/material"},
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "evaluated_at", "expires_at"],
+      "properties": {
+        "state": {"const": "fresh"},
+        "evaluated_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "operator_review": {"$ref": "#/$defs/review"},
+    "local_simulation_eligible": {"type": "boolean"},
+    "authority": {"$ref": "#/$defs/authority"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "artifact_is_command",
+        "network_capture_allowed",
+        "may_generate_live_proposal",
+        "may_execute",
+        "may_sign",
+        "may_submit_transaction",
+        "may_move_capital"
+      ],
+      "properties": {
+        "authority": {"const": false},
+        "artifact_is_command": {"const": false},
+        "network_capture_allowed": {"const": false},
+        "may_generate_live_proposal": {"const": false},
+        "may_execute": {"const": false},
+        "may_sign": {"const": false},
+        "may_submit_transaction": {"const": false},
+        "may_move_capital": {"const": false}
+      }
+    },
+    "material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot",
+        "source_review",
+        "mapping",
+        "network",
+        "observed_fields",
+        "transformed_fields",
+        "inferred_assumptions",
+        "missing_assumptions",
+        "local_route_fixture",
+        "authority"
+      ],
+      "properties": {
+        "snapshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifact_id",
+            "raw_sha256",
+            "normalized_sha256",
+            "observed_at",
+            "expires_at"
+          ],
+          "properties": {
+            "artifact_id": {"$ref": "#/$defs/sha256"},
+            "raw_sha256": {"$ref": "#/$defs/sha256"},
+            "normalized_sha256": {"$ref": "#/$defs/sha256"},
+            "observed_at": {"type": "string", "format": "date-time"},
+            "expires_at": {"type": "string", "format": "date-time"}
+          }
+        },
+        "source_review": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "registry_id",
+            "registry_sha256",
+            "source_id",
+            "source_review_evidence",
+            "source_reviewed_at"
+          ],
+          "properties": {
+            "registry_id": {"const": "codex.gate1a.testnet-source-registry.v0.1"},
+            "registry_sha256": {"$ref": "#/$defs/sha256"},
+            "source_id": {"type": "string", "minLength": 1},
+            "source_review_evidence": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "source_reviewed_at": {"type": "string", "format": "date-time"}
+          }
+        },
+        "mapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mapping_id", "mapping_sha256"],
+          "properties": {
+            "mapping_id": {"type": "string", "minLength": 1},
+            "mapping_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["network_name", "chain_id", "network_class"],
+          "properties": {
+            "network_name": {"type": "string", "minLength": 1},
+            "chain_id": {"type": "string", "minLength": 1},
+            "network_class": {"const": "testnet"}
+          }
+        },
+        "observed_fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "target_field",
+              "source_pointer",
+              "original_value",
+              "unit",
+              "observed_at"
+            ],
+            "properties": {
+              "target_field": {"type": "string", "minLength": 1},
+              "source_pointer": {"type": "string", "pattern": "^/"},
+              "original_value": {},
+              "unit": {"type": "string", "minLength": 1},
+              "observed_at": {"type": "string", "format": "date-time"}
+            }
+          }
+        },
+        "transformed_fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "target_field",
+              "input_value",
+              "output_value",
+              "input_unit",
+              "output_unit",
+              "conversion"
+            ],
+            "properties": {
+              "target_field": {"type": "string", "minLength": 1},
+              "input_value": {},
+              "output_value": {},
+              "input_unit": {"type": "string", "minLength": 1},
+              "output_unit": {"type": "string", "minLength": 1},
+              "conversion": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "inferred_assumptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["field", "value", "unit", "basis", "operator_supplied"],
+            "properties": {
+              "field": {"type": "string", "minLength": 1},
+              "value": {},
+              "unit": {"type": "string", "minLength": 1},
+              "basis": {"type": "string", "minLength": 1},
+              "operator_supplied": {"const": true}
+            }
+          }
+        },
+        "missing_assumptions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "gas_cost_eth",
+              "fee_cost_eth",
+              "liquidity_eth",
+              "latency_ms",
+              "slippage_eth",
+              "bridge_cost_eth",
+              "safety_margin_eth"
+            ]
+          }
+        },
+        "local_route_fixture": {
+          "type": "object",
+          "minProperties": 3
+        },
+        "authority": {"$ref": "#/$defs/authority"}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reviewed_draft_hash", "reviewer", "reviewed_at", "note"],
+      "properties": {
+        "state": {
+          "enum": [
+            "DRAFT_UNREVIEWED",
+            "RETURN_FOR_EVIDENCE",
+            "REVIEWED_FOR_LOCAL_SIMULATION",
+            "REJECTED"
+          ]
+        },
+        "reviewed_draft_hash": {
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]
+        },
+        "reviewer": {"type": ["string", "null"]},
+        "reviewed_at": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "format": "date-time"}
+          ]
+        },
+        "note": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

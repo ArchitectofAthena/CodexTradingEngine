@@ -1,0 +1,26 @@
+{
+  "mapping_id": "replace-with-reviewed-testnet-mapping",
+  "schema_version": "0.1",
+  "source_id": "replace-with-eligible-source-id",
+  "network_name": "replace-with-reviewed-testnet-name",
+  "chain_id": "replace-with-reviewed-testnet-chain-id",
+  "route_id": "replace-with-local-route-id",
+  "observations": [
+    {
+      "target_field": "expected_profit_eth",
+      "source_pointer": "/normalized_payload/replace/with/exact/source/path",
+      "source_unit": "wei",
+      "target_unit": "ETH",
+      "transform": {
+        "kind": "decimal_scale",
+        "factor": "0.000000000000000001"
+      }
+    }
+  ],
+  "authority": false,
+  "may_generate_live_proposal": false,
+  "may_execute": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "may_move_capital": false
+}

@@ -1,0 +1,91 @@
+name: Telemetry Draft Fixture v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/telemetry_draft_fixture.py"
+      - "schemas/telemetry_fixture_mapping_v0_1.schema.json"
+      - "schemas/telemetry_draft_fixture_v0_1.schema.json"
+      - "tests/test_telemetry_draft_fixture_v0_1.py"
+      - "docs/alpha/TELEMETRY_DRAFT_FIXTURE_ADAPTER_v0_1.md"
+      - "examples/alpha/**"
+      - "pyproject.toml"
+      - ".github/workflows/telemetry-draft-fixture-v0-1-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: telemetry-draft-fixture-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  telemetry-draft-fixture:
+    name: Telemetry draft fixture (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Checkout without retained credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test,dev]'
+
+      - name: Compile adapter
+        run: python -m py_compile eve_q/telemetry_draft_fixture.py
+
+      - name: Validate JSON contracts
+        run: |
+          python -m json.tool schemas/telemetry_fixture_mapping_v0_1.schema.json > /dev/null
+          python -m json.tool schemas/telemetry_draft_fixture_v0_1.schema.json > /dev/null
+          python -m json.tool examples/alpha/telemetry_mapping_template_v0_1.json > /dev/null
+          python -m json.tool examples/alpha/modeling_assumptions_template_v0_1.json > /dev/null
+
+      - name: Run focused fail-closed tests
+        run: |
+          python -m pytest \
+            -o addopts='' \
+            -q \
+            --strict-markers \
+            tests/test_telemetry_draft_fixture_v0_1.py
+
+      - name: Run focused lint and format checks
+        run: |
+          python -m ruff check \
+            eve_q/telemetry_draft_fixture.py \
+            tests/test_telemetry_draft_fixture_v0_1.py
+          python -m black --check \
+            eve_q/telemetry_draft_fixture.py \
+            tests/test_telemetry_draft_fixture_v0_1.py
+
+      - name: Verify CLI and authority boundary
+        run: |
+          codex-telemetry-draft --help > /dev/null
+          python - <<'PY'
+          from eve_q.telemetry_draft_fixture import AUTHORITY_BOUNDARY
+
+          assert AUTHORITY_BOUNDARY["authority"] is False
+          assert AUTHORITY_BOUNDARY["network_capture_allowed"] is False
+          assert AUTHORITY_BOUNDARY["may_generate_live_proposal"] is False
+          assert AUTHORITY_BOUNDARY["may_execute"] is False
+          assert AUTHORITY_BOUNDARY["may_sign"] is False
+          assert AUTHORITY_BOUNDARY["may_submit_transaction"] is False
+          assert AUTHORITY_BOUNDARY["may_move_capital"] is False
+          PY
