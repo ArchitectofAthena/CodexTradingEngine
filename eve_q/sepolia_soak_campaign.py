@@ -45,7 +45,6 @@ from eve_q.gate1_readonly_runtime import (
 )
 from eve_q.live_read_only_telemetry import iso_z
 
-
 CONTRACT_VERSION = "codex-sepolia-gate1-soak-v0.1"
 ARTIFACT_TYPE = "Gate1SepoliaSoakSummary"
 SOURCE_ID = "ethereum-sepolia-blockscout-stats-v0-1"
@@ -76,14 +75,9 @@ AUTHORITY_BOUNDARY = {
 
 _ROOT = Path(__file__).resolve().parents[1]
 _DEFAULT_REGISTRY = _ROOT / "registry" / "alpha_testnet_sources_v0_1.json"
-_DEFAULT_REGISTRY_SCHEMA = (
-    _ROOT / "schemas" / "alpha_testnet_source_registry_v0_1.schema.json"
-)
+_DEFAULT_REGISTRY_SCHEMA = _ROOT / "schemas" / "alpha_testnet_source_registry_v0_1.schema.json"
 _DEFAULT_SOURCE_SPEC = (
-    _ROOT
-    / "registry"
-    / "source_specs"
-    / "ethereum_sepolia_blockscout_stats_v0_1.json"
+    _ROOT / "registry" / "source_specs" / "ethereum_sepolia_blockscout_stats_v0_1.json"
 )
 _DEFAULT_SUMMARY_SCHEMA = _ROOT / "schemas" / "gate1_sepolia_soak_summary_v0_1.schema.json"
 
@@ -159,9 +153,7 @@ def _require_schema(document: Any, schema: Mapping[str, Any], label: str) -> Non
 
 def _find_reviewed_source(registry: Mapping[str, Any]) -> Mapping[str, Any]:
     matches = [
-        source
-        for source in registry.get("sources", [])
-        if source.get("source_id") == SOURCE_ID
+        source for source in registry.get("sources", []) if source.get("source_id") == SOURCE_ID
     ]
     if len(matches) != 1:
         raise SoakCampaignError(
@@ -238,7 +230,9 @@ def validate_campaign_inputs(
     if source.get("chain_id") != CHAIN_ID:
         raise SoakCampaignError("chain_id_mismatch", "Sepolia chain ID drifted")
     if source.get("network_class") != "testnet" or source.get("mainnet") is not False:
-        raise SoakCampaignError("network_boundary_failed", "only reviewed testnet data is permitted")
+        raise SoakCampaignError(
+            "network_boundary_failed", "only reviewed testnet data is permitted"
+        )
     if source.get("allowed_methods") != ["GET"]:
         raise SoakCampaignError("method_boundary_failed", "campaign permits GET only")
     if spec.freshness_ttl_seconds != source.get("freshness_ttl_seconds"):
@@ -624,10 +618,7 @@ def run_fixed_count_soak(
     replayed, replay_records = _replay_corpus(captures_dir, spec=spec)
     attempted = len(records)
     accepted = len(accepted_evidence)
-    rollbacks = sum(
-        record["outcome"] == "REJECTED_AND_ROLLED_BACK_TO_GATE_0"
-        for record in records
-    )
+    rollbacks = sum(record["outcome"] == "REJECTED_AND_ROLLED_BACK_TO_GATE_0" for record in records)
     rejected = rollbacks
     all_replayed = replayed == accepted
     status = (
@@ -704,8 +695,7 @@ def run_fixed_count_soak(
 
     (output_dir / "records.jsonl").write_text(
         "".join(
-            json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n"
-            for record in records
+            json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n" for record in records
         ),
         encoding="utf-8",
     )
@@ -737,7 +727,9 @@ def verify_summary(
             findings.append(f"authority.{key} must be {str(expected).lower()}")
     counts = summary.get("counts", {})
     if any(counts.get(key) != 0 for key in counts):
-        findings.append("all proposal, signing, transaction, execution, and capital counts must be zero")
+        findings.append(
+            "all proposal, signing, transaction, execution, and capital counts must be zero"
+        )
     return tuple(sorted(set(findings)))
 
 

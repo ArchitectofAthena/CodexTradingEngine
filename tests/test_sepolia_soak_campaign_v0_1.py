@@ -20,12 +20,9 @@ from eve_q.sepolia_soak_campaign import (
     verify_summary,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = json.loads(
-    (ROOT / "registry" / "alpha_testnet_sources_v0_1.json").read_text(
-        encoding="utf-8"
-    )
+    (ROOT / "registry" / "alpha_testnet_sources_v0_1.json").read_text(encoding="utf-8")
 )
 REGISTRY_SCHEMA = json.loads(
     (ROOT / "schemas" / "alpha_testnet_source_registry_v0_1.schema.json").read_text(
@@ -33,17 +30,12 @@ REGISTRY_SCHEMA = json.loads(
     )
 )
 SUMMARY_SCHEMA = json.loads(
-    (ROOT / "schemas" / "gate1_sepolia_soak_summary_v0_1.schema.json").read_text(
-        encoding="utf-8"
-    )
+    (ROOT / "schemas" / "gate1_sepolia_soak_summary_v0_1.schema.json").read_text(encoding="utf-8")
 )
 SOURCE_SPEC = SourceSpec.from_dict(
     json.loads(
         (
-            ROOT
-            / "registry"
-            / "source_specs"
-            / "ethereum_sepolia_blockscout_stats_v0_1.json"
+            ROOT / "registry" / "source_specs" / "ethereum_sepolia_blockscout_stats_v0_1.json"
         ).read_text(encoding="utf-8")
     )
 )
@@ -159,9 +151,7 @@ def test_identical_evidence_reproduces_the_same_receipt(tmp_path: Path) -> None:
     second = run(tmp_path / "second")
 
     assert first["receipt_sha256"] == second["receipt_sha256"]
-    assert first["results"]["record_ledger_sha256"] == second["results"][
-        "record_ledger_sha256"
-    ]
+    assert first["results"]["record_ledger_sha256"] == second["results"]["record_ledger_sha256"]
 
 
 def test_partial_outage_stops_and_rolls_back(tmp_path: Path) -> None:
