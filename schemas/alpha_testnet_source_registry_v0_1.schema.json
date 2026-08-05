@@ -86,7 +86,6 @@
         "concentration_risk_note",
         "review_evidence",
         "reviewed_at",
-        "review_expires_at",
         "authority",
         "mainnet",
         "wallet_required",
