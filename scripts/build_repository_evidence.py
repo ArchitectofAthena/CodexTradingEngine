@@ -140,7 +140,10 @@ SECRET_PATTERNS = [
     re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b"),
     re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b"),
     re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
-    re.compile(r"(?i)\b(?:api[_-]?key|access[_-]?token|auth[_-]?token|client[_-]?secret|password|private[_-]?key|secret)\b\s*[:=]\s*[^\s,;]{6,}"),
+    re.compile(
+        r"(?i)\b(?:api[_-]?key|access[_-]?token|auth[_-]?token|client[_-]?secret|"
+        r"password|private[_-]?key|secret)\b\s*[:=]\s*[^\s,;]{6,}"
+    ),
     re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
 ]
 
@@ -166,20 +169,34 @@ def run_git(repo: Path, *args: str, check: bool = True) -> str:
 
 
 def normalize_path(raw: str) -> str:
-    value = raw.replace("\\", "/").lstrip("./")
+    """Normalize a Git path without erasing a meaningful leading dot.
+
+    ``str.lstrip('./')`` is not prefix removal: it removes every leading dot and
+    slash character. That transformed ``.github/...`` into ``github/...`` and
+    silently excluded workflow files from the allowlist. Remove only explicit
+    current-directory prefixes and preserve hidden repository paths verbatim.
+    """
+
+    value = raw.replace("\\", "/")
+    while value.startswith("./"):
+        value = value[2:]
     return str(PurePosixPath(value))
 
 
 def path_allowed(path: str) -> bool:
     normalized = normalize_path(path)
-    parts = set(PurePosixPath(normalized).parts)
+    candidate = PurePosixPath(normalized)
+    if normalized in {"", "."} or candidate.is_absolute() or ".." in candidate.parts:
+        return False
+
+    parts = set(candidate.parts)
     if parts & DENY_PARTS:
         return False
-    suffix = PurePosixPath(normalized).suffix.lower()
-    if suffix in DENY_SUFFIXES:
+
+    if candidate.suffix.lower() in DENY_SUFFIXES:
         return False
-    basename = PurePosixPath(normalized).name
-    return basename in ALLOW_BASENAMES or normalized.startswith(ALLOW_PREFIXES)
+
+    return candidate.name in ALLOW_BASENAMES or normalized.startswith(ALLOW_PREFIXES)
 
 
 def changed_files(repo: Path, base_ref: str, head_ref: str) -> list[dict[str, str]]:
@@ -189,17 +206,13 @@ def changed_files(repo: Path, base_ref: str, head_ref: str) -> list[dict[str, st
         if not line.strip():
             continue
         fields = line.split("\t")
-        status = fields[0]
-        path = fields[-1]
-        rows.append({"status": status, "path": normalize_path(path)})
+        rows.append({"status": fields[0], "path": normalize_path(fields[-1])})
     return rows[:1000]
 
 
 def redact_line(line: str) -> tuple[str, bool]:
     if any(pattern.search(line) for pattern in SECRET_PATTERNS):
-        prefix = ""
-        if line.startswith(("+", "-", " ")):
-            prefix = line[0]
+        prefix = line[0] if line.startswith(("+", "-", " ")) else ""
         return f"{prefix}[REDACTED_SECRET_SHAPE]", True
     return line, False
 
@@ -246,12 +259,12 @@ def bounded_diff(
 def manifest_hashes(repo: Path) -> tuple[list[dict[str, object]], int]:
     entries: list[dict[str, object]] = []
     excluded = 0
-    output = run_git(repo, "ls-files")
-    for raw_path in output.splitlines():
+    for raw_path in run_git(repo, "ls-files").splitlines():
         path = normalize_path(raw_path)
         if not path_allowed(path):
             excluded += 1
             continue
+
         full = repo / path
         try:
             size = full.stat().st_size
@@ -260,10 +273,17 @@ def manifest_hashes(repo: Path) -> tuple[list[dict[str, object]], int]:
         if size > MAX_HASH_FILE_BYTES or not full.is_file():
             excluded += 1
             continue
-        digest = hashlib.sha256(full.read_bytes()).hexdigest()
-        entries.append({"path": path, "sha256": digest, "size_bytes": size})
+
+        entries.append(
+            {
+                "path": path,
+                "sha256": hashlib.sha256(full.read_bytes()).hexdigest(),
+                "size_bytes": size,
+            }
+        )
         if len(entries) >= 500:
             break
+
     entries.sort(key=lambda item: str(item["path"]))
     return entries, excluded
 
@@ -341,6 +361,7 @@ def main() -> int:
     except Exception as exc:
         print(f"evidence build failed: {exc}", file=sys.stderr)
         return 1
+
     print(f"wrote {args.output} ({bundle['bundle_sha256']})")
     return 0
 
