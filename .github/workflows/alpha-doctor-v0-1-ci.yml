@@ -76,8 +76,12 @@ jobs:
 
           payload = json.loads(Path("alpha-doctor-result.json").read_text(encoding="utf-8"))
           assert payload["status"] == "READY_WITH_WARNINGS"
-          assert payload["source_registry"]["valid"] is True
-          assert payload["source_registry"]["eligible_source_count"] == 0
+          registry = payload["source_registry"]
+          assert registry["valid"] is True
+          assert registry["eligible_source_count"] == 1
+          assert registry["eligible_source_ids"] == [
+              "ethereum-sepolia-blockscout-stats-v0-1"
+          ]
           assert payload["gate_posture"]["gate_1a"] == "ACTIVE_FOR_APPROVED_ALPHA_RUNS"
           assert payload["gate_posture"]["gate_2"] == "LOCKED"
           assert payload["authority"]["authority"] is False

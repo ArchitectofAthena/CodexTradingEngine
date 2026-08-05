@@ -1,0 +1,25 @@
+{
+  "mapping_id": "sepolia-blockscout-stats-to-local-route-v0-1",
+  "schema_version": "0.1",
+  "source_id": "ethereum-sepolia-blockscout-stats-v0-1",
+  "network_name": "Ethereum Sepolia",
+  "chain_id": "11155111",
+  "route_id": "sepolia-stats-rehearsal-route",
+  "observations": [
+    {
+      "target_field": "observed_average_gas_price_gwei",
+      "source_pointer": "/normalized_payload/gas_prices/average",
+      "source_unit": "provider-reported gwei",
+      "target_unit": "provider-reported gwei",
+      "transform": {
+        "kind": "identity"
+      }
+    }
+  ],
+  "authority": false,
+  "may_generate_live_proposal": false,
+  "may_execute": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "may_move_capital": false
+}

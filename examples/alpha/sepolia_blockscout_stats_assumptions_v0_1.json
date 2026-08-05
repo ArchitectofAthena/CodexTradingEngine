@@ -1,0 +1,52 @@
+{
+  "assumptions": [
+    {
+      "field": "expected_profit_eth",
+      "value": "0.020",
+      "unit": "ETH",
+      "basis": "Test-only operator modeling assumption for workflow rehearsal. Not observed telemetry and not production evidence."
+    },
+    {
+      "field": "gas_cost_eth",
+      "value": "0.005",
+      "unit": "ETH",
+      "basis": "Test-only operator modeling assumption. The provider-reported gas observation remains separately recorded and does not silently set this value."
+    },
+    {
+      "field": "fee_cost_eth",
+      "value": "0.001",
+      "unit": "ETH",
+      "basis": "Test-only operator modeling assumption for workflow rehearsal."
+    },
+    {
+      "field": "liquidity_eth",
+      "value": "1.0",
+      "unit": "ETH",
+      "basis": "Test-only operator modeling assumption for workflow rehearsal."
+    },
+    {
+      "field": "latency_ms",
+      "value": "250",
+      "unit": "ms",
+      "basis": "Test-only operator modeling assumption for workflow rehearsal."
+    },
+    {
+      "field": "slippage_eth",
+      "value": "0.001",
+      "unit": "ETH",
+      "basis": "Test-only operator modeling assumption for workflow rehearsal."
+    },
+    {
+      "field": "bridge_cost_eth",
+      "value": "0",
+      "unit": "ETH",
+      "basis": "Test-only operator modeling assumption for a single-chain rehearsal."
+    },
+    {
+      "field": "safety_margin_eth",
+      "value": "0.002",
+      "unit": "ETH",
+      "basis": "Test-only operator modeling assumption for workflow rehearsal."
+    }
+  ]
+}

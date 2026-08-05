@@ -54,9 +54,9 @@ The repository commit is known, the working tree is clean, the installed package
 
 ### READY_WITH_WARNINGS
 
-The environment is explainable, but one or more non-fatal limitations remain. The initial canonical registry intentionally has zero eligible sources, so the expected first result is `READY_WITH_WARNINGS` with public testnet capture still unavailable.
+The environment is explainable, but one or more non-fatal limitations remain.
 
-A missing Rust verifier is also a warning when no Rust workflow is being invoked.
+The canonical registry now contains one time-bounded eligible public-testnet source. A normal checkout with no configured Rust verifier therefore reports `READY_WITH_WARNINGS` because Rust verification is unavailable, not because source eligibility is absent.
 
 ### HOLD
 
@@ -114,9 +114,35 @@ Schema:
 schemas/alpha_testnet_source_registry_v0_1.schema.json
 ```
 
-The initial registry contains no sources. That is deliberate. A source does not become eligible because someone knows its URL or because it returns data.
+The first eligible source is:
 
-An eligible source requires a reviewed testnet identity, chain ID, exact HTTPS host, GET or HEAD transport, freshness and response limits, unit conventions, terms and rate-limit review, provenance grouping, concentration-risk notes, review evidence, and explicit false authority fields.
+```text
+Source ID: ethereum-sepolia-blockscout-stats-v0-1
+Network: Ethereum Sepolia
+Chain ID: 11155111
+Host: eth-sepolia.blockscout.com
+Method: GET
+Endpoint: /api/v2/stats
+Review expires: 2026-09-04T01:12:00Z
+```
+
+Exact source review:
+
+```text
+docs/source-reviews/ETHEREUM_SEPOLIA_BLOCKSCOUT_STATS_v0_1.md
+```
+
+A source does not become eligible merely because someone knows its URL or because it returns data. This source earned a bounded evidence state through network identity review, exact-host transport rules, terms and rate-limit review, a 30-day expiry, and a successful live capture, replay, draft, exact-hash review, and local-simulation rehearsal.
+
+Eligibility remains narrow:
+
+- one GET per explicit approved run;
+- no recurring capture;
+- no credentials;
+- public Sepolia observations only;
+- price-like fields are not executable quotes;
+- testnet results are not production profitability evidence;
+- provider, host, schema, terms, rate-limit, deprecation, or network drift returns the source to HOLD.
 
 Mainnet identifiers, POST methods, IP-literal hosts, embedded credentials, wallet requirements, signing, transaction submission, and capital movement are rejected.
 
@@ -135,8 +161,10 @@ Its authority posture remains:
 - execution locked;
 - capital locked.
 
-## Next recursive slice
+## Current recursive state
 
-After a source earns eligibility, the next child of issue #118 is the deterministic telemetry-to-draft-fixture adapter. That adapter must preserve observed versus inferred fields, units, freshness, hashes, and missing economic assumptions while requiring explicit operator review before simulation.
+The doctor, deterministic telemetry-to-draft adapter, one-run alpha operator, and first reviewed-source rehearsal now exist.
 
-> The doctor explains the feet. It does not take the step.
+The next evidence question is not whether Gate 1A can function once. It is whether the source and workflow remain stable across a bounded, non-recurring soak without silently promoting testnet observations into production claims.
+
+> The doctor explains the feet. The source earned one bounded step. Neither owns the road.
