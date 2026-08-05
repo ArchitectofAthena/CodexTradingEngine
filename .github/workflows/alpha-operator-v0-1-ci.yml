@@ -70,15 +70,10 @@ jobs:
             eve_q/alpha_operator.py \
             tests/test_alpha_operator_v0_1.py
 
-      - name: Exercise canonical no-source HOLD
-        shell: bash
+      - name: Exercise canonical reviewed-source readiness
         run: |
-          set +e
           codex-alpha-run status \
             --output-dir artifacts/alpha-status-ci
-          status=$?
-          set -e
-          test "$status" -eq 2
           python - <<'PY'
           import json
           from pathlib import Path
@@ -89,14 +84,18 @@ jobs:
               )
           )
           surface = payload["result_surface"]
-          assert surface["PIPELINE"] == "HOLD"
-          assert surface["SOURCE"] == "HOLD_NO_ELIGIBLE_SOURCE"
+          assert surface["PIPELINE"] == "READY"
+          assert surface["SOURCE"] == "ELIGIBLE"
           assert surface["FRESHNESS"] == "NOT_RUN"
           assert surface["ECONOMICS"] == "NOT_RUN"
           assert surface["CLASSICAL_BASELINE"] == "NOT_RUN"
           assert surface["QAOA_COMPARISON"] == "NOT_RUN"
           assert surface["EXECUTION"] == "LOCKED"
           assert surface["ROLLBACK"] == "READY"
+          source = payload["source"]
+          assert source["eligible_source_ids"] == [
+              "ethereum-sepolia-blockscout-stats-v0-1"
+          ]
           boundary = payload["boundary"]
           assert boundary["authority"] is False
           assert boundary["network_capture_allowed"] is False
