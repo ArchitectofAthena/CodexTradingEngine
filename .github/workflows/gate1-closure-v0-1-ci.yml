@@ -1,0 +1,105 @@
+name: Gate 1 Closure Packet v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/gate1-closure-v0-1-ci.yml"
+      - "docs/governance/EVE_Q_GATE1_CLOSURE_THREAT_MODEL_v0_1.md"
+      - "docs/telemetry/EVE_Q_GATE1_PILOT_STATUS_v0_1.md"
+      - "eve_q/gate1_closure.py"
+      - "examples/governance/gate1_closure_rollback_receipt_v0_1.json"
+      - "examples/governance/gate1_closure_threat_model_v0_1.json"
+      - "examples/governance/gate_descent_g0_to_g1_ready_v0_1.json"
+      - "pyproject.toml"
+      - "schemas/gate1_closure_threat_model_v0_1.schema.json"
+      - "tests/test_gate1_closure_v0_1.py"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/gate1-closure-v0-1-ci.yml"
+      - "docs/governance/EVE_Q_GATE1_CLOSURE_THREAT_MODEL_v0_1.md"
+      - "docs/telemetry/EVE_Q_GATE1_PILOT_STATUS_v0_1.md"
+      - "eve_q/gate1_closure.py"
+      - "examples/governance/gate1_closure_rollback_receipt_v0_1.json"
+      - "examples/governance/gate1_closure_threat_model_v0_1.json"
+      - "examples/governance/gate_descent_g0_to_g1_ready_v0_1.json"
+      - "pyproject.toml"
+      - "schemas/gate1_closure_threat_model_v0_1.schema.json"
+      - "tests/test_gate1_closure_v0_1.py"
+
+permissions:
+  contents: read
+
+jobs:
+  gate1-closure:
+    name: Gate 1 closure (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Checkout without retained credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test,dev]'
+
+      - name: Compile and validate JSON contracts
+        run: |
+          python -m py_compile eve_q/gate1_closure.py
+          python -m json.tool schemas/gate1_closure_threat_model_v0_1.schema.json > /dev/null
+          python -m json.tool examples/governance/gate1_closure_rollback_receipt_v0_1.json > /dev/null
+          python -m json.tool examples/governance/gate1_closure_threat_model_v0_1.json > /dev/null
+          python -m json.tool examples/governance/gate_descent_g0_to_g1_ready_v0_1.json > /dev/null
+
+      - name: Run focused closure matrix
+        run: |
+          python -m pytest \
+            -o addopts='' \
+            -q \
+            --strict-markers \
+            tests/test_gate1_closure_v0_1.py
+
+      - name: Run focused lint and format checks
+        run: |
+          python -m ruff check \
+            eve_q/gate1_closure.py \
+            tests/test_gate1_closure_v0_1.py
+          python -m black --check \
+            eve_q/gate1_closure.py \
+            tests/test_gate1_closure_v0_1.py
+
+      - name: Verify canonical rollback receipt
+        run: |
+          python -m eve_q.gate1_hardening \
+            --validate-rollback-receipt \
+            examples/governance/gate1_closure_rollback_receipt_v0_1.json
+
+      - name: Verify ready proposal remains non-commanding
+        run: |
+          python -m eve_q.gate_descent \
+            --validate examples/governance/gate_descent_g0_to_g1_ready_v0_1.json \
+            --now 2026-08-05T04:30:00Z
+
+      - name: Verify complete closure packet
+        run: |
+          codex-gate1-closure \
+            --threat-model examples/governance/gate1_closure_threat_model_v0_1.json \
+            --threat-schema schemas/gate1_closure_threat_model_v0_1.schema.json \
+            --proposal examples/governance/gate_descent_g0_to_g1_ready_v0_1.json \
+            --proposal-schema schemas/gate_descent_proposal_v0_1.schema.json \
+            --now 2026-08-05T04:30:00Z

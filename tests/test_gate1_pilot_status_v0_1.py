@@ -14,13 +14,12 @@ def test_gate1_pilot_status_opens_only_scoped_alpha_lane():
         "Gate 1A TESTNET_READ_ONLY_ALPHA: ACTIVE FOR APPROVED ALPHA RUNS"
         in text
     )
-    assert (
-        "Gate 1B MAINNET_READ_ONLY_TELEMETRY: LOCKED PENDING #68 / #76"
-        in text
-    )
+    assert "Gate 1B MAINNET_READ_ONLY_TELEMETRY: LOCKED" in text
     assert "Gate 2  LIVE_PROPOSAL_GENERATION: LOCKED" in text
     assert "Gate 3  TESTNET_MANUAL_EXTERNAL: LOCKED" in text
     assert "Gate 4–6: LOCKED" in text
+    assert "READY_FOR_HUMAN_REVIEW" in text
+    assert "Gate 1B remains locked regardless of that decision" in text
     assert '"mainnet_allowed": false' in text
     assert '"may_generate_live_proposal": false' in text
     assert '"may_execute": false' in text
