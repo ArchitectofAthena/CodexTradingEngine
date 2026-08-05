@@ -22,21 +22,34 @@ A ready pipeline does not imply positive economics. Positive modeled economics d
 
 ## Current expected status
 
-The canonical source registry currently contains zero sources with `ELIGIBLE` disposition. Therefore:
+The canonical source registry contains one time-bounded source with `ELIGIBLE` disposition:
+
+```text
+ethereum-sepolia-blockscout-stats-v0-1
+Review expires 2026-09-04T01:12:00Z
+```
+
+Therefore:
 
 ```bash
 codex-alpha-run status
 ```
 
-correctly writes a report and exits with status 2 while showing:
+writes a report and shows:
 
 ```text
-PIPELINE: HOLD
-SOURCE: HOLD_NO_ELIGIBLE_SOURCE
+PIPELINE: READY
+SOURCE: ELIGIBLE
+FRESHNESS: NOT_RUN
+ECONOMICS: NOT_RUN
+CLASSICAL_BASELINE: NOT_RUN
+QAOA_COMPARISON: NOT_RUN
+RUST_VERIFICATION: NOT_RUN
 EXECUTION: LOCKED
+ROLLBACK: READY
 ```
 
-This is an evidence-bearing hold, not a software failure and not permission to invent a source.
+`SOURCE: ELIGIBLE` means one exact observation path earned a bounded evidence state. It does not authorize a network request by itself.
 
 ## Status mode
 
@@ -67,10 +80,12 @@ The status command performs no network request.
 
 ## Simulate one exact-hash reviewed draft
 
-After a source has separately earned `ELIGIBLE`, a Gate 1A snapshot has passed replay, and a draft has been reviewed for local simulation, run:
+After a Gate 1A snapshot has passed replay and a draft has been reviewed for local simulation, run:
 
 ```bash
-codex-alpha-run simulate-reviewed \
+codex-alpha-run \
+  --acknowledge-dirty \
+  simulate-reviewed \
   --draft artifacts/<RUN_ID>-reviewed/reviewed-draft.json \
   --expected-draft-hash <64-character-draft-hash> \
   --cycle-id <bounded-cycle-id> \
@@ -94,6 +109,28 @@ The operator requires all of the following:
 - the local route fixture contains every field required by `codex-research`.
 
 Any failed condition stops the procedure and emits a visible HOLD report.
+
+## First complete rehearsal
+
+The Sepolia Blockscout source completed the full bounded sequence once in GitHub Actions:
+
+```text
+doctor: READY_WITH_WARNINGS
+source: ELIGIBLE
+DNS/IP preflight: PASS
+one public GET: PASS
+offline replay: PASS
+post-capture resolution verification: PASS
+draft translation: PASS
+exact-hash review: PASS
+local simulation: READY
+execution: LOCKED
+capital: LOCKED
+```
+
+The observed field was provider-reported average gas price. Profit, gas cost, fees, liquidity, latency, slippage, bridge cost, and safety margin remained separately labeled test-only assumptions.
+
+This is one successful bounded rehearsal, not a production reliability claim and not evidence of recurring profitability.
 
 ## Simulation boundary
 
@@ -153,7 +190,7 @@ The orchestration receipt excludes run timestamps and output-directory paths fro
 
 ## Dirty-tree research
 
-A dirty working tree normally produces HOLD. For bounded private local research only:
+A dirty working tree normally produces HOLD. Capture and local artifacts make an active research checkout dirty, so the explicit acknowledgement is required for the bounded continuation:
 
 ```bash
 codex-alpha-run --acknowledge-dirty status
