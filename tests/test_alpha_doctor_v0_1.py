@@ -97,11 +97,13 @@ def _facts(**overrides: object) -> DoctorFacts:
     return DoctorFacts(**values)  # type: ignore[arg-type]
 
 
-def test_empty_canonical_registry_is_valid_and_explicitly_has_no_eligible_source() -> None:
+def test_canonical_registry_is_valid_and_contains_reviewed_source() -> None:
     result = validate_registry(_registry(), _schema())
 
     assert result.valid is True
-    assert result.eligible_source_ids == ()
+    assert result.eligible_source_ids == (
+        "ethereum-sepolia-blockscout-stats-v0-1",
+    )
     assert len(result.registry_sha256) == 64
 
 
