@@ -1,0 +1,46 @@
+{
+  "assumptions": [
+    {
+      "field": "gas_cost_eth",
+      "value": "replace-with-reviewed-local-model",
+      "unit": "ETH",
+      "basis": "operator-supplied assumption; not observed telemetry"
+    },
+    {
+      "field": "fee_cost_eth",
+      "value": "replace-with-reviewed-local-model",
+      "unit": "ETH",
+      "basis": "operator-supplied assumption; not observed telemetry"
+    },
+    {
+      "field": "liquidity_eth",
+      "value": "replace-with-reviewed-local-model",
+      "unit": "ETH",
+      "basis": "operator-supplied assumption; not observed telemetry"
+    },
+    {
+      "field": "latency_ms",
+      "value": "replace-with-reviewed-local-model",
+      "unit": "ms",
+      "basis": "operator-supplied assumption; not observed telemetry"
+    },
+    {
+      "field": "slippage_eth",
+      "value": "replace-with-reviewed-local-model",
+      "unit": "ETH",
+      "basis": "operator-supplied assumption; not observed telemetry"
+    },
+    {
+      "field": "bridge_cost_eth",
+      "value": "replace-with-reviewed-local-model",
+      "unit": "ETH",
+      "basis": "operator-supplied assumption; not observed telemetry"
+    },
+    {
+      "field": "safety_margin_eth",
+      "value": "replace-with-reviewed-local-model",
+      "unit": "ETH",
+      "basis": "operator-supplied assumption; not observed telemetry"
+    }
+  ]
+}
