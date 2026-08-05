@@ -1,0 +1,38 @@
+{
+  "artifact_type": "ChangeReceipt",
+  "contract_version": "change_receipt_v0.1",
+  "change_id": "hecate_input_gate_v0_1",
+  "repository": "ArchitectofAthena/CodexTradingEngine",
+  "branch": "feat/hecate-input-gate-v0-1",
+  "scope": "Deterministic anticipatory input membrane upstream of Road Runner field admission.",
+  "files": [
+    "docs/HECATE_INPUT_GATE_v0_1.md",
+    "eve_q/hecate_input_gate.py",
+    "receipts/changes/hecate_input_gate_v0_1.json",
+    "schemas/hecate_gate_receipt_v0_1.schema.json",
+    "tests/test_hecate_input_gate_v0_1.py"
+  ],
+  "change": "Adds Hecate as a stateless daemon-boundary gate that evaluates provenance, freshness, replay, secret shape, prompt injection, authority escalation, network expansion, coherence, affect stability, readiness, and route safety before emitting ALLOW, HOLD, or RETURN.",
+  "reason": "Road Runner needs an upstream liminal membrane that can detect observable hazards before signals enter the working field without inheriting execution or capital authority.",
+  "tests": [
+    "python -m py_compile eve_q/hecate_input_gate.py tests/test_hecate_input_gate_v0_1.py",
+    "python -m pytest -q tests/test_hecate_input_gate_v0_1.py",
+    "local isolated validation: 9 focused tests passed before branch creation",
+    "repository-native CI pending"
+  ],
+  "result": "PENDING_REPOSITORY_CI",
+  "road_runner_integration": "Parallel-safe adapter seam only. No Road Runner file is imported or modified.",
+  "authority_impact": "None. ALLOW permits only next-layer observation. It grants no execution, deployment, signing, broadcast, merge, repository-write, wallet, credential, or capital authority.",
+  "rollback": "Revert the candidate branch or resulting squash commit. No external system, wallet, transaction, deployment, credential, capital, or Road Runner state is mutated by this change.",
+  "created_at": "2026-08-05T16:32:00-05:00",
+  "artifact_is_command": false,
+  "authority": false,
+  "human_promotion_required": true,
+  "may_merge": false,
+  "may_write_repository": false,
+  "may_deploy": false,
+  "may_execute": false,
+  "may_sign": false,
+  "may_broadcast": false,
+  "may_move_capital": false
+}
