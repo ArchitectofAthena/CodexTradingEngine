@@ -60,6 +60,9 @@ py-modules = [
 [tool.setuptools.packages.find]
 include = ["eve_q*", "models*", "omega_telemetry*"]
 
+[tool.setuptools.package-data]
+eve_q = ["organ_contract.json"]
+
 [tool.black]
 line-length = 100
 target-version = ["py311"]
