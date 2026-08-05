@@ -1,0 +1,54 @@
+name: ViV Adversarial Sandbox v0.1
+
+on:
+  pull_request:
+    paths:
+      - 'eve_q/viv_adversarial.py'
+      - 'tests/test_viv_adversarial_v0_1.py'
+      - 'schemas/viv_adversarial_receipt_v0_1.schema.json'
+      - 'docs/VIV_ADVERSARIAL_SANDBOX_v0_1.md'
+      - 'receipts/changes/viv_adversarial_sandbox_v0_1.json'
+      - 'pyproject.toml'
+      - '.github/workflows/viv-adversarial-sandbox-v0-1.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'eve_q/viv_adversarial.py'
+      - 'tests/test_viv_adversarial_v0_1.py'
+      - 'schemas/viv_adversarial_receipt_v0_1.schema.json'
+      - 'pyproject.toml'
+      - '.github/workflows/viv-adversarial-sandbox-v0-1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  viv-gauntlet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install test surface
+        run: python -m pip install --upgrade pip && python -m pip install -e '.[test]'
+
+      - name: Python syntax
+        run: python -m compileall -q eve_q/viv_adversarial.py tests/test_viv_adversarial_v0_1.py
+
+      - name: Schema and provenance JSON
+        run: |
+          python -m json.tool schemas/viv_adversarial_receipt_v0_1.schema.json >/dev/null
+          python -m json.tool receipts/changes/viv_adversarial_sandbox_v0_1.json >/dev/null
+
+      - name: Focused ViV tests
+        run: pytest -q tests/test_viv_adversarial_v0_1.py --no-cov
