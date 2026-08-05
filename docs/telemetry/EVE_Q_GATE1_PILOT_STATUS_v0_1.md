@@ -3,7 +3,7 @@
 ```text
 Gate 0  SIMULATION_ONLY: ACTIVE
 Gate 1A TESTNET_READ_ONLY_ALPHA: ACTIVE FOR APPROVED ALPHA RUNS
-Gate 1B MAINNET_READ_ONLY_TELEMETRY: LOCKED PENDING #68 / #76
+Gate 1B MAINNET_READ_ONLY_TELEMETRY: LOCKED
 Gate 2  LIVE_PROPOSAL_GENERATION: LOCKED
 Gate 3  TESTNET_MANUAL_EXTERNAL: LOCKED
 Gate 4–6: LOCKED
@@ -54,19 +54,41 @@ docs/governance/EVE_Q_GATE1A_ALPHA_PROMOTION_v0_1.md
 - canonical snapshot artifact ID;
 - offline replay and freshness validation;
 - DNS/IP-class preflight and post-capture drift detection;
+- transport-level public-IP connection pinning while preserving TLS hostname verification;
 - rollback-receipt emission on supported failures;
+- deterministic telemetry-to-draft translation with exact-hash operator review;
+- one-run alpha doctor and result surface;
+- fixed-count 25-capture Sepolia soak with complete replay;
+- offline conflict and false-consensus refusal evidence;
 - schema and boundary tests;
 - structured alpha issue reporting.
 
+## Gate 1A closure packet
+
+Issue #132 packages the completed evidence into:
+
+```text
+examples/governance/gate1_closure_threat_model_v0_1.json
+examples/governance/gate_descent_g0_to_g1_ready_v0_1.json
+examples/governance/gate1_closure_rollback_receipt_v0_1.json
+```
+
+The proposal state is:
+
+```text
+READY_FOR_HUMAN_REVIEW
+```
+
+This state is non-commanding. Human decision fields remain unset, and passing tests do not promote any gate. The review question is limited to ratifying and closing the historical Gate 0 to Gate 1A evidence record. Gate 1B remains locked regardless of that decision.
+
 ## Still required before Gate 1B mainnet review
 
-- reviewed live public/read-only mainnet source list;
-- transport-level IP pinning while preserving TLS hostname verification, or an explicit accepted residual-risk decision;
-- bounded source-outage campaign;
-- conflicting-source and weak-provenance campaign;
+- reviewed live public/read-only mainnet source set with independent provenance;
+- mainnet-specific terms, freshness, rate-limit, payload, and outage review;
+- bounded source-outage and provider-conflict campaigns using those reviewed sources;
 - bounded live-read-only mainnet soak;
-- content-addressed threat model, rollback receipt, and soak result;
-- final `GateDescentProposal` update to `READY_FOR_HUMAN_REVIEW`;
+- mainnet-specific content-addressed threat model and residual-risk decision;
+- a separate Gate 1B proposal;
 - explicit human promotion of Gate 1B.
 
 ## Authority posture
@@ -78,7 +100,11 @@ docs/governance/EVE_Q_GATE1A_ALPHA_PROMOTION_v0_1.md
   "human_promotion_required_for_next_gate": true,
   "mainnet_allowed": false,
   "may_generate_live_proposal": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
   "may_execute": false,
+  "may_use_flash_liquidity": false,
+  "may_transfer_charity": false,
   "may_move_capital": false,
   "testnet_read_only_alpha_allowed": true
 }
