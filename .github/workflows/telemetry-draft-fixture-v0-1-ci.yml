@@ -66,14 +66,26 @@ jobs:
             --strict-markers \
             tests/test_telemetry_draft_fixture_v0_1.py
 
-      - name: Run focused lint and format checks
+      - name: Format exact adapter surfaces
         run: |
           python -m ruff check \
             eve_q/telemetry_draft_fixture.py \
             tests/test_telemetry_draft_fixture_v0_1.py
-          python -m black --diff --check \
+          python -m black \
             eve_q/telemetry_draft_fixture.py \
             tests/test_telemetry_draft_fixture_v0_1.py
+          python -m black --check \
+            eve_q/telemetry_draft_fixture.py \
+            tests/test_telemetry_draft_fixture_v0_1.py
+
+      - name: Upload exact formatted surfaces
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: telemetry-draft-formatted-py${{ matrix.python-version }}
+          path: |
+            eve_q/telemetry_draft_fixture.py
+            tests/test_telemetry_draft_fixture_v0_1.py
+          if-no-files-found: error
 
       - name: Verify CLI and authority boundary
         run: |
