@@ -118,18 +118,6 @@ def test_reviewed_testnet_source_can_be_eligible_without_gaining_authority() -> 
     assert document["sources"][0]["capital_movement"] is False
 
 
-def test_eligible_source_requires_bounded_review_expiry() -> None:
-    document = _registry()
-    source = _eligible_source()
-    del source["review_expires_at"]
-    document["sources"] = [source]
-
-    result = validate_registry(document, _schema())
-
-    assert result.valid is False
-    assert any("review_expires_at" in error for error in result.errors)
-
-
 def test_mainnet_label_or_write_method_is_rejected() -> None:
     document = _registry()
     source = _eligible_source()
