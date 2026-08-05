@@ -45,9 +45,20 @@ For machine-readable output:
 codex-alpha-doctor --json
 ```
 
-The doctor reports `READY`, `READY_WITH_WARNINGS`, or `HOLD` while keeping Gate 2, execution, signing, transactions, and capital locked. The initial reviewed registry intentionally contains zero eligible public testnet sources, so `READY_WITH_WARNINGS` is the expected result until a source review is completed and merged.
+The doctor reports `READY`, `READY_WITH_WARNINGS`, or `HOLD` while keeping Gate 2, execution, signing, transactions, and capital locked.
 
-Read [`docs/alpha/ALPHA_DOCTOR_AND_SOURCE_REGISTRY_v0_1.md`](docs/alpha/ALPHA_DOCTOR_AND_SOURCE_REGISTRY_v0_1.md).
+The canonical registry now contains one time-bounded eligible source:
+
+```text
+ethereum-sepolia-blockscout-stats-v0-1
+Ethereum Sepolia, chain ID 11155111
+GET https://eth-sepolia.blockscout.com/api/v2/stats
+Review expires 2026-09-04T01:12:00Z
+```
+
+A normal checkout without a configured Rust verifier reports `READY_WITH_WARNINGS`. The warning concerns unavailable Rust verification, not source eligibility.
+
+Read [`docs/alpha/ALPHA_DOCTOR_AND_SOURCE_REGISTRY_v0_1.md`](docs/alpha/ALPHA_DOCTOR_AND_SOURCE_REGISTRY_v0_1.md) and the exact [source review receipt](docs/source-reviews/ETHEREUM_SEPOLIA_BLOCKSCOUT_STATS_v0_1.md).
 
 ## Run the deterministic built-in example
 
@@ -136,15 +147,32 @@ Gate 3 TESTNET_MANUAL_EXTERNAL: LOCKED
 
 Gate 1A requires no wallet, seed phrase, signing key, write credential, or transaction. It uses public testnet observations only and preserves `EXECUTION=LOCKED`.
 
+### Capture the reviewed Sepolia source
+
+One explicit invocation performs one bounded GET, DNS/IP preflight, offline replay, post-capture DNS verification, and rollback receipt generation on supported failure:
+
+```bash
+export EVE_Q_GATE1_PILOT=1
+unset EVE_Q_GATE1_KILL_SWITCH || true
+
+RUN_ID="sepolia-blockscout-$(date -u +%Y%m%dT%H%M%SZ)" \
+RUN_ROOT="$HOME/codex-alpha-runs" \
+PRODUCER_COMMIT="$(git rev-parse HEAD)" \
+  bash scripts/run_gate1_read_only_capture_v0_2.sh \
+  registry/source_specs/ethereum_sepolia_blockscout_stats_v0_1.json
+```
+
+This source is observational. Its price-like fields are not executable quotes, and its testnet data is not production profitability evidence.
+
 ## Translate telemetry into a reviewed local draft
 
 After a source has earned `ELIGIBLE` status and a Gate 1A bundle has passed replay, build a deterministic draft:
 
 ```bash
 codex-telemetry-draft build \
-  --bundle "$HOME/codex-alpha-runs/<RUN_ID>" \
-  --mapping artifacts/alpha-mapping.json \
-  --assumptions artifacts/alpha-assumptions.json \
+  --bundle "$HOME/codex-alpha-runs/<RUN_ID>/snapshot" \
+  --mapping examples/alpha/sepolia_blockscout_stats_mapping_v0_1.json \
+  --assumptions examples/alpha/sepolia_blockscout_stats_assumptions_v0_1.json \
   --output-dir artifacts/<RUN_ID>-draft
 ```
 
@@ -158,7 +186,7 @@ codex-telemetry-draft review \
   --expected-draft-hash <64-character-draft-hash> \
   --decision REVIEWED_FOR_LOCAL_SIMULATION \
   --reviewer "Architect" \
-  --reviewed-at 2026-08-05T00:32:00Z \
+  --reviewed-at <UTC-DATE-TIME> \
   --note "Exact draft reviewed for local simulation only." \
   --output-dir artifacts/<RUN_ID>-reviewed
 ```
@@ -176,11 +204,11 @@ codex-alpha-run status \
   --output-dir artifacts/alpha-status
 ```
 
-Because the canonical registry currently contains zero eligible sources, the honest expected result is:
+With the current reviewed source and no configured Rust verifier, the expected status is:
 
 ```text
-PIPELINE: HOLD
-SOURCE: HOLD_NO_ELIGIBLE_SOURCE
+PIPELINE: READY
+SOURCE: ELIGIBLE
 FRESHNESS: NOT_RUN
 ECONOMICS: NOT_RUN
 CLASSICAL_BASELINE: NOT_RUN
@@ -190,10 +218,12 @@ EXECUTION: LOCKED
 ROLLBACK: READY
 ```
 
-After a source earns `ELIGIBLE` and an exact-hash draft is reviewed for local simulation, run:
+After an exact-hash draft is reviewed for local simulation, run:
 
 ```bash
-codex-alpha-run simulate-reviewed \
+codex-alpha-run \
+  --acknowledge-dirty \
+  simulate-reviewed \
   --draft artifacts/<RUN_ID>-reviewed/reviewed-draft.json \
   --expected-draft-hash <64-character-draft-hash> \
   --cycle-id <bounded-cycle-id> \
