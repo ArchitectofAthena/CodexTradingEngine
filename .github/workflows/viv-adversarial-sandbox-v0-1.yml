@@ -1,6 +1,7 @@
 name: ViV Adversarial Sandbox v0.1
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'eve_q/viv_adversarial.py'
@@ -8,6 +9,7 @@ on:
       - 'schemas/viv_adversarial_receipt_v0_1.schema.json'
       - 'docs/VIV_ADVERSARIAL_SANDBOX_v0_1.md'
       - 'receipts/changes/viv_adversarial_sandbox_v0_1.json'
+      - 'receipts/changes/viv_recursive_correction_runs_v0_1.json'
       - 'pyproject.toml'
       - '.github/workflows/viv-adversarial-sandbox-v0-1.yml'
   push:
@@ -16,6 +18,9 @@ on:
       - 'eve_q/viv_adversarial.py'
       - 'tests/test_viv_adversarial_v0_1.py'
       - 'schemas/viv_adversarial_receipt_v0_1.schema.json'
+      - 'docs/VIV_ADVERSARIAL_SANDBOX_v0_1.md'
+      - 'receipts/changes/viv_adversarial_sandbox_v0_1.json'
+      - 'receipts/changes/viv_recursive_correction_runs_v0_1.json'
       - 'pyproject.toml'
       - '.github/workflows/viv-adversarial-sandbox-v0-1.yml'
 
@@ -49,6 +54,83 @@ jobs:
         run: |
           python -m json.tool schemas/viv_adversarial_receipt_v0_1.schema.json >/dev/null
           python -m json.tool receipts/changes/viv_adversarial_sandbox_v0_1.json >/dev/null
+          python -m json.tool receipts/changes/viv_recursive_correction_runs_v0_1.json >/dev/null
 
       - name: Focused ViV tests
         run: pytest -q tests/test_viv_adversarial_v0_1.py --no-cov
+
+      - name: Build deterministic baseline candidate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          from eve_q.simulation_runs import build_simulation_run
+
+          candidate = build_simulation_run(
+              strategy_id="eve_q.shadow_v0",
+              seed=12345,
+              market_snapshot_hash="sha256:market",
+              candidate_count=3,
+              accepted_count=1,
+              rejected_count=2,
+              result_summary_hash="sha256:summary",
+              risk_flags=[],
+              perturbation_id="perturbation-viv-ci",
+              created_at="2026-08-05T00:00:00Z",
+          )
+          output_dir = Path("artifacts/viv")
+          output_dir.mkdir(parents=True, exist_ok=True)
+          (output_dir / "simulation-run.json").write_text(
+              json.dumps(candidate, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Run recursive ViV correction gauntlets
+        run: |
+          set -euo pipefail
+          for seed in 0 7331 424242; do
+            codex-viv-gauntlet \
+              --candidate artifacts/viv/simulation-run.json \
+              --validator simulation_run \
+              --seed "${seed}" \
+              --created-at 2026-08-05T00:00:00Z \
+              --receipt-out "artifacts/viv/viv-receipt-${seed}.json" \
+              > "artifacts/viv/viv-cli-${seed}.json"
+          done
+
+      - name: Validate recursive runtime receipts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          from eve_q.viv_adversarial import validate_viv_receipt
+
+          summaries = []
+          receipt_paths = sorted(Path("artifacts/viv").glob("viv-receipt-*.json"))
+          if len(receipt_paths) != 3:
+              raise SystemExit(f"expected 3 runtime receipts, found {len(receipt_paths)}")
+
+          for path in receipt_paths:
+              receipt = json.loads(path.read_text(encoding="utf-8"))
+              validate_viv_receipt(receipt)
+              if receipt["overall_outcome"] != "pass":
+                  raise SystemExit(f"{path}: correction run did not pass")
+              if receipt["blocked_count"] != receipt["case_count"]:
+                  raise SystemExit(f"{path}: not every configured mutation was blocked")
+              if receipt["escaped_count"] != 0 or receipt["repair_required"] is not False:
+                  raise SystemExit(f"{path}: escaped mutation or repair flag detected")
+              summaries.append(
+                  {
+                      "seed": receipt["seed"],
+                      "receipt_id": receipt["receipt_id"],
+                      "blocked_count": receipt["blocked_count"],
+                      "escaped_count": receipt["escaped_count"],
+                      "candidate_unchanged": receipt["candidate_unchanged"],
+                  }
+              )
+
+          print(json.dumps({"ok": True, "recursive_runs": summaries}, sort_keys=True))
+          PY
