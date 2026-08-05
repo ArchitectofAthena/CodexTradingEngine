@@ -84,6 +84,13 @@ jobs:
       - name: Compile evidence producer
         run: python -m py_compile scripts/build_repository_evidence.py
 
+      - name: Run focused evidence producer tests
+        run: |
+          python -m unittest discover \
+            -s tests \
+            -p 'test_repository_evidence_bundle_v0_1.py' \
+            -v
+
       - name: Build evidence bundle
         run: |
           python scripts/build_repository_evidence.py \
