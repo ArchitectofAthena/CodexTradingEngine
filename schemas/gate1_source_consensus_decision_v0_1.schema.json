@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/gate1_source_consensus_decision_v0_1.schema.json",
+  "title": "Codex Gate 1 Source Consensus Decision v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "evaluation_id",
+    "evaluated_at",
+    "receipt_sha256",
+    "comparison",
+    "observations",
+    "decision",
+    "unresolved_questions",
+    "counts",
+    "gate_posture",
+    "authority"
+  ],
+  "properties": {
+    "artifact_type": {"const": "Gate1SourceConsensusDecision"},
+    "contract_version": {"const": "codex-gate1-source-consensus-v0.1"},
+    "evaluation_id": {"type": "string", "minLength": 1},
+    "evaluated_at": {"type": "string", "format": "date-time"},
+    "receipt_sha256": {"$ref": "#/$defs/sha256"},
+    "comparison": {"$ref": "#/$defs/comparison"},
+    "observations": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 16,
+      "items": {"$ref": "#/$defs/observation"}
+    },
+    "decision": {"$ref": "#/$defs/decision"},
+    "unresolved_questions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "counts": {"$ref": "#/$defs/counts"},
+    "gate_posture": {"$ref": "#/$defs/gates"},
+    "authority": {"$ref": "#/$defs/authority"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "nullableDecimal": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^-?[0-9]+(?:\\.[0-9]+)?$"}
+      ]
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comparison_unit",
+        "absolute_tolerance",
+        "source_count",
+        "provenance_group_count",
+        "operator_count",
+        "independent_provenance",
+        "observed_min",
+        "observed_max",
+        "conflict_magnitude",
+        "aggregate_value",
+        "aggregation_performed"
+      ],
+      "properties": {
+        "comparison_unit": {"type": "string", "minLength": 1},
+        "absolute_tolerance": {
+          "type": "string",
+          "pattern": "^[0-9]+(?:\\.[0-9]+)?$"
+        },
+        "source_count": {"type": "integer", "minimum": 0, "maximum": 16},
+        "provenance_group_count": {"type": "integer", "minimum": 0, "maximum": 16},
+        "operator_count": {"type": "integer", "minimum": 0, "maximum": 16},
+        "independent_provenance": {"type": "boolean"},
+        "observed_min": {"$ref": "#/$defs/nullableDecimal"},
+        "observed_max": {"$ref": "#/$defs/nullableDecimal"},
+        "conflict_magnitude": {"$ref": "#/$defs/nullableDecimal"},
+        "aggregate_value": {"const": null},
+        "aggregation_performed": {"const": false}
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "registry_sha256",
+        "provenance_group",
+        "operator",
+        "original_value",
+        "original_unit",
+        "decimals",
+        "conversion",
+        "normalized_value",
+        "comparison_unit",
+        "observed_at",
+        "expires_at",
+        "review_status",
+        "review_expires_at"
+      ],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "registry_sha256": {"$ref": "#/$defs/sha256"},
+        "provenance_group": {"type": "string", "minLength": 1},
+        "operator": {"type": "string", "minLength": 1},
+        "original_value": {"type": "string"},
+        "original_unit": {"type": "string", "minLength": 1},
+        "decimals": {"type": "integer", "minimum": 0, "maximum": 36},
+        "conversion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "factor", "comparison_unit"],
+          "properties": {
+            "kind": {"enum": ["identity", "decimal_scale"]},
+            "factor": {
+              "type": "string",
+              "pattern": "^-?[0-9]+(?:\\.[0-9]+)?$"
+            },
+            "comparison_unit": {"type": "string", "minLength": 1}
+          }
+        },
+        "normalized_value": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(?:\\.[0-9]+)?$"
+        },
+        "comparison_unit": {"type": "string", "minLength": 1},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "review_status": {"enum": ["ELIGIBLE", "HOLD", "REJECT", "MISSING"]},
+        "review_expires_at": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "format": "date-time"}
+          ]
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "reasons",
+        "observation_only",
+        "human_review_required"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "ACCEPT_OBSERVATION_ONLY",
+            "HOLD_CONFLICT",
+            "HOLD_CONCENTRATION",
+            "HOLD_STALE",
+            "HOLD_UNIT_AMBIGUITY",
+            "HOLD_REVIEW_EXPIRED",
+            "HOLD_SOURCE_REVIEW"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "observation_only": {"type": "boolean"},
+        "human_review_required": {"const": true}
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "live_proposals_generated",
+        "signatures_created",
+        "transactions_submitted",
+        "executions_performed",
+        "capital_movements"
+      ],
+      "properties": {
+        "live_proposals_generated": {"const": 0},
+        "signatures_created": {"const": 0},
+        "transactions_submitted": {"const": 0},
+        "executions_performed": {"const": 0},
+        "capital_movements": {"const": 0}
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate_0",
+        "gate_1a",
+        "gate_1b",
+        "gate_2",
+        "gate_3",
+        "gate_4_through_6"
+      ],
+      "properties": {
+        "gate_0": {"const": "ACTIVE"},
+        "gate_1a": {"const": "ACTIVE_FOR_APPROVED_ALPHA_RUNS"},
+        "gate_1b": {"const": "LOCKED"},
+        "gate_2": {"const": "LOCKED"},
+        "gate_3": {"const": "LOCKED"},
+        "gate_4_through_6": {"const": "LOCKED"}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "artifact_is_command",
+        "network_access_allowed",
+        "may_generate_live_proposal",
+        "may_execute",
+        "may_sign",
+        "may_submit_transaction",
+        "may_move_capital"
+      ],
+      "properties": {
+        "authority": {"const": false},
+        "artifact_is_command": {"const": false},
+        "network_access_allowed": {"const": false},
+        "may_generate_live_proposal": {"const": false},
+        "may_execute": {"const": false},
+        "may_sign": {"const": false},
+        "may_submit_transaction": {"const": false},
+        "may_move_capital": {"const": false}
+      }
+    }
+  }
+}
