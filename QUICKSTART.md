@@ -167,6 +167,46 @@ This review grants only local simulation eligibility. It does not invoke `codex-
 
 Read [`docs/alpha/TELEMETRY_DRAFT_FIXTURE_ADAPTER_v0_1.md`](docs/alpha/TELEMETRY_DRAFT_FIXTURE_ADAPTER_v0_1.md).
 
+## Carry the bounded alpha procedure in one command
+
+The summary-first Gate 1A operator exposes nine independent states without widening authority:
+
+```bash
+codex-alpha-run status \
+  --output-dir artifacts/alpha-status
+```
+
+Because the canonical registry currently contains zero eligible sources, the honest expected result is:
+
+```text
+PIPELINE: HOLD
+SOURCE: HOLD_NO_ELIGIBLE_SOURCE
+FRESHNESS: NOT_RUN
+ECONOMICS: NOT_RUN
+CLASSICAL_BASELINE: NOT_RUN
+QAOA_COMPARISON: NOT_RUN
+RUST_VERIFICATION: NOT_RUN
+EXECUTION: LOCKED
+ROLLBACK: READY
+```
+
+After a source earns `ELIGIBLE` and an exact-hash draft is reviewed for local simulation, run:
+
+```bash
+codex-alpha-run simulate-reviewed \
+  --draft artifacts/<RUN_ID>-reviewed/reviewed-draft.json \
+  --expected-draft-hash <64-character-draft-hash> \
+  --cycle-id <bounded-cycle-id> \
+  --producer-commit "$(git rev-parse HEAD)" \
+  --output-dir artifacts/<RUN_ID>-alpha
+```
+
+The command validates the doctor, source eligibility, registry hash, draft hash, review binding, freshness, assumptions, route fields, and false-authority boundaries before invoking the simulation-safe research path. It emits one JSON report, one Markdown report, and one compact summary.
+
+An unpaired QAOA result produces HOLD until an exact classical baseline accompanies it. No mode captures telemetry automatically, creates Gate 2 authority, signs, submits a transaction, executes, or moves capital.
+
+Read [`docs/alpha/ONE_RUN_ALPHA_OPERATOR_v0_1.md`](docs/alpha/ONE_RUN_ALPHA_OPERATOR_v0_1.md).
+
 ## Verify the complete simulation-safe repository
 
 ```bash
