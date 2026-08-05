@@ -2,8 +2,8 @@
   "registry_id": "codex.gate1a.testnet-source-registry.v0.1",
   "schema_version": "0.1",
   "reviewed_at": "2026-08-05T01:12:00Z",
-  "producer_commit": "6e1a4e547267db90f9f512bfe2927f38f2962f04",
-  "review_note": "Ethereum Sepolia Blockscout stats has earned time-bounded Gate 1A eligibility for one explicit GET per approved alpha run. Eligibility expires on 2026-09-04 and returns to HOLD on host, schema, terms, rate-limit, deprecation, or network-identity drift.",
+  "producer_commit": "a1fcb7fae8f866dcb53cc573b73f912952e408b4",
+  "review_note": "Ethereum Sepolia Blockscout stats has earned time-bounded Gate 1A eligibility. Normal approved alpha runs permit one explicit GET. Issue #128 additionally authorizes one fixed-count 25-capture soak at exactly 12-second spacing, with no automatic recurrence. Eligibility expires on 2026-09-04 and returns to HOLD on host, schema, terms, rate-limit, deprecation, or network-identity drift.",
   "authority": false,
   "gate_posture": {
     "gate_0": "ACTIVE",
@@ -39,7 +39,7 @@
         "reference": "docs/source-reviews/ETHEREUM_SEPOLIA_BLOCKSCOUT_STATS_v0_1.md",
         "reviewed_at": "2026-08-05T01:12:00Z"
       },
-      "rate_limit_notes": "Blockscout documents a default unauthenticated limit of 300 requests per minute. This Gate 1A profile permits one GET per explicit approved run and no automatic recurrence.",
+      "rate_limit_notes": "Blockscout documents a default unauthenticated limit of 300 requests per minute. Normal Gate 1A runs permit one GET per explicit invocation. The one-time #128 soak permits exactly 25 GETs at 12-second spacing, a maximum of 5 requests per minute, and no automatic recurrence.",
       "provenance_group": "blockscout-sepolia-per-instance-v2",
       "concentration_risk_note": "Single explorer instance and provider. Blockscout has announced future deprecation of per-instance endpoints in favor of its PRO API. Re-review by 2026-09-04 or immediately on host, schema, terms, rate-limit, deprecation, or network-identity drift.",
       "review_evidence": [
@@ -48,6 +48,7 @@
         "https://docs.blockscout.com/devs/apis/rest",
         "https://docs.blockscout.com/api-reference/get-stats-counters",
         "https://docs.blockscout.com/devs/apis/requests-and-limits",
+        "https://github.com/ArchitectofAthena/CodexTradingEngine/issues/128",
         "docs/source-reviews/ETHEREUM_SEPOLIA_BLOCKSCOUT_STATS_v0_1.md"
       ],
       "reviewed_at": "2026-08-05T01:12:00Z",
