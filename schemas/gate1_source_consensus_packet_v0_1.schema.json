@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/gate1_source_consensus_packet_v0_1.schema.json",
+  "title": "Codex Gate 1 Source Consensus Packet v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "packet_type",
+    "schema_version",
+    "evaluation_id",
+    "evaluated_at",
+    "comparison_unit",
+    "absolute_tolerance",
+    "observations",
+    "unresolved_questions",
+    "authority"
+  ],
+  "properties": {
+    "packet_type": {"const": "Gate1SourceConsensusPacket"},
+    "schema_version": {"const": "0.1"},
+    "evaluation_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"
+    },
+    "evaluated_at": {"type": "string", "format": "date-time"},
+    "comparison_unit": {"type": "string", "minLength": 1},
+    "absolute_tolerance": {
+      "type": "string",
+      "pattern": "^[0-9]+(?:\\.[0-9]+)?$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 16,
+      "items": {"$ref": "#/$defs/observation"}
+    },
+    "unresolved_questions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "authority": {"const": false}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "registry_sha256",
+        "provenance_group",
+        "operator",
+        "value",
+        "unit",
+        "decimals",
+        "comparison_unit",
+        "conversion",
+        "observed_at",
+        "expires_at",
+        "review_status",
+        "review_expires_at",
+        "authority"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$"
+        },
+        "registry_sha256": {"$ref": "#/$defs/sha256"},
+        "provenance_group": {"type": "string", "minLength": 1},
+        "operator": {"type": "string", "minLength": 1},
+        "value": {
+          "type": ["string", "number"],
+          "not": {"type": "boolean"}
+        },
+        "unit": {"type": "string"},
+        "decimals": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 36
+        },
+        "comparison_unit": {"type": "string"},
+        "conversion": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind"],
+              "properties": {
+                "kind": {"const": "identity"}
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "factor"],
+              "properties": {
+                "kind": {"const": "decimal_scale"},
+                "factor": {
+                  "type": "string",
+                  "pattern": "^-?[0-9]+(?:\\.[0-9]+)?$"
+                }
+              }
+            }
+          ]
+        },
+        "observed_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "review_status": {
+          "enum": ["ELIGIBLE", "HOLD", "REJECT", "MISSING"]
+        },
+        "review_expires_at": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "format": "date-time"}
+          ]
+        },
+        "authority": {"const": false}
+      }
+    }
+  }
+}
