@@ -31,7 +31,6 @@ from eve_q.research_cli import build_report, write_report
 from eve_q.telemetry_draft_fixture import verify_draft_hash
 from shadow_cycle_runner import run_shadow_cycle
 
-
 OPERATOR_VERSION = "codex-alpha-operator-v0.1"
 REPORT_ARTIFACT_TYPE = "CodexAlphaOperatorReport"
 RESULT_KEYS = (
@@ -131,9 +130,7 @@ def _schema_errors(document: Any, schema: Mapping[str, Any]) -> tuple[str, ...]:
 def _require_schema(document: Any, schema: Mapping[str, Any], label: str) -> None:
     errors = _schema_errors(document, schema)
     if errors:
-        raise AlphaOperatorError(
-            f"{label} schema validation failed: " + "; ".join(errors[:8])
-        )
+        raise AlphaOperatorError(f"{label} schema validation failed: " + "; ".join(errors[:8]))
 
 
 def _doctor_snapshot(doctor: DoctorResult) -> dict[str, Any]:
@@ -169,11 +166,7 @@ def _base_surface(doctor: DoctorResult) -> dict[str, str]:
         "QAOA_COMPARISON": "NOT_RUN",
         "RUST_VERIFICATION": _rust_status(doctor),
         "EXECUTION": "LOCKED",
-        "ROLLBACK": (
-            "HOLD_KILL_SWITCH_ACTIVE"
-            if doctor.facts.kill_switch_active
-            else "READY"
-        ),
+        "ROLLBACK": ("HOLD_KILL_SWITCH_ACTIVE" if doctor.facts.kill_switch_active else "READY"),
     }
 
 
@@ -185,9 +178,7 @@ def _stable_receipt_material(report: Mapping[str, Any]) -> dict[str, Any]:
         stable_research = {
             "summary": embedded.get("summary") if isinstance(embedded, Mapping) else None,
             "verification": (
-                embedded.get("verification")
-                if isinstance(embedded, Mapping)
-                else None
+                embedded.get("verification") if isinstance(embedded, Mapping) else None
             ),
             "boundary": embedded.get("boundary") if isinstance(embedded, Mapping) else None,
         }
@@ -322,9 +313,7 @@ def _validate_reviewed_draft(
     route = draft["draft_material"]["local_route_fixture"]
     missing = sorted(REQUIRED_ROUTE_FIELDS - set(route))
     if missing:
-        raise AlphaOperatorError(
-            "reviewed route fixture is missing fields: " + ", ".join(missing)
-        )
+        raise AlphaOperatorError("reviewed route fixture is missing fields: " + ", ".join(missing))
     return copy.deepcopy(route)
 
 
@@ -635,16 +624,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             draft_schema = _load_json(args.draft_schema)
             expected_hash = args.expected_draft_hash.lower()
             cycle_id = args.cycle_id or f"alpha-{expected_hash[:12]}"
-            producer_commit = (
-                args.producer_commit or doctor.facts.commit_sha or "0" * 40
-            ).lower()
+            producer_commit = (args.producer_commit or doctor.facts.commit_sha or "0" * 40).lower()
             if len(producer_commit) != 40 or any(
-                character not in "0123456789abcdef"
-                for character in producer_commit
+                character not in "0123456789abcdef" for character in producer_commit
             ):
-                raise AlphaOperatorError(
-                    "producer commit must be a 40-character hexadecimal SHA"
-                )
+                raise AlphaOperatorError("producer commit must be a 40-character hexadecimal SHA")
             now = parse_utc(args.now) if args.now else datetime.now(timezone.utc)
             operator_result = simulate_reviewed_result(
                 doctor=doctor,

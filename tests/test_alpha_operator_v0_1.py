@@ -23,17 +23,12 @@ from eve_q.telemetry_draft_fixture import (
 )
 from eve_q.telemetry_draft_fixture import sha256_hex as draft_sha256
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DRAFT_SCHEMA = json.loads(
-    (ROOT / "schemas" / "telemetry_draft_fixture_v0_1.schema.json").read_text(
-        encoding="utf-8"
-    )
+    (ROOT / "schemas" / "telemetry_draft_fixture_v0_1.schema.json").read_text(encoding="utf-8")
 )
 REPORT_SCHEMA = json.loads(
-    (ROOT / "schemas" / "alpha_operator_report_v0_1.schema.json").read_text(
-        encoding="utf-8"
-    )
+    (ROOT / "schemas" / "alpha_operator_report_v0_1.schema.json").read_text(encoding="utf-8")
 )
 NOW = datetime(2026, 8, 5, 1, 0, tzinfo=timezone.utc)
 REGISTRY_HASH = "a" * 64
@@ -231,10 +226,7 @@ def test_status_holds_when_no_source_is_eligible() -> None:
 
     assert result.exit_code == 2
     assert result.report["result_surface"]["PIPELINE"] == "HOLD"
-    assert (
-        result.report["result_surface"]["SOURCE"]
-        == "HOLD_NO_ELIGIBLE_SOURCE"
-    )
+    assert result.report["result_surface"]["SOURCE"] == "HOLD_NO_ELIGIBLE_SOURCE"
     assert result.report["result_surface"]["EXECUTION"] == "LOCKED"
     assert result.report["boundary"] == AUTHORITY_BOUNDARY
 
@@ -302,9 +294,7 @@ def test_wrong_hash_or_unreviewed_draft_holds(tmp_path: Path) -> None:
 def test_stale_or_missing_route_field_holds(tmp_path: Path) -> None:
     stale = reviewed_draft()
     stale["freshness"]["expires_at"] = "2026-08-05T00:59:00Z"
-    stale["draft_material"]["snapshot"]["expires_at"] = (
-        "2026-08-05T00:59:00Z"
-    )
+    stale["draft_material"]["snapshot"]["expires_at"] = "2026-08-05T00:59:00Z"
     stale["draft_hash"] = draft_sha256(stale["draft_material"])
     stale["draft_id"] = f"draft-{stale['draft_hash'][:24]}"
     stale["operator_review"]["reviewed_draft_hash"] = stale["draft_hash"]
@@ -355,14 +345,8 @@ def test_unpaired_qaoa_is_a_visible_hold(tmp_path: Path) -> None:
 
     assert result.exit_code == 2
     assert result.report["result_surface"]["PIPELINE"] == "HOLD"
-    assert (
-        result.report["result_surface"]["CLASSICAL_BASELINE"]
-        == "HOLD_MISSING_CLASSICAL_PAIR"
-    )
-    assert (
-        result.report["result_surface"]["QAOA_COMPARISON"]
-        == "HOLD_UNPAIRED_QAOA"
-    )
+    assert result.report["result_surface"]["CLASSICAL_BASELINE"] == "HOLD_MISSING_CLASSICAL_PAIR"
+    assert result.report["result_surface"]["QAOA_COMPARISON"] == "HOLD_UNPAIRED_QAOA"
 
 
 def test_receipt_is_deterministic_for_identical_stable_evidence(tmp_path: Path) -> None:
