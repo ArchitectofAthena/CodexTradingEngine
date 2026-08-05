@@ -1,0 +1,99 @@
+name: Organ Contract Package Resource v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - "contracts/organ_contract.json"
+      - "eve_q/organ_contract.json"
+      - "eve_q/organ_contract.py"
+      - "pyproject.toml"
+      - "tests/test_organ_contract_enforcement.py"
+      - "tests/test_organ_contract_scaffold.py"
+      - "tests/test_organ_contract_package_resource.py"
+      - ".github/workflows/organ-contract-package-resource-v0-1-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "contracts/organ_contract.json"
+      - "eve_q/organ_contract.json"
+      - "eve_q/organ_contract.py"
+      - "pyproject.toml"
+      - "tests/test_organ_contract_enforcement.py"
+      - "tests/test_organ_contract_scaffold.py"
+      - "tests/test_organ_contract_package_resource.py"
+      - ".github/workflows/organ-contract-package-resource-v0-1-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  package-resource:
+    name: Package resource (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install focused build and test tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build pytest
+
+      - name: Run focused organ-contract tests
+        run: |
+          python -m pytest -q -o addopts='' \
+            tests/test_organ_contract_scaffold.py \
+            tests/test_organ_contract_enforcement.py \
+            tests/test_organ_contract_package_resource.py
+
+      - name: Build wheel
+        run: python -m build --wheel
+
+      - name: Verify wheel contains packaged contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          wheels = list(Path("dist").glob("*.whl"))
+          assert len(wheels) == 1, wheels
+          with ZipFile(wheels[0]) as archive:
+              names = set(archive.namelist())
+          assert "eve_q/organ_contract.json" in names, sorted(
+              name for name in names if "organ_contract" in name
+          )
+          PY
+
+      - name: Install wheel without repository layout
+        run: |
+          python -m venv /tmp/codex-organ-contract-wheel
+          /tmp/codex-organ-contract-wheel/bin/python -m pip install --no-deps dist/*.whl
+          cd /tmp
+          /tmp/codex-organ-contract-wheel/bin/python - <<'PY'
+          from eve_q.organ_contract import load_organ_contract, validate_contract_shape
+
+          contract = load_organ_contract()
+          assert contract["organ_id"] == "codex_trading_engine"
+          assert validate_contract_shape(contract) == []
+          PY
+
+      - name: Verify source and package mirrors are identical
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          source = json.loads(Path("contracts/organ_contract.json").read_text(encoding="utf-8"))
+          packaged = json.loads(Path("eve_q/organ_contract.json").read_text(encoding="utf-8"))
+          assert source == packaged
+          PY

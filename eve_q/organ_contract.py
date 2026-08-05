@@ -10,11 +10,15 @@ transfer, promote, or mutate governance state.
 from __future__ import annotations
 
 import json
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeAlias
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CONTRACT_PATH = REPO_ROOT / "contracts" / "organ_contract.json"
+SOURCE_CONTRACT_PATH = REPO_ROOT / "contracts" / "organ_contract.json"
+DEFAULT_CONTRACT_PATH: Traversable = files("eve_q").joinpath("organ_contract.json")
+ContractSource: TypeAlias = str | Path | Traversable
 
 CONTRACT_REQUIRED_FIELDS = {
     "organ_id",
@@ -52,11 +56,26 @@ CAPABILITY_FIELDS = {
 }
 
 
-def load_organ_contract(path: str | Path = DEFAULT_CONTRACT_PATH) -> dict[str, Any]:
-    """Load the machine-readable organ contract."""
+def _read_contract_text(source: ContractSource) -> str:
+    """Read a contract from either a filesystem path or package resource."""
 
-    contract_path = Path(path)
-    return json.loads(contract_path.read_text(encoding="utf-8"))
+    if isinstance(source, (str, Path)):
+        return Path(source).read_text(encoding="utf-8")
+    return source.read_text(encoding="utf-8")
+
+
+def load_organ_contract(path: ContractSource | None = None) -> dict[str, Any]:
+    """Load the machine-readable organ contract.
+
+    The default contract is read through :mod:`importlib.resources`, so the
+    validator works from a source checkout, an installed wheel, or another
+    import layout that does not contain the repository-level ``contracts``
+    directory. An explicit path or traversable resource may still be supplied
+    for tests and bounded operator review.
+    """
+
+    source = DEFAULT_CONTRACT_PATH if path is None else path
+    return json.loads(_read_contract_text(source))
 
 
 def validate_contract_shape(contract: dict[str, Any]) -> list[str]:
@@ -110,7 +129,7 @@ def validate_receipt_against_contract(
     receipt: dict[str, Any],
     *,
     contract: dict[str, Any] | None = None,
-    contract_path: str | Path = DEFAULT_CONTRACT_PATH,
+    contract_path: ContractSource | None = None,
 ) -> list[str]:
     """Validate a receipt against the organ contract."""
 
