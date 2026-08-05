@@ -1,0 +1,144 @@
+name: Codex Evidence Bundle v0.1
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "config/**"
+      - "deploy/**"
+      - "docs/**"
+      - "eve_q/**"
+      - "examples/**"
+      - "schemas/**"
+      - "scripts/**"
+      - "tests/**"
+      - "tools/**"
+      - "Dockerfile*"
+      - "SECURITY.md"
+      - "pyproject.toml"
+      - "requirements*.txt"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".gitleaks.toml"
+      - ".trivyignore.yaml"
+      - ".security-audit-allowlist.json"
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: Base Git ref or SHA
+        required: true
+        default: main
+      head_ref:
+        description: Head Git ref or SHA
+        required: true
+        default: main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codex-evidence-bundle-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evidence:
+    name: Build bounded review evidence
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out complete history without retained credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Resolve evidence range
+        id: range
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          INPUT_BASE_REF: ${{ inputs.base_ref }}
+          INPUT_HEAD_REF: ${{ inputs.head_ref }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base_ref="$PR_BASE_SHA"
+            head_ref="$PR_HEAD_SHA"
+          else
+            base_ref="$INPUT_BASE_REF"
+            head_ref="$INPUT_HEAD_REF"
+          fi
+          git rev-parse --verify "${base_ref}^{commit}" >/dev/null
+          git rev-parse --verify "${head_ref}^{commit}" >/dev/null
+          printf 'base_ref=%s\n' "$base_ref" >> "$GITHUB_OUTPUT"
+          printf 'head_ref=%s\n' "$head_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Compile evidence producer
+        run: python -m py_compile scripts/build_repository_evidence.py
+
+      - name: Run focused evidence producer tests
+        run: |
+          python -m unittest discover \
+            -s tests \
+            -p 'test_repository_evidence_bundle_v0_1.py' \
+            -v
+
+      - name: Build evidence bundle
+        run: |
+          python scripts/build_repository_evidence.py \
+            --repo . \
+            --repository ArchitectofAthena/CodexTradingEngine \
+            --base-ref '${{ steps.range.outputs.base_ref }}' \
+            --head-ref '${{ steps.range.outputs.head_ref }}' \
+            --output security-artifacts/codex-evidence-bundle-v0-1.json
+
+      - name: Assert authority-false contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("security-artifacts/codex-evidence-bundle-v0-1.json")
+          packet = json.loads(path.read_text(encoding="utf-8"))
+          authority = packet["authority"]
+          assert authority["artifact_is_command"] is False
+          assert authority["human_promotion_required"] is True
+          for key, value in authority.items():
+              if key not in {"artifact_is_command", "human_promotion_required"}:
+                  assert value is False, (key, value)
+          PY
+
+      - name: Write minimal job summary
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          packet = json.loads(Path("security-artifacts/codex-evidence-bundle-v0-1.json").read_text())
+          print("## Codex evidence bundle v0.1")
+          print()
+          print(f"- Head: `{packet['head_sha']}`")
+          print(f"- Changed files: {len(packet['changed_files'])}")
+          print(f"- Redacted secret-shaped lines: {packet['redaction']['secret_shaped_lines']}")
+          print(f"- Truncated: `{packet['redaction']['truncated']}`")
+          print(f"- Bundle SHA-256: `{packet['bundle_sha256']}`")
+          print("- Authority: **false**")
+          print("- Human promotion required: **true**")
+          PY
+
+      - name: Upload redacted evidence artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        with:
+          name: codex-evidence-bundle-v0-1
+          path: security-artifacts/codex-evidence-bundle-v0-1.json
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
