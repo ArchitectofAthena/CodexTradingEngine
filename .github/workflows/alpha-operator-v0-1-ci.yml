@@ -4,35 +4,41 @@ on:
   pull_request:
     paths:
       - "eve_q/alpha_operator.py"
+      - "schemas/alpha_operator_report_v0_1.schema.json"
       - "tests/test_alpha_operator_v0_1.py"
+      - "docs/alpha/ONE_RUN_ALPHA_OPERATOR_v0_1.md"
       - "pyproject.toml"
+      - "QUICKSTART.md"
       - ".github/workflows/alpha-operator-v0-1-ci.yml"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: alpha-operator-v0-1-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  alpha-operator-format:
-    name: Alpha operator formatter
+  alpha-operator:
+    name: Alpha operator (Python ${{ matrix.python-version }})
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
 
     steps:
-      - name: Checkout exact pull-request branch
+      - name: Checkout without retained credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.head_ref }}
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: "3.13"
+          python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: pyproject.toml
 
@@ -41,7 +47,13 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e '.[test,dev]'
 
-      - name: Run focused tests before formatting
+      - name: Compile alpha operator
+        run: python -m py_compile eve_q/alpha_operator.py
+
+      - name: Validate report schema
+        run: python -m json.tool schemas/alpha_operator_report_v0_1.schema.json > /dev/null
+
+      - name: Run focused fail-closed tests
         run: |
           python -m pytest \
             -o addopts='' \
@@ -49,14 +61,8 @@ jobs:
             --strict-markers \
             tests/test_alpha_operator_v0_1.py
 
-      - name: Apply exact Ruff and Black formatting
+      - name: Run focused lint and format checks
         run: |
-          python -m ruff check --fix \
-            eve_q/alpha_operator.py \
-            tests/test_alpha_operator_v0_1.py
-          python -m black \
-            eve_q/alpha_operator.py \
-            tests/test_alpha_operator_v0_1.py
           python -m ruff check \
             eve_q/alpha_operator.py \
             tests/test_alpha_operator_v0_1.py
@@ -64,28 +70,39 @@ jobs:
             eve_q/alpha_operator.py \
             tests/test_alpha_operator_v0_1.py
 
-      - name: Re-run focused tests
-        run: |
-          python -m pytest \
-            -o addopts='' \
-            -q \
-            --strict-markers \
-            tests/test_alpha_operator_v0_1.py
-
-      - name: Commit formatter output only when changed
+      - name: Exercise canonical no-source HOLD
         shell: bash
         run: |
-          set -euo pipefail
-          if git diff --quiet -- \
-            eve_q/alpha_operator.py \
-            tests/test_alpha_operator_v0_1.py; then
-            echo "Formatter output already committed."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            eve_q/alpha_operator.py \
-            tests/test_alpha_operator_v0_1.py
-          git commit -m "Apply exact formatting to alpha operator surfaces"
-          git push origin "HEAD:${{ github.head_ref }}"
+          set +e
+          codex-alpha-run status \
+            --output-dir artifacts/alpha-status-ci
+          status=$?
+          set -e
+          test "$status" -eq 2
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(
+              Path("artifacts/alpha-status-ci/alpha-report.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          surface = payload["result_surface"]
+          assert surface["PIPELINE"] == "HOLD"
+          assert surface["SOURCE"] == "HOLD_NO_ELIGIBLE_SOURCE"
+          assert surface["FRESHNESS"] == "NOT_RUN"
+          assert surface["ECONOMICS"] == "NOT_RUN"
+          assert surface["CLASSICAL_BASELINE"] == "NOT_RUN"
+          assert surface["QAOA_COMPARISON"] == "NOT_RUN"
+          assert surface["EXECUTION"] == "LOCKED"
+          assert surface["ROLLBACK"] == "READY"
+          boundary = payload["boundary"]
+          assert boundary["authority"] is False
+          assert boundary["network_capture_allowed"] is False
+          assert boundary["may_generate_live_proposal"] is False
+          assert boundary["may_execute"] is False
+          assert boundary["may_sign"] is False
+          assert boundary["may_submit_transaction"] is False
+          assert boundary["may_move_capital"] is False
+          PY
