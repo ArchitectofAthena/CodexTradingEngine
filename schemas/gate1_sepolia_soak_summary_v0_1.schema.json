@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/gate1_sepolia_soak_summary_v0_1.schema.json",
+  "title": "Codex Gate 1A Sepolia Soak Summary v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "generated_at",
+    "receipt_sha256",
+    "producer_repository",
+    "producer_commit",
+    "source",
+    "campaign",
+    "results",
+    "accepted_evidence",
+    "replay_records",
+    "status",
+    "counts",
+    "residual_risks",
+    "gate_posture",
+    "authority"
+  ],
+  "properties": {
+    "artifact_type": {"const": "Gate1SepoliaSoakSummary"},
+    "contract_version": {"const": "codex-sepolia-gate1-soak-v0.1"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "receipt_sha256": {"$ref": "#/$defs/sha256"},
+    "producer_repository": {"const": "ArchitectofAthena/CodexTradingEngine"},
+    "producer_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "source": {"$ref": "#/$defs/source"},
+    "campaign": {"$ref": "#/$defs/campaign"},
+    "results": {"$ref": "#/$defs/results"},
+    "accepted_evidence": {
+      "type": "array",
+      "maxItems": 25,
+      "items": {"$ref": "#/$defs/evidence"}
+    },
+    "replay_records": {
+      "type": "array",
+      "maxItems": 25,
+      "items": {"$ref": "#/$defs/replay"}
+    },
+    "status": {"enum": ["PASS", "HOLD"]},
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "live_proposals_generated",
+        "signatures_created",
+        "transactions_submitted",
+        "executions_performed",
+        "capital_movements"
+      ],
+      "properties": {
+        "live_proposals_generated": {"const": 0},
+        "signatures_created": {"const": 0},
+        "transactions_submitted": {"const": 0},
+        "executions_performed": {"const": 0},
+        "capital_movements": {"const": 0}
+      }
+    },
+    "residual_risks": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "gate_posture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate_0",
+        "gate_1a",
+        "gate_1b",
+        "gate_2",
+        "gate_3",
+        "gate_4_through_6"
+      ],
+      "properties": {
+        "gate_0": {"const": "ACTIVE"},
+        "gate_1a": {"const": "ACTIVE_FOR_APPROVED_ALPHA_RUNS"},
+        "gate_1b": {"const": "LOCKED"},
+        "gate_2": {"const": "LOCKED"},
+        "gate_3": {"const": "LOCKED"},
+        "gate_4_through_6": {"const": "LOCKED"}
+      }
+    },
+    "authority": {"$ref": "#/$defs/authority"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "network_name",
+        "chain_id",
+        "host",
+        "url",
+        "method",
+        "registry_sha256",
+        "reviewed_at",
+        "review_expires_at",
+        "provenance_group"
+      ],
+      "properties": {
+        "source_id": {"const": "ethereum-sepolia-blockscout-stats-v0-1"},
+        "network_name": {"const": "Ethereum Sepolia"},
+        "chain_id": {"const": "11155111"},
+        "host": {"const": "eth-sepolia.blockscout.com"},
+        "url": {"const": "https://eth-sepolia.blockscout.com/api/v2/stats"},
+        "method": {"const": "GET"},
+        "registry_sha256": {"$ref": "#/$defs/sha256"},
+        "reviewed_at": {"type": "string", "format": "date-time"},
+        "review_expires_at": {"type": "string", "format": "date-time"},
+        "provenance_group": {"type": "string", "minLength": 1}
+      }
+    },
+    "campaign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capture_count",
+        "interval_seconds",
+        "maximum_requests_per_minute",
+        "automatic_recurrence",
+        "stop_on_first_failure",
+        "kill_switch_checked_before_every_attempt"
+      ],
+      "properties": {
+        "capture_count": {"const": 25},
+        "interval_seconds": {"const": 12},
+        "maximum_requests_per_minute": {"const": 5},
+        "automatic_recurrence": {"const": false},
+        "stop_on_first_failure": {"const": true},
+        "kill_switch_checked_before_every_attempt": {"const": true}
+      }
+    },
+    "results": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "captures_requested",
+        "captures_attempted",
+        "captures_accepted",
+        "captures_rejected",
+        "rollbacks",
+        "corpus_replayed",
+        "all_accepted_snapshots_replayed",
+        "observed_at_first",
+        "observed_at_last",
+        "record_ledger_sha256",
+        "replay_ledger_sha256"
+      ],
+      "properties": {
+        "captures_requested": {"const": 25},
+        "captures_attempted": {"type": "integer", "minimum": 1, "maximum": 25},
+        "captures_accepted": {"type": "integer", "minimum": 0, "maximum": 25},
+        "captures_rejected": {"type": "integer", "minimum": 0, "maximum": 1},
+        "rollbacks": {"type": "integer", "minimum": 0, "maximum": 1},
+        "corpus_replayed": {"type": "integer", "minimum": 0, "maximum": 25},
+        "all_accepted_snapshots_replayed": {"type": "boolean"},
+        "observed_at_first": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "format": "date-time"}
+          ]
+        },
+        "observed_at_last": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "format": "date-time"}
+          ]
+        },
+        "record_ledger_sha256": {"$ref": "#/$defs/sha256"},
+        "replay_ledger_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capture_index",
+        "observed_at",
+        "expires_at",
+        "snapshot_artifact_id",
+        "raw_sha256",
+        "normalized_sha256",
+        "resolution_artifact_id"
+      ],
+      "properties": {
+        "capture_index": {"type": "integer", "minimum": 0, "maximum": 24},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "snapshot_artifact_id": {"$ref": "#/$defs/sha256"},
+        "raw_sha256": {"$ref": "#/$defs/sha256"},
+        "normalized_sha256": {"$ref": "#/$defs/sha256"},
+        "resolution_artifact_id": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "replay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capture_index", "artifact_id", "valid", "findings"],
+      "properties": {
+        "capture_index": {"type": "integer", "minimum": 0, "maximum": 24},
+        "artifact_id": {"$ref": "#/$defs/sha256"},
+        "valid": {"type": "boolean"},
+        "findings": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "artifact_is_command",
+        "network_capture_allowed_outside_campaign",
+        "may_generate_live_proposal",
+        "may_execute",
+        "may_sign",
+        "may_submit_transaction",
+        "may_move_capital"
+      ],
+      "properties": {
+        "authority": {"const": false},
+        "artifact_is_command": {"const": false},
+        "network_capture_allowed_outside_campaign": {"const": false},
+        "may_generate_live_proposal": {"const": false},
+        "may_execute": {"const": false},
+        "may_sign": {"const": false},
+        "may_submit_transaction": {"const": false},
+        "may_move_capital": {"const": false}
+      }
+    }
+  }
+}
