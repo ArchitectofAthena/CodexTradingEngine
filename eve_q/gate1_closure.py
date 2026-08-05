@@ -128,9 +128,7 @@ def load_json(path: Path) -> Any:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise Gate1ClosureError(
-            f"unable to load JSON {path}: {type(exc).__name__}: {exc}"
-        ) from exc
+        raise Gate1ClosureError(f"unable to load JSON {path}: {type(exc).__name__}: {exc}") from exc
 
 
 def schema_findings(
@@ -213,8 +211,7 @@ def validate_threat_model(
     if not isinstance(residual, list) or not residual:
         findings.append("at least one residual risk must remain explicit")
     elif not any(
-        isinstance(item, Mapping) and item.get("status") == "BLOCKS_GATE1B"
-        for item in residual
+        isinstance(item, Mapping) and item.get("status") == "BLOCKS_GATE1B" for item in residual
     ):
         findings.append("at least one residual risk must explicitly block Gate 1B")
 
@@ -263,9 +260,7 @@ def validate_ready_proposal(
     rollback = document.get("rollback", {})
     threat_rollback = threat_model.get("rollback", {})
     if isinstance(rollback, Mapping) and isinstance(threat_rollback, Mapping):
-        if rollback.get("test_receipt_sha256") != threat_rollback.get(
-            "test_receipt_sha256"
-        ):
+        if rollback.get("test_receipt_sha256") != threat_rollback.get("test_receipt_sha256"):
             findings.append("proposal rollback receipt does not match threat model")
         if rollback.get("plan_sha256") != threat_rollback.get("plan_sha256"):
             findings.append("proposal rollback plan does not match threat model")

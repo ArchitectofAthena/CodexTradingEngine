@@ -60,9 +60,7 @@ def test_threat_model_receipt_detects_mutation():
 
 def test_missing_conflict_class_fails_closed():
     threat = load(THREAT_PATH)
-    threat["threats"] = [
-        item for item in threat["threats"] if item["class"] != "material_conflict"
-    ]
+    threat["threats"] = [item for item in threat["threats"] if item["class"] != "material_conflict"]
     threat["receipt_sha256"] = compute_receipt_sha256(threat)
 
     findings = validate_threat_model(threat, load(THREAT_SCHEMA_PATH))
