@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/alpha_operator_report_v0_1.schema.json",
+  "title": "Codex Gate 1A Alpha Operator Report v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "created_at",
+    "mode",
+    "receipt_sha256",
+    "doctor",
+    "source",
+    "draft",
+    "research",
+    "result_surface",
+    "expected_observed",
+    "rollback",
+    "reproduction",
+    "publication_safety",
+    "boundary"
+  ],
+  "properties": {
+    "artifact_type": {"const": "CodexAlphaOperatorReport"},
+    "contract_version": {"const": "codex-alpha-operator-v0.1"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "mode": {"enum": ["status", "simulate-reviewed"]},
+    "receipt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "doctor": {"$ref": "#/$defs/doctor"},
+    "source": {"type": ["object", "null"]},
+    "draft": {"type": ["object", "null"]},
+    "research": {"type": ["object", "null"]},
+    "result_surface": {"$ref": "#/$defs/resultSurface"},
+    "expected_observed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_behavior", "observed_behavior"],
+      "properties": {
+        "expected_behavior": {"type": "string", "minLength": 1},
+        "observed_behavior": {"type": "string", "minLength": 1}
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kill_switch_active",
+        "kill_switch_variable",
+        "rollback_state"
+      ],
+      "properties": {
+        "kill_switch_active": {"type": "boolean"},
+        "kill_switch_variable": {"const": "EVE_Q_GATE1_KILL_SWITCH"},
+        "rollback_state": {"type": "string", "minLength": 1}
+      }
+    },
+    "reproduction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository_commit", "python_version", "command"],
+      "properties": {
+        "repository_commit": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "python_version": {"type": "string", "minLength": 1},
+        "command": {"type": ["string", "null"]}
+      }
+    },
+    "publication_safety": {"type": "string", "minLength": 1},
+    "boundary": {"$ref": "#/$defs/authority"}
+  },
+  "$defs": {
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "artifact_is_command",
+        "network_capture_allowed",
+        "may_generate_live_proposal",
+        "may_execute",
+        "may_sign",
+        "may_submit_transaction",
+        "may_move_capital"
+      ],
+      "properties": {
+        "authority": {"const": false},
+        "artifact_is_command": {"const": false},
+        "network_capture_allowed": {"const": false},
+        "may_generate_live_proposal": {"const": false},
+        "may_execute": {"const": false},
+        "may_sign": {"const": false},
+        "may_submit_transaction": {"const": false},
+        "may_move_capital": {"const": false}
+      }
+    },
+    "doctor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "holds",
+        "warnings",
+        "repository",
+        "python",
+        "gate_posture",
+        "kill_switch_active",
+        "rust_verifier",
+        "source_registry",
+        "authority"
+      ],
+      "properties": {
+        "status": {"enum": ["READY", "READY_WITH_WARNINGS", "HOLD"]},
+        "holds": {"type": "array", "items": {"type": "string"}},
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "repository": {"type": "object"},
+        "python": {"type": "object"},
+        "gate_posture": {"type": "object"},
+        "kill_switch_active": {"type": "boolean"},
+        "rust_verifier": {"type": "object"},
+        "source_registry": {"type": "object"},
+        "authority": {"type": "object"}
+      }
+    },
+    "resultSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "PIPELINE",
+        "SOURCE",
+        "FRESHNESS",
+        "ECONOMICS",
+        "CLASSICAL_BASELINE",
+        "QAOA_COMPARISON",
+        "RUST_VERIFICATION",
+        "EXECUTION",
+        "ROLLBACK"
+      ],
+      "properties": {
+        "PIPELINE": {"type": "string", "minLength": 1},
+        "SOURCE": {"type": "string", "minLength": 1},
+        "FRESHNESS": {"type": "string", "minLength": 1},
+        "ECONOMICS": {"type": "string", "minLength": 1},
+        "CLASSICAL_BASELINE": {"type": "string", "minLength": 1},
+        "QAOA_COMPARISON": {"type": "string", "minLength": 1},
+        "RUST_VERIFICATION": {"type": "string", "minLength": 1},
+        "EXECUTION": {"const": "LOCKED"},
+        "ROLLBACK": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
