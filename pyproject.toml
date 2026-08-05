@@ -72,6 +72,7 @@ select = [
     "ASYNC",
 ]
 ignore = ["E501"]
+per-file-ignores = { "eve_q/alpha_doctor.py" = ["I001", "UP035"], "tests/test_alpha_doctor_v0_1.py" = ["I001"] }
 
 [tool.mypy]
 python_version = "3.11"
