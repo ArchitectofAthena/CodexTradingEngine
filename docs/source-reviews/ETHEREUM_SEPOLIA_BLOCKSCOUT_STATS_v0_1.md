@@ -50,9 +50,27 @@ Credential: none
 
 ## Gate 1A bounds
 
+Normal approved alpha invocation:
+
 ```text
 Requests per explicit run: 1
 Automatic recurrence: forbidden
+```
+
+One fixed-count campaign is additionally approved by issue #128:
+
+```text
+Campaign count: exactly 25 GET requests
+Spacing: exactly 12 seconds
+Maximum campaign rate: 5 requests per minute
+Automatic recurrence: forbidden
+Stop on first boundary failure: required
+Kill switch check before every attempt: required
+```
+
+Shared source limits:
+
+```text
 Allowed method: GET only
 Exact host: eth-sepolia.blockscout.com
 Allowed port: 443 only
@@ -65,6 +83,8 @@ Transaction submission: false
 Capital movement: false
 ```
 
+The 25-capture allowance is not a general increase in source authority. It applies only to one explicitly invoked campaign implementing issue #128. Any other run returns to the one-request rule unless separately reviewed.
+
 The repository transport also performs DNS/IP preflight, public-address enforcement, exact-host redirect enforcement, offline replay, raw and normalized hash verification, post-capture resolution verification, and rollback-receipt emission on supported failure.
 
 ## Interpretation boundary
@@ -76,15 +96,17 @@ Permitted use:
 - public Sepolia chain counters;
 - provider-reported gas statistics;
 - bounded workflow and provenance testing;
-- local simulation context after explicit translation and exact-hash review.
+- local simulation context after explicit translation and exact-hash review;
+- one fixed-count source-stability campaign under issue #128.
 
 Forbidden interpretation:
 
 - treating `coin_price` or `market_cap` as an executable quote;
 - treating any response field as a mainnet value;
-- asserting recurring profit from one observation;
+- asserting recurring profit from one or twenty-five observations;
 - using the source to create a Gate 2 proposal;
-- signing, submitting, executing, or moving capital.
+- signing, submitting, executing, or moving capital;
+- turning the soak into recurring or indefinite monitoring.
 
 The first mapping records one provider-reported average gas-price observation. Route profitability, gas cost, fees, liquidity, latency, slippage, bridge cost, and safety margin remain explicit test-only operator assumptions.
 
@@ -112,14 +134,14 @@ Blockscout has announced that per-instance API endpoints are expected to be depr
 2026-09-04T01:12:00Z
 ```
 
-A new evidence receipt and registry update are required after that point. Silence, continued availability, or a passing historical capture does not extend eligibility.
+A new evidence receipt and registry update are required after that point. Silence, continued availability, a passing historical capture, or a passing soak does not extend eligibility.
 
 ## Authority receipt
 
 ```text
 authority: false
 artifact_is_command: false
-network_capture_allowed: only through explicit Gate 1A invocation
+network_capture_allowed: only through explicit reviewed Gate 1A invocation
 may_generate_live_proposal: false
 may_sign: false
 may_submit_transaction: false
@@ -127,4 +149,4 @@ may_execute: false
 may_move_capital: false
 ```
 
-> Eligibility means this exact observation path has earned one bounded look. It does not mean the source owns the truth or the engine owns the next action.
+> Eligibility means this exact observation path earned bounded access under named conditions. It does not mean the source owns the truth or the engine owns the next action.
