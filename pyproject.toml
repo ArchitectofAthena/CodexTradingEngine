@@ -19,6 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
+codex-alpha-doctor = "eve_q.alpha_doctor:main"
 codex-gate1 = "eve_q.gate1_readonly_runtime:main"
 codex-research = "eve_q.research_cli:main"
 omega-context = "omega_telemetry.context_runner:main"
