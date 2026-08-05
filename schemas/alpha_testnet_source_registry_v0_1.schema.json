@@ -86,6 +86,7 @@
         "concentration_risk_note",
         "review_evidence",
         "reviewed_at",
+        "review_expires_at",
         "authority",
         "mainnet",
         "wallet_required",
@@ -214,6 +215,10 @@
           "type": ["string", "null"],
           "format": "date-time"
         },
+        "review_expires_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
         "authority": {"const": false},
         "mainnet": {"const": false},
         "wallet_required": {"const": false},
@@ -240,7 +245,8 @@
                 }
               },
               "review_evidence": {"minItems": 1},
-              "reviewed_at": {"type": "string", "format": "date-time"}
+              "reviewed_at": {"type": "string", "format": "date-time"},
+              "review_expires_at": {"type": "string", "format": "date-time"}
             }
           }
         }
