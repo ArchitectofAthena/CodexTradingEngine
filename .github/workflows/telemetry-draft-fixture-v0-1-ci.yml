@@ -71,7 +71,7 @@ jobs:
           python -m ruff check \
             eve_q/telemetry_draft_fixture.py \
             tests/test_telemetry_draft_fixture_v0_1.py
-          python -m black --check \
+          python -m black --diff --check \
             eve_q/telemetry_draft_fixture.py \
             tests/test_telemetry_draft_fixture_v0_1.py
 
