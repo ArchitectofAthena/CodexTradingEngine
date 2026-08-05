@@ -1,0 +1,46 @@
+{
+  "artifact_type": "CodexTradingEngineChangeReceipt",
+  "contract_version": "viv_market_robustness_gauntlet_v0.2",
+  "recorded_at": "2026-08-05T22:35:39Z",
+  "issue": 140,
+  "source": {
+    "base_merge_commit": "970232f3cfb1cc3cfbd524c0d8efcf8b83e102d4",
+    "existing_organs": [
+      "eve_q/delta_robustness.py",
+      "eve_q/perturbation_calibration.py",
+      "eve_q/viv_adversarial.py",
+      "schemas/viv_adversarial_receipt_v0_1.schema.json"
+    ],
+    "architect_decision": "Continue ViV as the bounded adversarial organ after v0.1 merged.",
+    "drive_doctrine_id": "1BuB_wX2DaZ8_qk-_9cMfFSM4ROzDUweKE6gH9VdpIzg"
+  },
+  "transformation": {
+    "mode": "extend_existing_harness_without_parallel_market_model",
+    "added": [
+      "serialized DeltaRobustnessReceipt validator",
+      "ten deterministic market evidence mutations",
+      "codex-viv-market-gauntlet CLI",
+      "focused tests",
+      "focused CI",
+      "operator doctrine"
+    ],
+    "reused": [
+      "existing ViV adversarial receipt",
+      "existing run_viv_gauntlet harness",
+      "existing delta robustness summary arithmetic",
+      "existing scenario-set and receipt content addressing"
+    ]
+  },
+  "authority": {
+    "artifact_is_command": false,
+    "market_discovery": false,
+    "network_access": false,
+    "repricing_execution": false,
+    "wallet_access": false,
+    "capital": false,
+    "merge": false,
+    "deployment": false,
+    "human_review_required": true
+  },
+  "axiom": "ViV does not generate the storm. She attacks the story the receipt tells about surviving it."
+}
