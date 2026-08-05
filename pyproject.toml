@@ -75,7 +75,7 @@ select = [
     "ASYNC",
 ]
 ignore = ["E501"]
-per-file-ignores = { "eve_q/alpha_doctor.py" = ["I001", "UP035"], "tests/test_alpha_doctor_v0_1.py" = ["I001"], "eve_q/telemetry_draft_fixture.py" = ["I001", "UP017"], "tests/test_telemetry_draft_fixture_v0_1.py" = ["I001", "UP017"], "eve_q/alpha_operator.py" = ["I001", "UP017"], "tests/test_alpha_operator_v0_1.py" = ["I001", "UP017"] }
+per-file-ignores = { "eve_q/alpha_doctor.py" = ["I001", "UP035"], "tests/test_alpha_doctor_v0_1.py" = ["I001"], "eve_q/telemetry_draft_fixture.py" = ["I001", "UP017"], "tests/test_telemetry_draft_fixture_v0_1.py" = ["I001", "UP017"], "eve_q/alpha_operator.py" = ["I001", "UP017"], "tests/test_alpha_operator_v0_1.py" = ["I001", "UP017"], "eve_q/sepolia_soak_campaign.py" = ["I001", "UP017"], "tests/test_sepolia_soak_campaign_v0_1.py" = ["I001", "UP017"] }
 
 [tool.mypy]
 python_version = "3.11"
