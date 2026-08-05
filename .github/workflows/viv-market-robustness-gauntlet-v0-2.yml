@@ -1,0 +1,51 @@
+name: ViV Market Robustness Gauntlet v0.2
+
+on:
+  pull_request:
+    paths:
+      - 'eve_q/viv_market_adversarial.py'
+      - 'tests/test_viv_market_adversarial_v0_2.py'
+      - 'docs/VIV_MARKET_ROBUSTNESS_GAUNTLET_v0_2.md'
+      - 'receipts/changes/viv_market_robustness_gauntlet_v0_2.json'
+      - 'schemas/viv_adversarial_receipt_v0_1.schema.json'
+      - 'pyproject.toml'
+      - '.github/workflows/viv-market-robustness-gauntlet-v0-2.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'eve_q/viv_market_adversarial.py'
+      - 'tests/test_viv_market_adversarial_v0_2.py'
+      - 'pyproject.toml'
+      - '.github/workflows/viv-market-robustness-gauntlet-v0-2.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  viv-market-gauntlet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install test surface
+        run: python -m pip install --upgrade pip && python -m pip install -e '.[test]'
+
+      - name: Python syntax
+        run: python -m compileall -q eve_q/viv_market_adversarial.py tests/test_viv_market_adversarial_v0_2.py
+
+      - name: Provenance JSON
+        run: python -m json.tool receipts/changes/viv_market_robustness_gauntlet_v0_2.json >/dev/null
+
+      - name: Focused ViV market tests
+        run: pytest -q tests/test_viv_market_adversarial_v0_2.py --no-cov
