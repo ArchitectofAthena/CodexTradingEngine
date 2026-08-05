@@ -1,7 +1,8 @@
 # ViV Adversarial Sandbox v0.1
 
-Status: candidate implementation  
+Status: merged bounded implementation  
 Issue: #138  
+Merged via: #139  
 Authority: none
 
 ## Purpose
@@ -109,6 +110,24 @@ Exit codes:
 - `1`: invalid input, invalid baseline, or harness error;
 - `2`: at least one mutation escaped.
 
+## Recursive correction proof
+
+The dedicated CI lane now exercises the installed `codex-viv-gauntlet` entry point rather than relying only on unit tests. For each supported Python version, it:
+
+1. builds one deterministic baseline simulation artifact;
+2. runs the complete mutation suite with root seeds `0`, `7331`, and `424242`;
+3. writes three content-addressed runtime receipts;
+4. validates each receipt with `validate_viv_receipt(...)`;
+5. fails if any configured mutation escapes, if repair is required, if the baseline changes, or if the expected receipt count is missing.
+
+The workflow is defined in:
+
+```text
+.github/workflows/viv-adversarial-sandbox-v0-1.yml
+```
+
+This recursive run is evidence that the current validator blocks the current nine mutations across the selected seeds and runtimes. It is not production certification and does not grant promotion authority.
+
 ## Receipt contract
 
 The canonical schema is:
@@ -191,4 +210,4 @@ Possible later expansions, each requiring a separate review:
 - model/prompt contradiction suites;
 - minimized counterexample generation.
 
-The v0.1 organ stays deliberately small: one candidate, one allowlisted validator, deterministic mutations, one evidence receipt.
+The v0.1 organ stays deliberately small: one candidate, one allowlisted validator, deterministic mutations, one evidence receipt per run.

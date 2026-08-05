@@ -1,0 +1,90 @@
+{
+  "artifact_type": "ViVRecursiveCorrectionReceipt",
+  "version": "v0.1",
+  "created_at": "2026-08-05T17:33:00-05:00",
+  "repository": "ArchitectofAthena/CodexTradingEngine",
+  "base_commit": "970232f3cfb1cc3cfbd524c0d8efcf8b83e102d4",
+  "pull_request": 141,
+  "trigger": "Architect request: Run recursive correction runs",
+  "correction_runs": [
+    {
+      "id": "runtime_receipt_proof",
+      "finding": "The original ViV CI lane compiled code, validated static JSON, and ran focused tests, but did not execute the installed gauntlet CLI as an independent runtime proof.",
+      "correction": "Generate a deterministic baseline artifact, execute codex-viv-gauntlet for seeds 0, 7331, and 424242 on Python 3.11 and 3.13, then validate every emitted receipt and fail on any escape or mutation of the baseline."
+    },
+    {
+      "id": "cross_runtime_digest_lock",
+      "finding": "Independent runtime success did not require Python 3.11 and 3.13 to emit identical content-addressed receipts.",
+      "correction": "Lock the expected receipt ID for every root seed so either runtime fails on deterministic digest drift."
+    },
+    {
+      "id": "node24_action_upgrade",
+      "finding": "The first correction run passed but emitted deprecation warnings because actions/checkout@v4 and actions/setup-python@v5 target the retired Node 20 action runtime.",
+      "correction": "Upgrade the dedicated lane to actions/checkout@v5 and actions/setup-python@v6, both using the Node 24 action runtime."
+    },
+    {
+      "id": "manual_recursion_entry",
+      "finding": "The dedicated workflow could not be invoked manually.",
+      "correction": "Add workflow_dispatch while preserving pull-request and main-branch path gates."
+    },
+    {
+      "id": "documentation_state_sync",
+      "finding": "The operator document still described the ViV organ as a candidate after pull request 139 merged.",
+      "correction": "Record the merged bounded implementation and document the recursive runtime proof lane without implying certification."
+    },
+    {
+      "id": "source_hold_separation",
+      "finding": "SpiralBloom OS issue 84 remains an incomplete Viv source intake while the separate bounded adversarial role has been implemented in CodexTradingEngine.",
+      "correction": "Preserve the distinction: the adversarial organ does not freeze or complete the narrative, finance, Stargazer, or draconic-renewal ontology in issue 84."
+    }
+  ],
+  "expected_runtime_matrix": {
+    "python_versions": [
+      "3.11",
+      "3.13"
+    ],
+    "root_seeds": [
+      0,
+      7331,
+      424242
+    ],
+    "receipts_per_runtime": 3,
+    "configured_mutations_per_receipt": 9,
+    "required_escaped_count": 0,
+    "expected_receipt_ids": {
+      "0": "sha256:e2f10ca5fc6c24e0a688b7e48b6a66104572e78793c769ddc70cfe85124645f6",
+      "7331": "sha256:3643d36d35811df70b7b83842918fdda55f39624fba4f0168d694b9bc333fd08",
+      "424242": "sha256:3572a57af6571402e2ff9bd15ced378a04efa22bd04d42390730a234abbd893c"
+    }
+  },
+  "first_run_observation": {
+    "runtime_jobs": 2,
+    "gauntlets": 6,
+    "mutation_checks": 54,
+    "blocked": 54,
+    "escaped": 0,
+    "candidate_unchanged": true,
+    "cross_runtime_receipts_identical": true,
+    "supporting_workflows": {
+      "viv_adversarial_sandbox": "success",
+      "full_simulation_suite": "success",
+      "gate_1_deployable_smoke": "success",
+      "lint_and_format": "success",
+      "security_audit": "success",
+      "full_history_secret_audit": "success",
+      "codex_evidence_bundle": "success"
+    }
+  },
+  "authority": {
+    "artifact_is_command": false,
+    "authority": false,
+    "human_promotion_required": true,
+    "may_merge": false,
+    "may_deploy": false,
+    "may_execute": false,
+    "may_sign": false,
+    "may_broadcast": false,
+    "may_access_wallet": false,
+    "may_move_capital": false
+  }
+}
