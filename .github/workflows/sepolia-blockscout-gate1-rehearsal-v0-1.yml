@@ -1,0 +1,215 @@
+name: Sepolia Blockscout Gate 1A Rehearsal v0.1
+
+on:
+  pull_request:
+    paths:
+      - "registry/alpha_testnet_sources_v0_1.json"
+      - "registry/source_specs/ethereum_sepolia_blockscout_stats_v0_1.json"
+      - "schemas/alpha_testnet_source_registry_v0_1.schema.json"
+      - "examples/alpha/sepolia_blockscout_stats_mapping_v0_1.json"
+      - "examples/alpha/sepolia_blockscout_stats_assumptions_v0_1.json"
+      - "docs/source-reviews/ETHEREUM_SEPOLIA_BLOCKSCOUT_STATS_v0_1.md"
+      - "scripts/run_gate1_read_only_capture_v0_2.sh"
+      - "tests/test_sepolia_blockscout_source_v0_1.py"
+      - ".github/workflows/sepolia-blockscout-gate1-rehearsal-v0-1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sepolia-blockscout-gate1-rehearsal-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bounded-rehearsal:
+    name: One bounded public Sepolia rehearsal
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout without retained credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test,dev]'
+
+      - name: Validate reviewed source contracts
+        run: |
+          python -m pytest \
+            -o addopts='' \
+            -q \
+            --strict-markers \
+            tests/test_alpha_doctor_v0_1.py \
+            tests/test_sepolia_blockscout_source_v0_1.py
+
+      - name: Explain the alpha environment before capture
+        run: |
+          codex-alpha-doctor \
+            --json \
+            --output artifacts/pre-capture-doctor.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(
+              Path("artifacts/pre-capture-doctor.json").read_text(encoding="utf-8")
+          )
+          assert payload["status"] == "READY_WITH_WARNINGS"
+          registry = payload["source_registry"]
+          assert registry["valid"] is True
+          assert registry["eligible_source_ids"] == [
+              "ethereum-sepolia-blockscout-stats-v0-1"
+          ]
+          assert registry["eligible_source_count"] == 1
+          assert payload["authority"]["authority"] is False
+          assert payload["authority"]["network_capture_allowed"] is False
+          assert payload["authority"]["may_execute"] is False
+          assert payload["authority"]["may_move_capital"] is False
+          PY
+
+      - name: Capture one bounded public Sepolia observation
+        env:
+          EVE_Q_GATE1_PILOT: "1"
+          EVE_Q_GATE1_KILL_SWITCH: "0"
+          RUN_ROOT: artifacts/sepolia-source-rehearsal
+          RUN_ID: sepolia-blockscout
+          PRODUCER_COMMIT: ${{ github.sha }}
+        run: |
+          bash scripts/run_gate1_read_only_capture_v0_2.sh \
+            registry/source_specs/ethereum_sepolia_blockscout_stats_v0_1.json
+
+      - name: Build deterministic unreviewed draft
+        run: |
+          codex-telemetry-draft build \
+            --bundle artifacts/sepolia-source-rehearsal/sepolia-blockscout/snapshot \
+            --mapping examples/alpha/sepolia_blockscout_stats_mapping_v0_1.json \
+            --assumptions examples/alpha/sepolia_blockscout_stats_assumptions_v0_1.json \
+            --output-dir artifacts/sepolia-source-rehearsal/draft
+
+      - name: Review the exact draft hash for local simulation only
+        id: review
+        run: |
+          DRAFT_HASH="$(python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(
+              Path(
+                  "artifacts/sepolia-source-rehearsal/draft/draft.json"
+              ).read_text(encoding="utf-8")
+          )
+          print(payload["draft_hash"])
+          PY
+          )"
+          REVIEWED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          codex-telemetry-draft review \
+            --draft artifacts/sepolia-source-rehearsal/draft/draft.json \
+            --expected-draft-hash "$DRAFT_HASH" \
+            --decision REVIEWED_FOR_LOCAL_SIMULATION \
+            --reviewer "Gate 1A CI rehearsal" \
+            --reviewed-at "$REVIEWED_AT" \
+            --note "Exact hash reviewed for bounded local simulation only; no production or execution authority." \
+            --output-dir artifacts/sepolia-source-rehearsal/reviewed
+          echo "draft_hash=$DRAFT_HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Run one reviewed local simulation
+        run: |
+          codex-alpha-run \
+            --acknowledge-dirty \
+            simulate-reviewed \
+            --draft artifacts/sepolia-source-rehearsal/reviewed/reviewed-draft.json \
+            --expected-draft-hash "${{ steps.review.outputs.draft_hash }}" \
+            --cycle-id sepolia-blockscout-rehearsal-v0-1 \
+            --producer-commit "${{ github.sha }}" \
+            --output-dir artifacts/sepolia-source-rehearsal/alpha
+
+      - name: Verify observation separation and final authority posture
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("artifacts/sepolia-source-rehearsal")
+          snapshot = json.loads(
+              (root / "sepolia-blockscout/snapshot/snapshot.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          draft = json.loads(
+              (root / "reviewed/reviewed-draft.json").read_text(encoding="utf-8")
+          )
+          report = json.loads(
+              (root / "alpha/alpha-report.json").read_text(encoding="utf-8")
+          )
+
+          assert snapshot["source"]["source_id"] == (
+              "ethereum-sepolia-blockscout-stats-v0-1"
+          )
+          assert snapshot["source"]["method"] == "GET"
+          assert snapshot["source"]["allowlisted_host"] == (
+              "eth-sepolia.blockscout.com"
+          )
+          assert snapshot["authority"] is False
+          assert snapshot["may_execute"] is False
+          assert snapshot["may_move_capital"] is False
+
+          material = draft["draft_material"]
+          observed = material["observed_fields"]
+          assumptions = material["inferred_assumptions"]
+          assert observed[0]["target_field"] == (
+              "observed_average_gas_price_gwei"
+          )
+          assert observed[0]["source_pointer"] == (
+              "/normalized_payload/gas_prices/average"
+          )
+          assert all(
+              item["field"] != "observed_average_gas_price_gwei"
+              for item in assumptions
+          )
+          assert material["missing_assumptions"] == []
+          assert draft["operator_review"]["state"] == (
+              "REVIEWED_FOR_LOCAL_SIMULATION"
+          )
+          assert draft["authority"]["authority"] is False
+          assert draft["authority"]["may_execute"] is False
+          assert draft["authority"]["may_move_capital"] is False
+
+          surface = report["result_surface"]
+          assert surface["PIPELINE"] == "READY"
+          assert surface["SOURCE"] == "ELIGIBLE"
+          assert surface["FRESHNESS"] == "FRESH"
+          assert surface["EXECUTION"] == "LOCKED"
+          assert surface["ROLLBACK"] == "READY"
+          assert report["source"]["source_id"] == (
+              "ethereum-sepolia-blockscout-stats-v0-1"
+          )
+          boundary = report["boundary"]
+          assert boundary["authority"] is False
+          assert boundary["network_capture_allowed"] is False
+          assert boundary["may_generate_live_proposal"] is False
+          assert boundary["may_execute"] is False
+          assert boundary["may_sign"] is False
+          assert boundary["may_submit_transaction"] is False
+          assert boundary["may_move_capital"] is False
+          PY
+
+      - name: Upload bounded rehearsal evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: sepolia-blockscout-gate1a-rehearsal-v0-1
+          path: artifacts/sepolia-source-rehearsal
+          if-no-files-found: warn
+          retention-days: 14
