@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/hecate_gate_receipt_v0_1.schema.json",
+  "title": "Hecate Input Gate Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "receipt_id",
+    "envelope_id",
+    "source_id",
+    "route",
+    "payload_hash",
+    "evaluated_at",
+    "outcome",
+    "findings",
+    "held_until",
+    "admitted_to_field",
+    "authority",
+    "artifact_is_command",
+    "human_promotion_required",
+    "may_execute",
+    "may_deploy",
+    "may_sign",
+    "may_broadcast",
+    "may_move_capital"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "pattern": "^hecate:[a-f0-9]{24}$"
+    },
+    "envelope_id": {"type": "string", "minLength": 1},
+    "source_id": {"type": "string", "minLength": 1},
+    "route": {"type": "string", "minLength": 1},
+    "payload_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "evaluated_at": {"type": "string", "format": "date-time"},
+    "outcome": {
+      "type": "string",
+      "enum": ["allow", "hold", "return"]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "severity", "disposition", "message"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "source_not_allowlisted",
+              "provenance_missing",
+              "stale_signal",
+              "future_timestamp",
+              "payload_too_large",
+              "duplicate_replay",
+              "secret_shape",
+              "prompt_injection",
+              "authority_escalation",
+              "network_expansion",
+              "coherence_low",
+              "affect_unstable",
+              "readiness_low",
+              "route_unsafe"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["info", "low", "medium", "high", "critical"]
+          },
+          "disposition": {
+            "type": "string",
+            "enum": ["hold", "return"]
+          },
+          "message": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "held_until": {
+      "oneOf": [
+        {"type": "string", "format": "date-time"},
+        {"type": "null"}
+      ]
+    },
+    "admitted_to_field": {"type": "boolean"},
+    "authority": {"const": false},
+    "artifact_is_command": {"const": false},
+    "human_promotion_required": {"const": true},
+    "may_execute": {"const": false},
+    "may_deploy": {"const": false},
+    "may_sign": {"const": false},
+    "may_broadcast": {"const": false},
+    "may_move_capital": {"const": false}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"outcome": {"const": "allow"}},
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "admitted_to_field": {"const": true},
+          "held_until": {"type": "null"},
+          "findings": {"maxItems": 0}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"outcome": {"const": "hold"}},
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "admitted_to_field": {"const": false},
+          "held_until": {"type": "string", "format": "date-time"},
+          "findings": {"minItems": 1}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"outcome": {"const": "return"}},
+        "required": ["outcome"]
+      },
+      "then": {
+        "properties": {
+          "admitted_to_field": {"const": false},
+          "held_until": {"type": "null"},
+          "findings": {"minItems": 1}
+        }
+      }
+    }
+  ]
+}
