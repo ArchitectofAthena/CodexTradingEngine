@@ -1,0 +1,72 @@
+{
+  "artifact_type": "CodexTradingEngineChangeReceipt",
+  "contract_version": "viv_adversarial_sandbox_change_v0.1",
+  "recorded_at": "2026-08-05T22:20:00Z",
+  "issue": 138,
+  "branch": "feat/viv-adversarial-sandbox-v0-1",
+  "status": "CANDIDATE",
+  "change": {
+    "name": "ViV adversarial sandbox v0.1",
+    "role": "sandboxed_adversarial_tester",
+    "implementation": [
+      "deterministic simulation-artifact mutation gauntlet",
+      "allowlisted validator registry",
+      "content-addressed adversarial receipts",
+      "blocked-versus-escaped evidence",
+      "original-candidate immutability check",
+      "JSON Schema",
+      "focused tests and CI",
+      "operator documentation"
+    ]
+  },
+  "source_lineage": {
+    "architect_decision": "ViV acts as the system's sandboxed adversarial tester while builders produce candidate artifacts.",
+    "drive_anchor": {
+      "title": "SIGMA-LIMBIC-RECURSION-CORE_vinf1_Viv.txt",
+      "file_id": "1SFhxJhfOx1RliM0yWJpNkdhOcPySg__H",
+      "url": "https://drive.google.com/file/d/1SFhxJhfOx1RliM0yWJpNkdhOcPySg__H",
+      "supported_terms": [
+        "analyze in sandbox",
+        "counterfactual ethics loop",
+        "output counters and safeguards",
+        "never execute unethical tactics",
+        "Architect's Restraint",
+        "adversarial fuel"
+      ]
+    },
+    "telegram_packet": {
+      "provided_at": "2026-08-05",
+      "context_only": true,
+      "files": [
+        {"name": "1000063908.png", "bytes": 204387, "sha256": "b0e24c5127ec47cdcbd2cdd3d7608ee138f09df991554e587860a22e4ba68fe7"},
+        {"name": "1000063909.png", "bytes": 201204, "sha256": "e68e5a5cf4e9422e095b2a48f585166f52cf7ba9702db41e35859a13eabca1ba"},
+        {"name": "1000063910.png", "bytes": 269059, "sha256": "8e228eb8bc2886cdfffac94912c3acd0ed61232cbb9374b0951468a8fb882e3e"},
+        {"name": "1000063911.png", "bytes": 247269, "sha256": "acd8cec6918b3fec60f1bf173aeda9248377582b693d54a1b7759e10ed69a78f"},
+        {"name": "1000063912.png", "bytes": 226825, "sha256": "3f6a8e4a77620f7e1d29213285a279c59e597a3469ac14ef266a43c600d299b4"},
+        {"name": "1000063913.png", "bytes": 223555, "sha256": "37476a6d8f39caa41dab5426087753878940274696b7ed7e21c2bd4f7b1894b0"},
+        {"name": "1000063914.png", "bytes": 211010, "sha256": "36c75900191d96f9eb3c136dc3f83be726629810715d7fc9dff45d9ae71923de"},
+        {"name": "1000063915.png", "bytes": 209389, "sha256": "0aa5297b612ac2d22d27e1dae09db5fc1e45ead1d321ee189762595464f09148"},
+        {"name": "1000063916.png", "bytes": 203798, "sha256": "00f529275a4cea003f6fc55d06d224f01b88454c8005d6073a7511dab5c6fb92"}
+      ]
+    }
+  },
+  "role_separation": {
+    "Hecate": "external ingress danger analysis",
+    "ViV": "internal candidate adversarial testing",
+    "Paladine": "consent and boundary integrity review",
+    "Loopmother": "outward consequence review"
+  },
+  "authority": false,
+  "artifact_is_command": false,
+  "self_certifying": false,
+  "network_access": false,
+  "dynamic_code_loading": false,
+  "human_review_required": true,
+  "merge_authority": false,
+  "deployment_authority": false,
+  "execution_authority": false,
+  "credential_authority": false,
+  "wallet_authority": false,
+  "capital_authority": false,
+  "canonical_memory_authority": false
+}
