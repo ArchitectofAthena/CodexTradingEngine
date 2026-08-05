@@ -26,7 +26,6 @@ from jsonschema import Draft202012Validator, FormatChecker
 from eve_q.alpha_doctor import validate_registry
 from eve_q.gate1_readonly_runtime import parse_utc, validate_snapshot_v2
 
-
 ADAPTER_VERSION = "codex-telemetry-draft-v0.1"
 DRAFT_ARTIFACT_TYPE = "TelemetryDraftFixture"
 MAPPING_SCHEMA_VERSION = "0.1"
@@ -61,12 +60,8 @@ AUTHORITY_BOUNDARY = {
 
 _ROOT = Path(__file__).resolve().parents[1]
 _DEFAULT_REGISTRY = _ROOT / "registry" / "alpha_testnet_sources_v0_1.json"
-_DEFAULT_REGISTRY_SCHEMA = (
-    _ROOT / "schemas" / "alpha_testnet_source_registry_v0_1.schema.json"
-)
-_DEFAULT_SNAPSHOT_SCHEMA = (
-    _ROOT / "schemas" / "live_read_only_telemetry_snapshot_v0_2.schema.json"
-)
+_DEFAULT_REGISTRY_SCHEMA = _ROOT / "schemas" / "alpha_testnet_source_registry_v0_1.schema.json"
+_DEFAULT_SNAPSHOT_SCHEMA = _ROOT / "schemas" / "live_read_only_telemetry_snapshot_v0_2.schema.json"
 _DEFAULT_MAPPING_SCHEMA = _ROOT / "schemas" / "telemetry_fixture_mapping_v0_1.schema.json"
 _DEFAULT_DRAFT_SCHEMA = _ROOT / "schemas" / "telemetry_draft_fixture_v0_1.schema.json"
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -101,9 +96,7 @@ def _load_json(path: Path) -> Any:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise DraftFixtureError(
-            f"unable to load JSON {path}: {type(exc).__name__}: {exc}"
-        ) from exc
+        raise DraftFixtureError(f"unable to load JSON {path}: {type(exc).__name__}: {exc}") from exc
 
 
 def _schema_errors(document: Any, schema: Mapping[str, Any]) -> tuple[str, ...]:
@@ -121,9 +114,7 @@ def _schema_errors(document: Any, schema: Mapping[str, Any]) -> tuple[str, ...]:
 def _require_schema(document: Any, schema: Mapping[str, Any], label: str) -> None:
     errors = _schema_errors(document, schema)
     if errors:
-        raise DraftFixtureError(
-            f"{label} schema validation failed: " + "; ".join(errors[:8])
-        )
+        raise DraftFixtureError(f"{label} schema validation failed: " + "; ".join(errors[:8]))
 
 
 def _json_pointer(document: Any, pointer: str) -> Any:
@@ -138,9 +129,7 @@ def _json_pointer(document: Any, pointer: str) -> Any:
             if key not in current:
                 raise DraftFixtureError(f"JSON pointer does not exist: {pointer}")
             current = current[key]
-        elif isinstance(current, Sequence) and not isinstance(
-            current, (str, bytes, bytearray)
-        ):
+        elif isinstance(current, Sequence) and not isinstance(current, (str, bytes, bytearray)):
             try:
                 index = int(key)
                 current = current[index]
@@ -179,9 +168,7 @@ def _transform_value(value: Any, transform: Mapping[str, Any]) -> tuple[Any, str
                 "decimal_scale requires finite decimal value and factor"
             ) from exc
         if not factor.is_finite() or not converted.is_finite():
-            raise DraftFixtureError(
-                "decimal_scale requires finite decimal value and factor"
-            )
+            raise DraftFixtureError("decimal_scale requires finite decimal value and factor")
         result = _normalize_decimal(converted)
         return result, f"decimal_scale factor={_normalize_decimal(factor)}"
     raise DraftFixtureError(f"unsupported transform kind: {kind}")
@@ -192,13 +179,9 @@ def _normalize_host(value: str) -> str:
 
 
 def _find_source(registry: Mapping[str, Any], source_id: str) -> Mapping[str, Any]:
-    matches = [
-        item for item in registry.get("sources", []) if item.get("source_id") == source_id
-    ]
+    matches = [item for item in registry.get("sources", []) if item.get("source_id") == source_id]
     if len(matches) != 1:
-        raise DraftFixtureError(
-            f"registry must contain exactly one source entry for {source_id}"
-        )
+        raise DraftFixtureError(f"registry must contain exactly one source entry for {source_id}")
     source = matches[0]
     if source.get("disposition") != "ELIGIBLE":
         raise DraftFixtureError(f"source {source_id} has not earned ELIGIBLE status")
@@ -212,10 +195,7 @@ def _validate_source_boundary(
 ) -> None:
     snapshot_source = snapshot["source"]
     source_id = str(source["source_id"])
-    if (
-        snapshot_source.get("source_id") != source_id
-        or mapping.get("source_id") != source_id
-    ):
+    if snapshot_source.get("source_id") != source_id or mapping.get("source_id") != source_id:
         raise DraftFixtureError("snapshot, mapping, and registry source IDs must match")
     if source.get("network_class") != "testnet" or source.get("mainnet") is not False:
         raise DraftFixtureError("only reviewed public testnet sources are permitted")
@@ -233,18 +213,12 @@ def _validate_source_boundary(
     for key in ("requested_uri", "final_uri"):
         host = urllib.parse.urlparse(str(snapshot_source[key])).hostname
         if not host or _normalize_host(host) != expected_host:
-            raise DraftFixtureError(
-                f"snapshot {key} does not match the reviewed exact host"
-            )
+            raise DraftFixtureError(f"snapshot {key} does not match the reviewed exact host")
     if _normalize_host(str(snapshot_source["allowlisted_host"])) != expected_host:
-        raise DraftFixtureError(
-            "snapshot allowlisted host does not match the reviewed source"
-        )
+        raise DraftFixtureError("snapshot allowlisted host does not match the reviewed source")
     method = str(snapshot_source["method"])
     if method not in source.get("allowed_methods", []):
-        raise DraftFixtureError(
-            "snapshot method is not approved by the source registry"
-        )
+        raise DraftFixtureError("snapshot method is not approved by the source registry")
     for field in (
         "authority",
         "mainnet",
@@ -259,17 +233,13 @@ def _validate_source_boundary(
         raise DraftFixtureError("mapping authority must remain false")
 
 
-def _validate_normalized_payload(
-    snapshot: Mapping[str, Any], normalized_bytes: bytes
-) -> None:
+def _validate_normalized_payload(snapshot: Mapping[str, Any], normalized_bytes: bytes) -> None:
     format_name = snapshot["normalization"]["format"]
     if format_name in {"canonical_json", "head_metadata"}:
         try:
             decoded = json.loads(normalized_bytes.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise DraftFixtureError(
-                "normalized payload is not valid canonical JSON"
-            ) from exc
+            raise DraftFixtureError("normalized payload is not valid canonical JSON") from exc
     elif format_name == "utf8_text_lf":
         try:
             decoded = normalized_bytes.decode("utf-8")
@@ -278,9 +248,7 @@ def _validate_normalized_payload(
     else:
         raise DraftFixtureError(f"unsupported normalization format: {format_name}")
     if decoded != snapshot["normalized_payload"]:
-        raise DraftFixtureError(
-            "normalized bytes do not match snapshot normalized_payload"
-        )
+        raise DraftFixtureError("normalized bytes do not match snapshot normalized_payload")
 
 
 def _assumption_map(document: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
@@ -294,14 +262,8 @@ def _assumption_map(document: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]
         field = str(item.get("field", ""))
         if not field or field in result:
             raise DraftFixtureError("assumption fields must be non-empty and unique")
-        if (
-            "value" not in item
-            or not str(item.get("unit", ""))
-            or not str(item.get("basis", ""))
-        ):
-            raise DraftFixtureError(
-                f"assumption {field} requires value, unit, and basis"
-            )
+        if "value" not in item or not str(item.get("unit", "")) or not str(item.get("basis", "")):
+            raise DraftFixtureError(f"assumption {field} requires value, unit, and basis")
         result[field] = copy.deepcopy(item)
     return result
 
@@ -354,8 +316,7 @@ def _draft_material(
     overlap = occupied.intersection(assumptions)
     if overlap:
         raise DraftFixtureError(
-            "operator assumptions may not overwrite observed fields: "
-            + ", ".join(sorted(overlap))
+            "operator assumptions may not overwrite observed fields: " + ", ".join(sorted(overlap))
         )
     inferred_assumptions: list[dict[str, Any]] = []
     for field in sorted(assumptions):
@@ -372,9 +333,7 @@ def _draft_material(
         route_values[field] = copy.deepcopy(item["value"])
 
     available = occupied.union(assumptions)
-    missing = [
-        field for field in REQUIRED_ECONOMIC_ASSUMPTIONS if field not in available
-    ]
+    missing = [field for field in REQUIRED_ECONOMIC_ASSUMPTIONS if field not in available]
     source_review = {
         "registry_id": registry["registry_id"],
         "registry_sha256": sha256_hex(registry),
@@ -438,9 +397,7 @@ def build_draft(
         require_fresh=True,
     )
     if findings:
-        raise DraftFixtureError(
-            "snapshot validation failed: " + "; ".join(findings)
-        )
+        raise DraftFixtureError("snapshot validation failed: " + "; ".join(findings))
     _validate_normalized_payload(snapshot, normalized_bytes)
     source = _find_source(registry, str(mapping["source_id"]))
     _validate_source_boundary(snapshot, mapping, source)
@@ -448,9 +405,7 @@ def build_draft(
         mapping["network_name"] != source["network_name"]
         or mapping["chain_id"] != source["chain_id"]
     ):
-        raise DraftFixtureError(
-            "mapping network name and chain ID must match the registry"
-        )
+        raise DraftFixtureError("mapping network name and chain ID must match the registry")
 
     material = _draft_material(snapshot, registry, source, mapping, assumptions)
     draft_hash = sha256_hex(material)
@@ -491,9 +446,7 @@ def build_draft(
 def verify_draft_hash(draft: Mapping[str, Any]) -> None:
     actual = sha256_hex(draft["draft_material"])
     if draft.get("draft_hash") != actual or not _SHA256_RE.fullmatch(actual):
-        raise DraftFixtureError(
-            "draft hash does not match the immutable draft material"
-        )
+        raise DraftFixtureError("draft hash does not match the immutable draft material")
     expected_id = f"draft-{actual[:24]}"
     if draft.get("draft_id") != expected_id:
         raise DraftFixtureError("draft ID does not match the draft hash")
@@ -514,24 +467,18 @@ def review_draft(
     if decision not in REVIEW_STATES - {"DRAFT_UNREVIEWED"}:
         raise DraftFixtureError(f"unsupported review decision: {decision}")
     if expected_draft_hash != draft["draft_hash"]:
-        raise DraftFixtureError(
-            "operator review hash does not match the exact draft hash"
-        )
+        raise DraftFixtureError("operator review hash does not match the exact draft hash")
     try:
         parsed = parse_utc(reviewed_at)
     except (TypeError, ValueError) as exc:
-        raise DraftFixtureError(
-            "reviewed_at must be a timezone-aware date-time"
-        ) from exc
+        raise DraftFixtureError("reviewed_at must be a timezone-aware date-time") from exc
     if not reviewer.strip() or not note.strip():
         raise DraftFixtureError("reviewer and review note are required")
     if (
         decision == "REVIEWED_FOR_LOCAL_SIMULATION"
         and draft["draft_material"]["missing_assumptions"]
     ):
-        raise DraftFixtureError(
-            "missing economic assumptions block local simulation review"
-        )
+        raise DraftFixtureError("missing economic assumptions block local simulation review")
 
     reviewed = copy.deepcopy(dict(draft))
     reviewed["operator_review"] = {
@@ -541,9 +488,7 @@ def review_draft(
         "reviewed_at": parsed.isoformat().replace("+00:00", "Z"),
         "note": note.strip(),
     }
-    reviewed["local_simulation_eligible"] = (
-        decision == "REVIEWED_FOR_LOCAL_SIMULATION"
-    )
+    reviewed["local_simulation_eligible"] = decision == "REVIEWED_FOR_LOCAL_SIMULATION"
     reviewed["authority"] = dict(AUTHORITY_BOUNDARY)
     _require_schema(reviewed, draft_schema, "reviewed draft")
     verify_draft_hash(reviewed)
@@ -591,8 +536,7 @@ def render_summary(summary: Mapping[str, Any]) -> str:
             f"MISSING ASSUMPTIONS: {missing}",
             f"FRESHNESS: {summary['freshness_state']}",
             f"REVIEW: {summary['review_state']}",
-            "LOCAL SIMULATION ELIGIBLE: "
-            + str(summary["local_simulation_eligible"]).lower(),
+            "LOCAL SIMULATION ELIGIBLE: " + str(summary["local_simulation_eligible"]).lower(),
             "AUTHORITY: false",
             "EXECUTION: LOCKED",
         )
@@ -642,34 +586,22 @@ def _build_from_args(args: argparse.Namespace) -> DraftResult:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Build or review one Gate 1A telemetry draft"
-    )
+    parser = argparse.ArgumentParser(description="Build or review one Gate 1A telemetry draft")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    build = subparsers.add_parser(
-        "build", help="build a deterministic unreviewed draft"
-    )
+    build = subparsers.add_parser("build", help="build a deterministic unreviewed draft")
     build.add_argument("--bundle", type=Path, required=True)
     build.add_argument("--mapping", type=Path, required=True)
     build.add_argument("--assumptions", type=Path, required=True)
     build.add_argument("--output-dir", type=Path, required=True)
     build.add_argument("--registry", type=Path, default=_DEFAULT_REGISTRY)
-    build.add_argument(
-        "--registry-schema", type=Path, default=_DEFAULT_REGISTRY_SCHEMA
-    )
-    build.add_argument(
-        "--snapshot-schema", type=Path, default=_DEFAULT_SNAPSHOT_SCHEMA
-    )
-    build.add_argument(
-        "--mapping-schema", type=Path, default=_DEFAULT_MAPPING_SCHEMA
-    )
+    build.add_argument("--registry-schema", type=Path, default=_DEFAULT_REGISTRY_SCHEMA)
+    build.add_argument("--snapshot-schema", type=Path, default=_DEFAULT_SNAPSHOT_SCHEMA)
+    build.add_argument("--mapping-schema", type=Path, default=_DEFAULT_MAPPING_SCHEMA)
     build.add_argument("--draft-schema", type=Path, default=_DEFAULT_DRAFT_SCHEMA)
     build.add_argument("--now")
 
-    review = subparsers.add_parser(
-        "review", help="record exact-hash operator review"
-    )
+    review = subparsers.add_parser("review", help="record exact-hash operator review")
     review.add_argument("--draft", type=Path, required=True)
     review.add_argument("--expected-draft-hash", required=True)
     review.add_argument(

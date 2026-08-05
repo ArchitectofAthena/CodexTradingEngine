@@ -18,17 +18,12 @@ from eve_q.telemetry_draft_fixture import (
     review_draft,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MAPPING_SCHEMA = json.loads(
-    (ROOT / "schemas" / "telemetry_fixture_mapping_v0_1.schema.json").read_text(
-        encoding="utf-8"
-    )
+    (ROOT / "schemas" / "telemetry_fixture_mapping_v0_1.schema.json").read_text(encoding="utf-8")
 )
 DRAFT_SCHEMA = json.loads(
-    (ROOT / "schemas" / "telemetry_draft_fixture_v0_1.schema.json").read_text(
-        encoding="utf-8"
-    )
+    (ROOT / "schemas" / "telemetry_draft_fixture_v0_1.schema.json").read_text(encoding="utf-8")
 )
 SNAPSHOT_SCHEMA = json.loads(
     (ROOT / "schemas" / "live_read_only_telemetry_snapshot_v0_2.schema.json").read_text(
@@ -102,9 +97,7 @@ def registry() -> dict:
 
 
 def snapshot_bundle() -> tuple[dict, bytes, bytes]:
-    body = json.dumps(
-        {"quote": {"expected_profit_wei": "20000000000000000"}}
-    ).encode("utf-8")
+    body = json.dumps({"quote": {"expected_profit_wei": "20000000000000000"}}).encode("utf-8")
     spec = SourceSpec(
         source_id="reviewed-sepolia-source",
         source_kind="market_snapshot",
@@ -273,9 +266,7 @@ def test_assumption_cannot_overwrite_observed_value() -> None:
 
 def test_missing_assumptions_remain_explicit() -> None:
     result = build(assumptions=assumptions(complete=False))
-    assert result.draft["draft_material"]["missing_assumptions"] == [
-        "gas_cost_eth"
-    ]
+    assert result.draft["draft_material"]["missing_assumptions"] == ["gas_cost_eth"]
 
 
 def test_exact_hash_review_enables_only_local_simulation_eligibility() -> None:
@@ -291,10 +282,7 @@ def test_exact_hash_review_enables_only_local_simulation_eligibility() -> None:
     )
 
     assert reviewed.draft["local_simulation_eligible"] is True
-    assert (
-        reviewed.draft["operator_review"]["reviewed_draft_hash"]
-        == result.draft["draft_hash"]
-    )
+    assert reviewed.draft["operator_review"]["reviewed_draft_hash"] == result.draft["draft_hash"]
     assert reviewed.draft["draft_hash"] == result.draft["draft_hash"]
     assert reviewed.draft["authority"]["may_execute"] is False
     assert reviewed.draft["authority"]["may_move_capital"] is False
