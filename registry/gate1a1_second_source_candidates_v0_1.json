@@ -33,6 +33,7 @@
       "https://ethereum.org/developers/docs/apis/json-rpc/",
       "docs/source-reviews/ETHEREUM_SEPOLIA_PUBLICNODE_BLOCKNUMBER_CANDIDATE_v0_1.md"
     ],
+    "source_review_receipt_sha256": null,
     "capture_receipt_sha256": null,
     "notes": [
       "PublicNode currently publishes the exact Ethereum Sepolia RPC endpoint.",
