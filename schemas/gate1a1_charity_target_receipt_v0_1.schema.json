@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/gate1a1_charity_target_receipt_v0_1.schema.json",
+  "title": "Gate 1A.1 Charity Target Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "receipt_id": {"type": "string", "pattern": "^gate1a1-charity-receipt:[0-9a-f]{24}$"},
+    "schema_version": {"const": "gate1a1-charity-target-receipt-v0.1"},
+    "contract_id": {"type": "string"},
+    "contract_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"enum": ["SIMULATION_ONLY_CONTRACT_COMPLETE", "HOLD_CHARITY_TARGET_CONTRACT"]},
+    "hold_reasons": {"type": "array", "items": {"type": "string"}},
+    "transfer_evidence_status": {"type": "string"},
+    "outcome_evidence_status": {"type": "string"},
+    "modeled_contribution_status": {"type": "string"},
+    "no_data_means_zero": {"const": false},
+    "transfer_enabled": {"const": false},
+    "reward_update_enabled": {"const": false},
+    "authority": {"const": false},
+    "artifact_is_command": {"const": false},
+    "automatic_gate_promotion": {"const": false},
+    "gate1b_activated": {"const": false},
+    "may_execute": {"const": false},
+    "may_sign": {"const": false},
+    "may_submit_transaction": {"const": false},
+    "may_access_wallet": {"const": false},
+    "may_move_capital": {"const": false},
+    "human_promotion_required": {"const": true}
+  },
+  "required": ["receipt_id", "schema_version", "contract_id", "contract_sha256", "status", "hold_reasons", "transfer_evidence_status", "outcome_evidence_status", "modeled_contribution_status", "no_data_means_zero", "transfer_enabled", "reward_update_enabled", "authority", "artifact_is_command", "automatic_gate_promotion", "gate1b_activated", "may_execute", "may_sign", "may_submit_transaction", "may_access_wallet", "may_move_capital", "human_promotion_required"]
+}
