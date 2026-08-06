@@ -10,6 +10,7 @@ on:
       - "schemas/gate1a1_fixed_benchmark_corpus_v0_1.schema.json"
       - "tests/test_gate1a1_benchmark_corpus_v0_1.py"
       - "docs/alpha/GATE1A1_FIXED_QAOA_BENCHMARK_CORPUS_v0_1.md"
+      - "receipts/changes/gate1a1_fixed_qaoa_benchmark_corpus_v0_1.json"
       - "pyproject.toml"
       - ".github/workflows/gate1a1-fixed-qaoa-benchmark-v0-1-ci.yml"
   pull_request:
@@ -19,6 +20,7 @@ on:
       - "schemas/gate1a1_fixed_benchmark_corpus_v0_1.schema.json"
       - "tests/test_gate1a1_benchmark_corpus_v0_1.py"
       - "docs/alpha/GATE1A1_FIXED_QAOA_BENCHMARK_CORPUS_v0_1.md"
+      - "receipts/changes/gate1a1_fixed_qaoa_benchmark_corpus_v0_1.json"
       - "pyproject.toml"
       - ".github/workflows/gate1a1-fixed-qaoa-benchmark-v0-1-ci.yml"
   workflow_dispatch:
