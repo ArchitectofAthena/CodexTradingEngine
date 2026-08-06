@@ -74,6 +74,7 @@ jobs:
 
       - name: Exercise installed candidate review
         run: |
+          mkdir -p artifacts
           set +e
           codex-gate1a1-source-review \
             --json \
