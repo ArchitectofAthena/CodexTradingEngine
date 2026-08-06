@@ -1,0 +1,51 @@
+{
+  "artifact_type": "ChangeReceipt",
+  "change_id": "gate1a1-publicnode-second-source-v0-1",
+  "created_at": "2026-08-06T16:24:00Z",
+  "source_issue": 145,
+  "repository": "ArchitectofAthena/CodexTradingEngine",
+  "branch": "feat/gate1a1-publicnode-second-source-v0-1",
+  "purpose": "Record and deterministically review a second Ethereum Sepolia source candidate without activating capture or source eligibility.",
+  "source_lineage": [
+    "https://ethereum-sepolia.publicnode.com/",
+    "https://ethereum-sepolia-rpc.publicnode.com/",
+    "https://ethereum.org/developers/docs/apis/json-rpc/",
+    "registry/alpha_testnet_sources_v0_1.json",
+    "eve_q/gate1_source_consensus.py"
+  ],
+  "delivered": [
+    "exact content-addressed eth_blockNumber request contract",
+    "PublicNode candidate metadata on HOLD",
+    "distinct-operator candidate classification",
+    "terms, capture, and concentration hold decisions",
+    "deterministic authority-false review receipt",
+    "strict JSON Schema",
+    "focused tests",
+    "Python 3.11 and 3.13 CI",
+    "operator review doctrine"
+  ],
+  "current_decision": "HOLD_TERMS_REVIEW",
+  "known_absences": [
+    "completed terms and rate-limit review",
+    "live capture receipt",
+    "proven upstream independence",
+    "active Gate 1 POST capture membrane",
+    "source eligibility",
+    "source-consensus acceptance"
+  ],
+  "boundary": {
+    "artifact_is_command": false,
+    "authority": false,
+    "network_capture_performed": false,
+    "capture_authorized": false,
+    "eligible": false,
+    "may_generate_live_proposal": false,
+    "may_execute": false,
+    "may_sign": false,
+    "may_submit_transaction": false,
+    "may_access_wallet": false,
+    "may_move_capital": false,
+    "automatic_promotion": false,
+    "human_promotion_required": true
+  }
+}
