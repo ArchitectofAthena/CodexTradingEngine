@@ -2,7 +2,7 @@
   "artifact_type": "ChangeReceipt",
   "change_id": "gate1a1-publicnode-second-source-v0-1",
   "created_at": "2026-08-06T16:24:00Z",
-  "updated_at": "2026-08-06T16:37:00Z",
+  "updated_at": "2026-08-06T16:45:00Z",
   "source_issue": 145,
   "repository": "ArchitectofAthena/CodexTradingEngine",
   "branch": "feat/gate1a1-publicnode-second-source-v0-1",
@@ -20,7 +20,9 @@
     "841ed304e2241e59ca13c598d27fdc8e8ddbc9b2",
     "0128e0c2a60b552990def6e596cf256e5b55cd6e",
     "2584e745c53021393b601413de64b005079081e2",
-    "deb4f4668052ca40e77783a49e84ff00815e2d58"
+    "deb4f4668052ca40e77783a49e84ff00815e2d58",
+    "f3ed1b0cdecda39edcb783b5e8893178b469d1c4",
+    "7817bec5422c1d251bc3bb152e01b111b61449d0"
   ],
   "delivered": [
     "exact content-addressed eth_blockNumber request contract",
@@ -29,6 +31,9 @@
     "terms, capture, and concentration hold decisions",
     "immutable source-review receipt requirement",
     "deterministic missing-expiry and expired-review refusal",
+    "invocation-time freshness evaluation instead of candidate-creation-time replay",
+    "explicit evaluated-at input for deterministic replay",
+    "refusal when evaluation predates candidate generation",
     "capture receipt requirement after fresh source review",
     "deterministic authority-false review receipt",
     "strict JSON Schema",
