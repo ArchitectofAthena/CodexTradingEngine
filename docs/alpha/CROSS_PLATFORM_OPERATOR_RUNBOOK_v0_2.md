@@ -78,6 +78,7 @@ cd "$HOME/src"
 git clone https://github.com/ArchitectofAthena/CodexTradingEngine.git
 cd CodexTradingEngine
 
+python --version
 python -m pip install --upgrade pip
 python -m pip install -e '.[test]'
 
@@ -85,7 +86,7 @@ python codex doctor
 python codex accept
 ```
 
-Rust is optional for the basic alpha path but is required for the isolated exact-verifier lanes. The doctor must report its origin honestly rather than treating an unexplained binary as trusted.
+The version check must report a repository-supported Python release before installation continues. Rust is optional for the basic alpha path but is required for the isolated exact-verifier lanes. The doctor must report its origin honestly rather than treating an unexplained binary as trusted.
 
 ### Existing checkout update
 
@@ -93,6 +94,7 @@ Rust is optional for the basic alpha path but is required for the isolated exact
 cd "$HOME/src/CodexTradingEngine"
 git status --short
 git pull --ff-only
+python --version
 python -m pip install -e '.[test]'
 python codex doctor
 python codex accept
@@ -112,7 +114,7 @@ Do not use `git reset --hard`, force-pull, or destructive cleanup as an ordinary
 
 ## 2. PC local host through Linux or UNIX terminal
 
-Install Git, Python 3.11 or 3.13, the Python virtual-environment package, and Rust through the host operating system's package manager.
+Install Git, Python 3.11 or 3.13, the matching Python virtual-environment package, and Rust through the host operating system's package manager. Select the interpreter explicitly rather than trusting an unversioned `python3` alias.
 
 ### First installation
 
@@ -122,8 +124,11 @@ cd "$HOME/src"
 git clone https://github.com/ArchitectofAthena/CodexTradingEngine.git
 cd CodexTradingEngine
 
-python3 -m venv .venv
+PYTHON_BIN="${PYTHON_BIN:-python3.13}"
+"$PYTHON_BIN" --version
+"$PYTHON_BIN" -m venv .venv
 . .venv/bin/activate
+python --version
 python -m pip install --upgrade pip
 python -m pip install -e '.[test]'
 
@@ -131,11 +136,14 @@ python codex doctor
 python codex accept
 ```
 
+Set `PYTHON_BIN=python3.11` before the block when Python 3.11 is the reviewed host interpreter.
+
 ### Existing checkout update
 
 ```bash
 cd "$HOME/src/CodexTradingEngine"
 . .venv/bin/activate
+python --version
 git status --short
 git pull --ff-only
 python -m pip install -e '.[test]'
@@ -146,17 +154,18 @@ python codex accept
 ### Shell portability
 
 - Commands target POSIX-compatible shells.
-- Use `python3` instead of `python` until the virtual environment is active when the host does not map `python` to Python 3.
+- Use an explicit `python3.11` or `python3.13` interpreter to create the virtual environment.
+- After activation, confirm `python --version` before installation or acceptance.
 - Do not run the alpha workflow as root.
 
 ---
 
 ## 3. Mac local host through Terminal
 
-Use a current Python 3.11 or 3.13 installation. Homebrew is one supported prerequisite path:
+Use a reviewed Python 3.11 or 3.13 installation. Homebrew is one supported prerequisite path with an explicit version pin:
 
 ```bash
-brew install git python rust
+brew install git python@3.13 rust
 ```
 
 ### First installation
@@ -167,8 +176,10 @@ cd "$HOME/src"
 git clone https://github.com/ArchitectofAthena/CodexTradingEngine.git
 cd CodexTradingEngine
 
-python3 -m venv .venv
+python3.13 --version
+python3.13 -m venv .venv
 . .venv/bin/activate
+python --version
 python -m pip install --upgrade pip
 python -m pip install -e '.[test]'
 
@@ -176,11 +187,14 @@ python codex doctor
 python codex accept
 ```
 
+Use `python3.11` consistently instead when the reviewed host installation is Python 3.11. Do not substitute an unversioned Homebrew `python` formula without first confirming that its release is inside the repository's tested matrix.
+
 ### Existing checkout update
 
 ```bash
 cd "$HOME/src/CodexTradingEngine"
 . .venv/bin/activate
+python --version
 git status --short
 git pull --ff-only
 python -m pip install -e '.[test]'
@@ -246,6 +260,7 @@ For an Android Termux host:
 
 ```bash
 cd "$HOME/src/CodexTradingEngine"
+python --version
 python codex doctor
 python codex status
 python codex accept
@@ -256,6 +271,7 @@ For a PC or Mac host using the virtual environment:
 ```bash
 cd "$HOME/src/CodexTradingEngine"
 . .venv/bin/activate
+python --version
 python codex doctor
 python codex status
 python codex accept
@@ -306,7 +322,8 @@ cross-repository visibility != repository mutation
 
 | Symptom | Safe response |
 |---|---|
-| `python` is missing | Use `python3` before activating the virtual environment. |
+| `python` is missing | Select an installed `python3.11` or `python3.13` before creating the environment. |
+| Unsupported Python version | Stop and create `.venv` with a repository-supported interpreter; do not continue on an unreviewed release. |
 | Editable install is stale | Re-run `python -m pip install -e '.[test]'`. |
 | Dirty working tree | Inspect `git status --short`; do not erase changes automatically. |
 | Rust warning | Install or verify Rust, then rerun `python codex doctor`. |
