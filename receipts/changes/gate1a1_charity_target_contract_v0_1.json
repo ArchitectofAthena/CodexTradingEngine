@@ -1,0 +1,26 @@
+{
+  "artifact_is_command": false,
+  "authority": false,
+  "automatic_gate_promotion": false,
+  "change_id": "gate1a1_charity_target_contract_v0_1",
+  "change_type": "simulation_only_charity_target_evidence_uncertainty_and_no_transfer_contract",
+  "gate1b_activated": false,
+  "human_promotion_required": true,
+  "may_access_wallet": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "parent_issue": 145,
+  "scope": [
+    "donation_transfer_evidence",
+    "observed_outcome_evidence",
+    "modeled_contribution",
+    "unsupported_causal_claim_refusal",
+    "explicit_no_data_semantics",
+    "human_review",
+    "no_transfer",
+    "no_automatic_reward_rewrite"
+  ],
+  "schema_version": "codex-change-receipt-v0.1"
+}
