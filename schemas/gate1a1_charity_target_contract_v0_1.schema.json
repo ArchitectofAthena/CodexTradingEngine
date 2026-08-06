@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/gate1a1_charity_target_contract_v0_1.schema.json",
+  "title": "Gate 1A.1 Charity Target Contract v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "gate1a1-charity-target-contract-v0.1"},
+    "contract_id": {"type": "string", "pattern": "^gate1a1-charity-target:[0-9a-f]{24}$"},
+    "pipeline": {"const": ["telemetry_observed", "counterfactual_impact_estimated", "uncertainty_preserved", "human_review", "no_transfer"]},
+    "donation_transfer_evidence": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"status": {"const": "ABSENT"}, "transaction_reference": {"type": "null"}, "receipt_sha256": {"type": "null"}},
+      "required": ["status", "transaction_reference", "receipt_sha256"]
+    },
+    "observed_outcome_evidence": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"status": {"const": "NO_DATA"}, "observations": {"type": "array", "maxItems": 0}, "provenance": {"type": "null"}},
+      "required": ["status", "observations", "provenance"]
+    },
+    "modeled_contribution": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "status": {"const": "MODEL_ONLY"},
+        "estimate": {"type": "number"},
+        "uncertainty_interval": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}},
+        "assumptions_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "required": ["status", "estimate", "uncertainty_interval", "assumptions_sha256"]
+    },
+    "unsupported_causal_claim": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"present": {"const": false}, "claim": {"type": "null"}},
+      "required": ["present", "claim"]
+    },
+    "no_data_semantics": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "meaning": {"const": "NO_OBSERVATION_AVAILABLE"},
+        "not_equivalent_to": {"const": ["ZERO_IMPACT", "NEGATIVE_IMPACT", "TRANSFER_FAILED", "NO_CHARITY_VALUE"]}
+      },
+      "required": ["meaning", "not_equivalent_to"]
+    },
+    "human_review": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"required": {"const": true}, "decision": {"const": "PENDING"}, "reviewer": {"type": "null"}},
+      "required": ["required", "decision", "reviewer"]
+    },
+    "reward_posture": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"automatic_update": {"const": false}, "may_rewrite_reward_function": {"const": false}, "human_promotion_required": {"const": true}},
+      "required": ["automatic_update", "may_rewrite_reward_function", "human_promotion_required"]
+    },
+    "transfer_posture": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"enabled": {"const": false}, "attempted": {"const": false}, "wallet_access": {"const": false}, "transaction_submission": {"const": false}},
+      "required": ["enabled", "attempted", "wallet_access", "transaction_submission"]
+    },
+    "authority": {"const": false},
+    "artifact_is_command": {"const": false},
+    "automatic_gate_promotion": {"const": false},
+    "gate1b_activated": {"const": false},
+    "may_execute": {"const": false},
+    "may_sign": {"const": false},
+    "may_submit_transaction": {"const": false},
+    "may_access_wallet": {"const": false},
+    "may_move_capital": {"const": false},
+    "human_promotion_required": {"const": true}
+  },
+  "required": ["schema_version", "contract_id", "pipeline", "donation_transfer_evidence", "observed_outcome_evidence", "modeled_contribution", "unsupported_causal_claim", "no_data_semantics", "human_review", "reward_posture", "transfer_posture", "authority", "artifact_is_command", "automatic_gate_promotion", "gate1b_activated", "may_execute", "may_sign", "may_submit_transaction", "may_access_wallet", "may_move_capital", "human_promotion_required"]
+}
