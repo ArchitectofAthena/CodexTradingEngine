@@ -260,7 +260,14 @@ def verify_binary(
         if request.get("request_id") and response.get("request_id") != request.get("request_id"):
             raise ValueError("verifier response changed request_id")
         outcome = _VERIFIED
-    except (json.JSONDecodeError, OSError, RuntimeError, TypeError, ValueError) as exc:
+    except (
+        json.JSONDecodeError,
+        OSError,
+        RuntimeError,
+        subprocess.SubprocessError,
+        TypeError,
+        ValueError,
+    ) as exc:
         reasons.append(str(exc))
         outcome = _HOLD
 
