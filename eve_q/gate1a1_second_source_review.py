@@ -122,13 +122,18 @@ def evaluate_candidate(
     expected_request_hash = sha256_hex(publicnode_request_body())
     declared_request_hash = str(candidate["candidate"]["request_body_sha256"])
     if declared_request_hash != expected_request_hash:
-        raise SecondSourceReviewError("candidate request body hash does not match exact allowlisted RPC body")
+        raise SecondSourceReviewError(
+            "candidate request body hash does not match exact allowlisted RPC body"
+        )
     if candidate["boundary"] != BOUNDARY:
-        raise SecondSourceReviewError("candidate attempts to widen the second-source authority boundary")
+        raise SecondSourceReviewError(
+            "candidate attempts to widen the second-source authority boundary"
+        )
 
     relationship = candidate["candidate"]["relationship_to_primary"]
     terms = candidate["candidate"]["terms_review"]
     capture = candidate["candidate"]["live_capture_status"]
+    capture_receipt = candidate["evidence"]["capture_receipt_sha256"]
 
     if relationship != "DISTINCT_OPERATOR_CANDIDATE":
         code = "HOLD_CONCENTRATION"
@@ -136,9 +141,11 @@ def evaluate_candidate(
     elif terms != "REVIEWED":
         code = "HOLD_TERMS_REVIEW"
         reasons = ["terms and rate-limit review is not complete"]
-    elif capture != "PASS":
+    elif capture != "PASS" or capture_receipt is None:
         code = "HOLD_CAPTURE_EVIDENCE"
-        reasons = ["no bounded live capture receipt proves endpoint and response-contract behavior"]
+        reasons = [
+            "no bounded live capture receipt proves endpoint and response-contract behavior"
+        ]
     else:
         code = "READY_FOR_ELIGIBILITY_REVIEW"
         reasons = [
@@ -185,7 +192,9 @@ def render_summary(result: Mapping[str, Any]) -> str:
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(
         prog="codex-gate1a1-source-review",
-        description="Review one inert Gate 1A.1 source candidate without network capture or authority.",
+        description=(
+            "Review one inert Gate 1A.1 source candidate without network capture or authority."
+        ),
     )
     result.add_argument("--candidate", type=Path, default=_DEFAULT_CANDIDATE)
     result.add_argument("--schema", type=Path, default=_DEFAULT_SCHEMA)
