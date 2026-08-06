@@ -1,0 +1,106 @@
+name: Gate 1A.1 Evidence Convergence v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/gate1a1_evidence_convergence.py"
+      - "schemas/gate1a1_evidence_bundle_v0_1.schema.json"
+      - "schemas/gate1a1_decision_receipt_v0_1.schema.json"
+      - "benchmarks/gate1a1_evidence_bundle_seed_v0_1.json"
+      - "tests/test_gate1a1_evidence_convergence_v0_1.py"
+      - "docs/alpha/GATE1A1_EVIDENCE_CONVERGENCE_v0_1.md"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-evidence-convergence-v0-1-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate1a1-evidence-convergence-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  convergence:
+    name: Evidence convergence (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Checkout without retained credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test,dev]'
+
+      - name: Compile convergence organ
+        run: python -m py_compile eve_q/gate1a1_evidence_convergence.py
+
+      - name: Validate schemas and seed fixture
+        run: |
+          python -m json.tool schemas/gate1a1_evidence_bundle_v0_1.schema.json > /dev/null
+          python -m json.tool schemas/gate1a1_decision_receipt_v0_1.schema.json > /dev/null
+          python -m json.tool benchmarks/gate1a1_evidence_bundle_seed_v0_1.json > /dev/null
+
+      - name: Run focused fail-closed tests
+        run: |
+          python -m pytest \
+            -o addopts='' \
+            -q \
+            --strict-markers \
+            tests/test_gate1a1_evidence_convergence_v0_1.py
+
+      - name: Run focused lint and format checks
+        run: |
+          python -m ruff check \
+            eve_q/gate1a1_evidence_convergence.py \
+            tests/test_gate1a1_evidence_convergence_v0_1.py
+          python -m black --check \
+            eve_q/gate1a1_evidence_convergence.py \
+            tests/test_gate1a1_evidence_convergence_v0_1.py
+
+      - name: Exercise deterministic research-only decision
+        run: |
+          codex-gate1a1 \
+            --evidence benchmarks/gate1a1_evidence_bundle_seed_v0_1.json \
+            --generated-at 2026-08-06T16:00:00Z \
+            --output artifacts/gate1a1-evidence/decision-receipt.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(
+              Path("artifacts/gate1a1-evidence/decision-receipt.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          assert payload["decision"] == "QAOA_RESEARCH_ONLY"
+          assert payload["hold_reasons"] == []
+          assert payload["compact_report"]["EXECUTION_LOCKS"] == "LOCKED"
+          assert payload["compact_report"]["NEXT_DECISION"] == "QAOA_RESEARCH_ONLY"
+          boundary = payload["boundary"]
+          assert boundary["authority"] is False
+          assert boundary["automatic_gate_promotion"] is False
+          assert boundary["gate1b_activated"] is False
+          assert boundary["may_execute"] is False
+          assert boundary["may_sign"] is False
+          assert boundary["may_submit_transaction"] is False
+          assert boundary["may_access_wallet"] is False
+          assert boundary["may_move_capital"] is False
+          assert boundary["human_promotion_required"] is True
+          PY
