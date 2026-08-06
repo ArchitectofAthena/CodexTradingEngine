@@ -1,0 +1,104 @@
+name: Gate 1A.1 Second Source Review v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - "eve_q/gate1a1_second_source_review.py"
+      - "registry/gate1a1_second_source_candidates_v0_1.json"
+      - "schemas/gate1a1_second_source_candidate_v0_1.schema.json"
+      - "tests/test_gate1a1_second_source_review_v0_1.py"
+      - "docs/source-reviews/ETHEREUM_SEPOLIA_PUBLICNODE_BLOCKNUMBER_CANDIDATE_v0_1.md"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-second-source-review-v0-1-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate1a1-second-source-review-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  second-source-review:
+    name: Second-source review (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Checkout without retained credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test,dev]'
+
+      - name: Compile review membrane
+        run: python -m py_compile eve_q/gate1a1_second_source_review.py
+
+      - name: Parse schema and candidate
+        run: |
+          python -m json.tool schemas/gate1a1_second_source_candidate_v0_1.schema.json > /dev/null
+          python -m json.tool registry/gate1a1_second_source_candidates_v0_1.json > /dev/null
+
+      - name: Run focused tests
+        run: |
+          python -m pytest \
+            -o addopts='' \
+            -q \
+            --strict-markers \
+            tests/test_gate1a1_second_source_review_v0_1.py
+
+      - name: Run focused lint and format checks
+        run: |
+          python -m ruff check \
+            eve_q/gate1a1_second_source_review.py \
+            tests/test_gate1a1_second_source_review_v0_1.py
+          python -m black --check \
+            eve_q/gate1a1_second_source_review.py \
+            tests/test_gate1a1_second_source_review_v0_1.py
+
+      - name: Exercise installed candidate review
+        run: |
+          mkdir -p artifacts
+          set +e
+          codex-gate1a1-source-review \
+            --json \
+            --output artifacts/gate1a1-second-source-review.json \
+            > artifacts/gate1a1-second-source-stdout.json
+          status=$?
+          set -e
+          test "$status" -eq 2
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(
+              Path("artifacts/gate1a1-second-source-review.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          assert payload["decision"]["code"] == "HOLD_TERMS_REVIEW"
+          assert payload["decision"]["eligible"] is False
+          assert payload["decision"]["capture_authorized"] is False
+          assert payload["candidate"]["live_capture_status"] == "NOT_RUN"
+          assert payload["boundary"]["network_capture_performed"] is False
+          assert payload["boundary"]["may_execute"] is False
+          assert payload["boundary"]["may_access_wallet"] is False
+          assert payload["boundary"]["may_move_capital"] is False
+          assert payload["boundary"]["automatic_promotion"] is False
+          PY
