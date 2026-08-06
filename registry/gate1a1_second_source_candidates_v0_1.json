@@ -1,0 +1,67 @@
+{
+  "artifact_type": "Gate1A1SecondSourceCandidate",
+  "contract_version": "codex-gate1a1-second-source-v0.1",
+  "generated_at": "2026-08-06T16:18:00Z",
+  "receipt_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "primary_source": {
+    "source_id": "ethereum-sepolia-blockscout-stats-v0-1",
+    "operator": "Blockscout",
+    "provenance_group": "blockscout-sepolia-per-instance-v2"
+  },
+  "candidate": {
+    "source_id": "ethereum-sepolia-publicnode-blocknumber-v0-1",
+    "network_name": "Ethereum Sepolia",
+    "chain_id": "11155111",
+    "endpoint_url": "https://ethereum-sepolia-rpc.publicnode.com",
+    "host": "ethereum-sepolia-rpc.publicnode.com",
+    "endpoint_class": "json_rpc",
+    "operator": "PublicNode",
+    "transport_method": "POST",
+    "rpc_method": "eth_blockNumber",
+    "request_body_sha256": "0094f94313d26ab04a2c854b4af649acb9193cebbc2ac237110eacbdfcb2a427",
+    "response_contract": "jsonrpc=2.0; id=1; result=0x-prefixed quantity; no error object",
+    "provenance_group": "publicnode-ethereum-sepolia-jsonrpc",
+    "relationship_to_primary": "DISTINCT_OPERATOR_CANDIDATE",
+    "terms_review": "PENDING",
+    "live_capture_status": "NOT_RUN",
+    "review_expires_at": null
+  },
+  "evidence": {
+    "references": [
+      "https://ethereum-sepolia.publicnode.com/",
+      "https://ethereum-sepolia-rpc.publicnode.com/",
+      "https://ethereum.org/developers/docs/apis/json-rpc/",
+      "docs/source-reviews/ETHEREUM_SEPOLIA_PUBLICNODE_BLOCKNUMBER_CANDIDATE_v0_1.md"
+    ],
+    "capture_receipt_sha256": null,
+    "notes": [
+      "PublicNode currently publishes the exact Ethereum Sepolia RPC endpoint.",
+      "Ethereum JSON-RPC defines eth_blockNumber as the most recent block number known to the client.",
+      "Distinct operator naming is candidate evidence only; upstream independence still requires review.",
+      "No live network capture was performed while constructing this artifact.",
+      "The active Gate 1 runtime remains GET/HEAD-only and this candidate cannot enter it by implication."
+    ]
+  },
+  "decision": {
+    "code": "HOLD_TERMS_REVIEW",
+    "reasons": [
+      "terms and rate-limit review is not complete"
+    ],
+    "eligible": false,
+    "capture_authorized": false,
+    "human_review_required": true
+  },
+  "boundary": {
+    "artifact_is_command": false,
+    "authority": false,
+    "network_capture_performed": false,
+    "may_generate_live_proposal": false,
+    "may_execute": false,
+    "may_sign": false,
+    "may_submit_transaction": false,
+    "may_access_wallet": false,
+    "may_move_capital": false,
+    "automatic_promotion": false,
+    "human_promotion_required": true
+  }
+}
