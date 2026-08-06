@@ -13,6 +13,7 @@ import hashlib
 import json
 import sys
 from collections.abc import Mapping, Sequence
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -105,6 +106,19 @@ def require_schema(document: Any, schema: Mapping[str, Any]) -> None:
         )
 
 
+def _parse_review_time(value: object, field_name: str) -> datetime:
+    if not isinstance(value, str):
+        raise SecondSourceReviewError(f"{field_name} is required")
+    normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise SecondSourceReviewError(f"{field_name} is not a valid date-time") from exc
+    if parsed.tzinfo is None:
+        raise SecondSourceReviewError(f"{field_name} must include a UTC offset")
+    return parsed
+
+
 def _receipt_material(document: Mapping[str, Any]) -> dict[str, Any]:
     material = copy.deepcopy(dict(document))
     material.pop("receipt_sha256", None)
@@ -134,6 +148,8 @@ def evaluate_candidate(
     terms = candidate["candidate"]["terms_review"]
     capture = candidate["candidate"]["live_capture_status"]
     capture_receipt = candidate["evidence"]["capture_receipt_sha256"]
+    review_expires_at = candidate["candidate"]["review_expires_at"]
+    generated_at = _parse_review_time(candidate["generated_at"], "generated_at")
 
     if relationship != "DISTINCT_OPERATOR_CANDIDATE":
         code = "HOLD_CONCENTRATION"
@@ -141,6 +157,12 @@ def evaluate_candidate(
     elif terms != "REVIEWED":
         code = "HOLD_TERMS_REVIEW"
         reasons = ["terms and rate-limit review is not complete"]
+    elif review_expires_at is None:
+        code = "HOLD_TERMS_REVIEW"
+        reasons = ["reviewed source metadata is missing a review expiry"]
+    elif _parse_review_time(review_expires_at, "review_expires_at") <= generated_at:
+        code = "HOLD_TERMS_REVIEW"
+        reasons = ["source review is expired at the candidate evaluation time"]
     elif capture != "PASS" or capture_receipt is None:
         code = "HOLD_CAPTURE_EVIDENCE"
         reasons = [
