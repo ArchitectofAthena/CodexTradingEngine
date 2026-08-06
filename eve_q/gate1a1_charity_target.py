@@ -11,9 +11,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
 
 _CONTRACT_SCHEMA = "gate1a1-charity-target-contract-v0.1"
 _RECEIPT_SCHEMA = "gate1a1-charity-target-receipt-v0.1"
@@ -81,6 +81,13 @@ def _validate_locks(payload: Mapping[str, object], context: str) -> None:
             raise CharityTargetError(f"{context}.{name} must be {expected!r}")
 
 
+def _nested_status(contract: Mapping[str, object], field: str) -> str:
+    value = contract.get(field)
+    if not isinstance(value, dict):
+        return "MALFORMED"
+    return str(value.get("status", "UNKNOWN"))
+
+
 def contract_seed(contract: Mapping[str, object]) -> dict[str, object]:
     return {key: value for key, value in contract.items() if key != "contract_id"}
 
@@ -144,8 +151,19 @@ def validate_contract(contract: Mapping[str, object]) -> None:
     if modeled["status"] != "MODEL_ONLY":
         raise CharityTargetError("modeled contribution must remain MODEL_ONLY")
     estimate = float(modeled["estimate"])
-    interval = [float(value) for value in _array(modeled["uncertainty_interval"], "modeled_contribution.uncertainty_interval")]
-    if len(interval) != 2 or interval[0] > estimate or estimate > interval[1]:
+    interval = [
+        float(value)
+        for value in _array(
+            modeled["uncertainty_interval"], "modeled_contribution.uncertainty_interval"
+        )
+    ]
+    if (
+        not math.isfinite(estimate)
+        or len(interval) != 2
+        or not all(math.isfinite(value) for value in interval)
+        or interval[0] > estimate
+        or estimate > interval[1]
+    ):
         raise CharityTargetError("modeled contribution uncertainty interval is invalid")
     _sha(modeled["assumptions_sha256"], "modeled_contribution.assumptions_sha256")
 
@@ -159,7 +177,10 @@ def validate_contract(contract: Mapping[str, object]) -> None:
     if no_data["meaning"] != "NO_OBSERVATION_AVAILABLE":
         raise CharityTargetError("no-data meaning drifted")
     forbidden_equivalences = tuple(
-        str(item) for item in _array(no_data["not_equivalent_to"], "no_data_semantics.not_equivalent_to")
+        str(item)
+        for item in _array(
+            no_data["not_equivalent_to"], "no_data_semantics.not_equivalent_to"
+        )
     )
     if forbidden_equivalences != (
         "ZERO_IMPACT",
@@ -211,33 +232,30 @@ def build_receipt(contract: Mapping[str, object]) -> dict[str, object]:
 
     reasons: list[str] = []
     try:
+        contract_digest = canonical_sha256(contract)
+    except (TypeError, ValueError) as exc:
+        contract_digest = "0" * 64
+        reasons.append(f"contract digest unavailable: {exc}")
+
+    try:
         validate_contract(contract)
-        status = "SIMULATION_ONLY_CONTRACT_COMPLETE"
     except (TypeError, ValueError) as exc:
         reasons.append(str(exc))
-        status = "HOLD_CHARITY_TARGET_CONTRACT"
 
+    status = (
+        "SIMULATION_ONLY_CONTRACT_COMPLETE"
+        if not reasons
+        else "HOLD_CHARITY_TARGET_CONTRACT"
+    )
     receipt_seed = {
         "schema_version": _RECEIPT_SCHEMA,
         "contract_id": str(contract.get("contract_id", "UNKNOWN")),
-        "contract_sha256": canonical_sha256(contract),
+        "contract_sha256": contract_digest,
         "status": status,
         "hold_reasons": reasons,
-        "transfer_evidence_status": str(
-            _mapping(contract.get("donation_transfer_evidence", {}), "donation_transfer_evidence").get(
-                "status", "UNKNOWN"
-            )
-        ),
-        "outcome_evidence_status": str(
-            _mapping(contract.get("observed_outcome_evidence", {}), "observed_outcome_evidence").get(
-                "status", "UNKNOWN"
-            )
-        ),
-        "modeled_contribution_status": str(
-            _mapping(contract.get("modeled_contribution", {}), "modeled_contribution").get(
-                "status", "UNKNOWN"
-            )
-        ),
+        "transfer_evidence_status": _nested_status(contract, "donation_transfer_evidence"),
+        "outcome_evidence_status": _nested_status(contract, "observed_outcome_evidence"),
+        "modeled_contribution_status": _nested_status(contract, "modeled_contribution"),
         "no_data_means_zero": False,
         "transfer_enabled": False,
         "reward_update_enabled": False,
@@ -264,7 +282,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.output:
         output = Path(args.output)
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output.write_text(
+            json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
     print(json.dumps(receipt, sort_keys=True))
     return 2 if receipt["status"].startswith("HOLD") else 0
 
