@@ -59,12 +59,37 @@ def test_reviewed_terms_without_capture_holds() -> None:
     assert result["decision"]["code"] == "HOLD_CAPTURE_EVIDENCE"
 
 
+def test_reviewed_terms_without_expiry_hold() -> None:
+    candidate = copy.deepcopy(CANDIDATE)
+    candidate["candidate"]["terms_review"] = "REVIEWED"
+    candidate["candidate"]["live_capture_status"] = "PASS"
+    candidate["evidence"]["capture_receipt_sha256"] = "a" * 64
+
+    result = evaluate_candidate(candidate, schema=SCHEMA)
+
+    assert result["decision"]["code"] == "HOLD_TERMS_REVIEW"
+    assert "missing a review expiry" in result["decision"]["reasons"][0]
+
+
+def test_expired_review_holds_before_capture_evidence() -> None:
+    candidate = copy.deepcopy(CANDIDATE)
+    candidate["candidate"]["terms_review"] = "REVIEWED"
+    candidate["candidate"]["live_capture_status"] = "PASS"
+    candidate["candidate"]["review_expires_at"] = "2026-08-06T16:18:00Z"
+    candidate["evidence"]["capture_receipt_sha256"] = "b" * 64
+
+    result = evaluate_candidate(candidate, schema=SCHEMA)
+
+    assert result["decision"]["code"] == "HOLD_TERMS_REVIEW"
+    assert "expired" in result["decision"]["reasons"][0]
+
+
 def test_complete_evidence_routes_to_human_eligibility_review() -> None:
     candidate = copy.deepcopy(CANDIDATE)
     candidate["candidate"]["terms_review"] = "REVIEWED"
     candidate["candidate"]["live_capture_status"] = "PASS"
     candidate["candidate"]["review_expires_at"] = "2026-09-05T00:00:00Z"
-    candidate["evidence"]["capture_receipt_sha256"] = "a" * 64
+    candidate["evidence"]["capture_receipt_sha256"] = "c" * 64
 
     result = evaluate_candidate(candidate, schema=SCHEMA)
 
@@ -80,7 +105,7 @@ def test_shared_or_unknown_lineage_forces_concentration_hold() -> None:
     candidate["candidate"]["terms_review"] = "REVIEWED"
     candidate["candidate"]["live_capture_status"] = "PASS"
     candidate["candidate"]["review_expires_at"] = "2026-09-05T00:00:00Z"
-    candidate["evidence"]["capture_receipt_sha256"] = "b" * 64
+    candidate["evidence"]["capture_receipt_sha256"] = "d" * 64
 
     result = evaluate_candidate(candidate, schema=SCHEMA)
 
