@@ -1,0 +1,89 @@
+name: Gate 1A.1 Fixed QAOA Benchmark v0.1 CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "eve_q/gate1a1_benchmark_corpus.py"
+      - "benchmarks/gate1a1_fixed_benchmark_*.json"
+      - "schemas/gate1a1_fixed_benchmark_corpus_v0_1.schema.json"
+      - "tests/test_gate1a1_benchmark_corpus_v0_1.py"
+      - "docs/alpha/GATE1A1_FIXED_QAOA_BENCHMARK_CORPUS_v0_1.md"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-fixed-qaoa-benchmark-v0-1-ci.yml"
+  pull_request:
+    paths:
+      - "eve_q/gate1a1_benchmark_corpus.py"
+      - "benchmarks/gate1a1_fixed_benchmark_*.json"
+      - "schemas/gate1a1_fixed_benchmark_corpus_v0_1.schema.json"
+      - "tests/test_gate1a1_benchmark_corpus_v0_1.py"
+      - "docs/alpha/GATE1A1_FIXED_QAOA_BENCHMARK_CORPUS_v0_1.md"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-fixed-qaoa-benchmark-v0-1-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate1a1-fixed-qaoa-benchmark-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fixed-corpus:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - name: Check out repository without retained credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install focused dependencies
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1 jsonschema==4.25.1 ruff==0.14.14
+      - name: Compile benchmark module and tests
+        run: python -m py_compile eve_q/gate1a1_benchmark_corpus.py tests/test_gate1a1_benchmark_corpus_v0_1.py
+      - name: Validate corpus schema
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          schema = json.loads(Path("schemas/gate1a1_fixed_benchmark_corpus_v0_1.schema.json").read_text())
+          corpus = json.loads(Path("benchmarks/gate1a1_fixed_benchmark_corpus_v0_1.json").read_text())
+          Draft202012Validator.check_schema(schema)
+          Draft202012Validator(schema).validate(corpus)
+          PY
+      - name: Run focused tests
+        run: python -m pytest -q tests/test_gate1a1_benchmark_corpus_v0_1.py
+      - name: Check lint
+        run: python -m ruff check eve_q/gate1a1_benchmark_corpus.py tests/test_gate1a1_benchmark_corpus_v0_1.py
+      - name: Exercise installed CLI
+        run: |
+          python -m pip install --no-deps .
+          mkdir -p artifacts/gate1a1
+          codex-gate1a1-benchmark \
+            benchmarks/gate1a1_fixed_benchmark_corpus_v0_1.json \
+            --summary \
+            --output artifacts/gate1a1/benchmark-report.json \
+            | tee artifacts/gate1a1/benchmark-summary.txt
+          grep -q '^GATE1A1_BENCHMARK=QAOA_ADDS_NO_MEASURABLE_VALUE$' artifacts/gate1a1/benchmark-summary.txt
+          grep -q '^AUTHORITY=false$' artifacts/gate1a1/benchmark-summary.txt
+          grep -q '^GATE1B_ACTIVATED=false$' artifacts/gate1a1/benchmark-summary.txt
+          grep -q '^HUMAN_PROMOTION_REQUIRED=true$' artifacts/gate1a1/benchmark-summary.txt
+      - name: Compare expected deterministic report
+        run: cmp benchmarks/gate1a1_fixed_benchmark_expected_report_v0_1.json artifacts/gate1a1/benchmark-report.json
+      - name: Clean generated output
+        run: rm -rf artifacts/gate1a1
+      - name: Require clean tracked tree
+        run: git diff --exit-code
