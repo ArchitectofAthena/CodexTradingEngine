@@ -129,12 +129,14 @@ def test_acceptance_holds_on_doctor_status_demo_or_verify_failure(mutator):
 
 def test_compost_is_dry_run_and_confined(monkeypatch, tmp_path):
     allowed = tmp_path / "artifacts" / "alpha-activation"
+    monkeypatch.setattr(alpha_frontdoor, "ROOT", tmp_path)
     monkeypatch.setattr(alpha_frontdoor, "DEFAULT_OUTPUT", allowed)
     allowed.mkdir(parents=True)
     (allowed / "alpha.json").write_text("{}\n", encoding="utf-8")
 
     preview = alpha_frontdoor.compost(allowed, apply=False)
     assert preview["applied"] is False
+    assert preview["files"] == ["artifacts/alpha-activation/alpha.json"]
     assert allowed.exists()
 
     applied = alpha_frontdoor.compost(allowed, apply=True)
