@@ -13,7 +13,7 @@ import hashlib
 import json
 import sys
 from collections.abc import Mapping, Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -119,6 +119,10 @@ def _parse_review_time(value: object, field_name: str) -> datetime:
     return parsed
 
 
+def utc_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
 def _receipt_material(document: Mapping[str, Any]) -> dict[str, Any]:
     material = copy.deepcopy(dict(document))
     material.pop("receipt_sha256", None)
@@ -129,8 +133,9 @@ def evaluate_candidate(
     candidate: Mapping[str, Any],
     *,
     schema: Mapping[str, Any],
+    evaluated_at: str,
 ) -> dict[str, Any]:
-    """Evaluate one candidate without performing capture or promotion."""
+    """Evaluate one candidate at an explicit time without capture or promotion."""
 
     require_schema(candidate, schema)
     expected_request_hash = sha256_hex(publicnode_request_body())
@@ -144,13 +149,17 @@ def evaluate_candidate(
             "candidate attempts to widen the second-source authority boundary"
         )
 
+    candidate_generated_at = _parse_review_time(candidate["generated_at"], "generated_at")
+    evaluation_time = _parse_review_time(evaluated_at, "evaluated_at")
+    if evaluation_time < candidate_generated_at:
+        raise SecondSourceReviewError("evaluated_at precedes candidate generation")
+
     relationship = candidate["candidate"]["relationship_to_primary"]
     terms = candidate["candidate"]["terms_review"]
     source_review_receipt = candidate["evidence"]["source_review_receipt_sha256"]
     capture = candidate["candidate"]["live_capture_status"]
     capture_receipt = candidate["evidence"]["capture_receipt_sha256"]
     review_expires_at = candidate["candidate"]["review_expires_at"]
-    generated_at = _parse_review_time(candidate["generated_at"], "generated_at")
 
     if relationship != "DISTINCT_OPERATOR_CANDIDATE":
         code = "HOLD_CONCENTRATION"
@@ -164,7 +173,7 @@ def evaluate_candidate(
     elif review_expires_at is None:
         code = "HOLD_TERMS_REVIEW"
         reasons = ["reviewed source metadata is missing a review expiry"]
-    elif _parse_review_time(review_expires_at, "review_expires_at") <= generated_at:
+    elif _parse_review_time(review_expires_at, "review_expires_at") <= evaluation_time:
         code = "HOLD_TERMS_REVIEW"
         reasons = ["source review is expired at the candidate evaluation time"]
     elif capture != "PASS" or capture_receipt is None:
@@ -183,6 +192,7 @@ def evaluate_candidate(
         raise AssertionError(f"unexpected decision: {code}")
 
     result = copy.deepcopy(dict(candidate))
+    result["generated_at"] = evaluated_at
     result["decision"] = {
         "code": code,
         "reasons": reasons,
@@ -201,6 +211,7 @@ def render_summary(result: Mapping[str, Any]) -> str:
     return "\n".join(
         (
             "CODEX GATE 1A.1 SECOND-SOURCE REVIEW v0.1",
+            f"EVALUATED_AT: {result['generated_at']}",
             f"SOURCE: {candidate['source_id']}",
             f"OPERATOR: {candidate['operator']}",
             f"RPC_METHOD: {candidate['rpc_method']}",
@@ -224,6 +235,10 @@ def parser() -> argparse.ArgumentParser:
     )
     result.add_argument("--candidate", type=Path, default=_DEFAULT_CANDIDATE)
     result.add_argument("--schema", type=Path, default=_DEFAULT_SCHEMA)
+    result.add_argument(
+        "--evaluated-at",
+        help="Explicit evaluation time for deterministic replay; defaults to current UTC time.",
+    )
     result.add_argument("--output", type=Path)
     result.add_argument("--json", action="store_true")
     return result
@@ -234,7 +249,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         candidate = _load_json(args.candidate)
         schema = _load_json(args.schema)
-        reviewed = evaluate_candidate(candidate, schema=schema)
+        reviewed = evaluate_candidate(
+            candidate,
+            schema=schema,
+            evaluated_at=args.evaluated_at or utc_now(),
+        )
         if args.output is not None:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(
