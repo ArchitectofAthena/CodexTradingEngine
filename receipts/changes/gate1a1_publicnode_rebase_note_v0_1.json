@@ -1,0 +1,16 @@
+{
+  "artifact_type": "Gate1A1PublicNodeRebaseNote",
+  "schema_version": "0.1",
+  "recorded_at": "2026-08-06T21:24:00Z",
+  "source_pr": 148,
+  "source_head": "37f7d8ae0c14308d5fcb4137a8afd6b10966cbc1",
+  "main_head": "2bd45a910d769a36b57c0a1cdee4eb64ffc0726c",
+  "reason": "PR 147 merged after PR 148 branched, producing a pyproject merge conflict and preventing GitHub from creating a pull-request merge ref for the latest head.",
+  "successor_strategy": "Rebase by reconstruction from current main; transplant only the eight reviewed Workstream A files and retain all authority locks.",
+  "authority": false,
+  "automatic_promotion": false,
+  "may_execute": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "may_move_capital": false
+}
