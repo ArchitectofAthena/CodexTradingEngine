@@ -1,0 +1,32 @@
+{
+  "artifact_type": "Gate1A1CIRetriggerReceipt",
+  "schema_version": "0.1",
+  "generated_at": "2026-08-06T21:18:00Z",
+  "repository": "ArchitectofAthena/CodexTradingEngine",
+  "pull_request": 147,
+  "prior_head_sha": "f0fba638c1dad88183ae968593993039f1d631a1",
+  "reason": "Retrigger the complete PR workflow set after multiple GitHub Actions jobs failed during action-download setup with Service Unavailable responses, while other code-bearing jobs on the same head passed.",
+  "observed_runs": [
+    {
+      "workflow": "Hybrid Benchmark CI",
+      "run_id": 31117823223,
+      "classification": "INFRASTRUCTURE_RETRY_REQUIRED",
+      "evidence": "Python 3.11 and 3.13 benchmark jobs failed before checkout because GitHub could not resolve action download information; Qiskit comparison and Rust replay jobs passed."
+    },
+    {
+      "workflow": "Gate 1A.1 Evidence Convergence v0.1 CI",
+      "run_id": 31117823323,
+      "classification": "QUEUED_AT_RETRIGGER_TIME"
+    }
+  ],
+  "authority": false,
+  "artifact_is_command": false,
+  "automatic_merge": false,
+  "automatic_gate_promotion": false,
+  "may_execute": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "may_access_wallet": false,
+  "may_move_capital": false,
+  "human_review_required": true
+}

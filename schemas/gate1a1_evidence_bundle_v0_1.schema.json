@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/gate1a1_evidence_bundle_v0_1.schema.json",
+  "title": "Gate 1A.1 Evidence Bundle v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "source_quorum",
+    "benchmark",
+    "rust_verifier",
+    "viv",
+    "economics",
+    "charity",
+    "rollback",
+    "boundary"
+  ],
+  "properties": {
+    "artifact_type": {"const": "Gate1A1EvidenceBundle"},
+    "contract_version": {"const": "codex_gate1a1_evidence_convergence_v0.1"},
+    "source_quorum": {"$ref": "#/$defs/sourceQuorum"},
+    "benchmark": {"$ref": "#/$defs/benchmark"},
+    "rust_verifier": {"$ref": "#/$defs/rustVerifier"},
+    "viv": {"$ref": "#/$defs/viv"},
+    "economics": {"$ref": "#/$defs/economics"},
+    "charity": {"$ref": "#/$defs/charity"},
+    "rollback": {"$ref": "#/$defs/rollback"},
+    "boundary": {"$ref": "#/$defs/boundary"}
+  },
+  "$defs": {
+    "evidenceRefs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "sourceQuorum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision",
+        "independent_source_count",
+        "material_disagreement",
+        "shared_provenance_concentration",
+        "stale_evidence",
+        "unit_ambiguity",
+        "missing_or_expired_review",
+        "evidence_refs"
+      ],
+      "properties": {
+        "decision": {
+          "enum": [
+            "ACCEPT_OBSERVATION_ONLY",
+            "HOLD_CONFLICT",
+            "HOLD_CONCENTRATION",
+            "HOLD_STALE",
+            "HOLD_UNIT_AMBIGUITY",
+            "HOLD_SOURCE_REVIEW"
+          ]
+        },
+        "independent_source_count": {"type": "integer", "minimum": 0},
+        "material_disagreement": {"type": "boolean"},
+        "shared_provenance_concentration": {"type": "boolean"},
+        "stale_evidence": {"type": "boolean"},
+        "unit_ambiguity": {"type": "boolean"},
+        "missing_or_expired_review": {"type": "boolean"},
+        "evidence_refs": {"$ref": "#/$defs/evidenceRefs"}
+      }
+    },
+    "benchmark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exact_pair_present",
+        "same_qubo_hash",
+        "assumptions_identical",
+        "solver_versions_recorded",
+        "resource_usage_recorded",
+        "repeated_seed_stability_evaluated",
+        "verifier_agreement",
+        "qaoa_value_demonstrated",
+        "evidence_refs"
+      ],
+      "properties": {
+        "exact_pair_present": {"type": "boolean"},
+        "same_qubo_hash": {"type": "boolean"},
+        "assumptions_identical": {"type": "boolean"},
+        "solver_versions_recorded": {"type": "boolean"},
+        "resource_usage_recorded": {"type": "boolean"},
+        "repeated_seed_stability_evaluated": {"type": "boolean"},
+        "verifier_agreement": {"type": "boolean"},
+        "qaoa_value_demonstrated": {"type": "boolean"},
+        "evidence_refs": {"$ref": "#/$defs/evidenceRefs"}
+      }
+    },
+    "rustVerifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_commit_present",
+        "build_command_present",
+        "toolchain_pinned",
+        "package_origin_recorded",
+        "binary_hash_verified",
+        "target_triple_recorded",
+        "clean_tree",
+        "schema_versions_match",
+        "deterministic_replay",
+        "evidence_refs"
+      ],
+      "properties": {
+        "source_commit_present": {"type": "boolean"},
+        "build_command_present": {"type": "boolean"},
+        "toolchain_pinned": {"type": "boolean"},
+        "package_origin_recorded": {"type": "boolean"},
+        "binary_hash_verified": {"type": "boolean"},
+        "target_triple_recorded": {"type": "boolean"},
+        "clean_tree": {"type": "boolean"},
+        "schema_versions_match": {"type": "boolean"},
+        "deterministic_replay": {"type": "boolean"},
+        "evidence_refs": {"$ref": "#/$defs/evidenceRefs"}
+      }
+    },
+    "viv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_mutations_complete",
+        "blocked",
+        "critical_escaped",
+        "self_certifying",
+        "evidence_refs"
+      ],
+      "properties": {
+        "required_mutations_complete": {"type": "boolean"},
+        "blocked": {"type": "integer", "minimum": 0},
+        "critical_escaped": {"type": "integer", "minimum": 0},
+        "self_certifying": {"const": false},
+        "evidence_refs": {"$ref": "#/$defs/evidenceRefs"}
+      }
+    },
+    "economics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["complete", "units_explicit", "frictions_included", "evidence_refs"],
+      "properties": {
+        "complete": {"type": "boolean"},
+        "units_explicit": {"type": "boolean"},
+        "frictions_included": {"type": "boolean"},
+        "evidence_refs": {"$ref": "#/$defs/evidenceRefs"}
+      }
+    },
+    "charity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_complete",
+        "simulation_only",
+        "transfer_enabled",
+        "impact_grants_authority",
+        "no_data_semantics",
+        "evidence_refs"
+      ],
+      "properties": {
+        "contract_complete": {"type": "boolean"},
+        "simulation_only": {"const": true},
+        "transfer_enabled": {"const": false},
+        "impact_grants_authority": {"const": false},
+        "no_data_semantics": {"type": "boolean"},
+        "evidence_refs": {"$ref": "#/$defs/evidenceRefs"}
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kill_switch_ready", "rollback_replay_passed", "evidence_refs"],
+      "properties": {
+        "kill_switch_ready": {"type": "boolean"},
+        "rollback_replay_passed": {"type": "boolean"},
+        "evidence_refs": {"$ref": "#/$defs/evidenceRefs"}
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_is_command",
+        "authority",
+        "automatic_gate_promotion",
+        "may_execute",
+        "may_sign",
+        "may_submit_transaction",
+        "may_access_wallet",
+        "may_move_capital",
+        "human_promotion_required"
+      ],
+      "properties": {
+        "artifact_is_command": {"const": false},
+        "authority": {"const": false},
+        "automatic_gate_promotion": {"const": false},
+        "may_execute": {"const": false},
+        "may_sign": {"const": false},
+        "may_submit_transaction": {"const": false},
+        "may_access_wallet": {"const": false},
+        "may_move_capital": {"const": false},
+        "human_promotion_required": {"const": true}
+      }
+    }
+  }
+}

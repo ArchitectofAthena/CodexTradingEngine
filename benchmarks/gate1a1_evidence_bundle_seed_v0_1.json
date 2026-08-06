@@ -1,0 +1,88 @@
+{
+  "artifact_type": "Gate1A1EvidenceBundle",
+  "contract_version": "codex_gate1a1_evidence_convergence_v0.1",
+  "source_quorum": {
+    "decision": "ACCEPT_OBSERVATION_ONLY",
+    "independent_source_count": 2,
+    "material_disagreement": false,
+    "shared_provenance_concentration": false,
+    "stale_evidence": false,
+    "unit_ambiguity": false,
+    "missing_or_expired_review": false,
+    "evidence_refs": [
+      "fixture:independent-source-quorum-v0-1"
+    ]
+  },
+  "benchmark": {
+    "exact_pair_present": true,
+    "same_qubo_hash": true,
+    "assumptions_identical": true,
+    "solver_versions_recorded": true,
+    "resource_usage_recorded": true,
+    "repeated_seed_stability_evaluated": true,
+    "verifier_agreement": true,
+    "qaoa_value_demonstrated": false,
+    "evidence_refs": [
+      "fixture:classical-qaoa-pair-v0-1"
+    ]
+  },
+  "rust_verifier": {
+    "source_commit_present": true,
+    "build_command_present": true,
+    "toolchain_pinned": true,
+    "package_origin_recorded": true,
+    "binary_hash_verified": true,
+    "target_triple_recorded": true,
+    "clean_tree": true,
+    "schema_versions_match": true,
+    "deterministic_replay": true,
+    "evidence_refs": [
+      "fixture:rust-origin-replay-v0-1"
+    ]
+  },
+  "viv": {
+    "required_mutations_complete": true,
+    "blocked": 18,
+    "critical_escaped": 0,
+    "self_certifying": false,
+    "evidence_refs": [
+      "fixture:viv-required-mutations-v0-1"
+    ]
+  },
+  "economics": {
+    "complete": true,
+    "units_explicit": true,
+    "frictions_included": true,
+    "evidence_refs": [
+      "fixture:complete-economics-v0-1"
+    ]
+  },
+  "charity": {
+    "contract_complete": true,
+    "simulation_only": true,
+    "transfer_enabled": false,
+    "impact_grants_authority": false,
+    "no_data_semantics": true,
+    "evidence_refs": [
+      "fixture:charity-target-contract-v0-1"
+    ]
+  },
+  "rollback": {
+    "kill_switch_ready": true,
+    "rollback_replay_passed": true,
+    "evidence_refs": [
+      "fixture:rollback-replay-v0-1"
+    ]
+  },
+  "boundary": {
+    "artifact_is_command": false,
+    "authority": false,
+    "automatic_gate_promotion": false,
+    "may_execute": false,
+    "may_sign": false,
+    "may_submit_transaction": false,
+    "may_access_wallet": false,
+    "may_move_capital": false,
+    "human_promotion_required": true
+  }
+}
