@@ -19,6 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
+codex = "eve_q.alpha_frontdoor:main"
 codex-alpha-doctor = "eve_q.alpha_doctor:main"
 codex-alpha-run = "eve_q.alpha_operator:main"
 codex-gate1 = "eve_q.gate1_readonly_runtime:main"
