@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/gate1a1_decision_receipt_v0_1.schema.json",
+  "title": "Gate 1A.1 Evidence Convergence Decision Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "generated_at",
+    "evidence_sha256",
+    "decision",
+    "hold_reasons",
+    "qaoa_status",
+    "compact_report",
+    "evidence_summary",
+    "boundary",
+    "receipt_sha256"
+  ],
+  "properties": {
+    "artifact_type": {"const": "Gate1A1EvidenceConvergenceReceipt"},
+    "contract_version": {"const": "codex_gate1a1_evidence_convergence_v0.1"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "evidence_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "decision": {
+      "enum": ["HOLD", "QAOA_RESEARCH_ONLY", "READY_FOR_GATE1B_REVIEW"]
+    },
+    "hold_reasons": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "qaoa_status": {
+      "enum": ["RESEARCH_ONLY", "CANDIDATE_FOR_FURTHER_TESTING"]
+    },
+    "compact_report": {"$ref": "#/$defs/compactReport"},
+    "evidence_summary": {"$ref": "#/$defs/evidenceSummary"},
+    "boundary": {"$ref": "#/$defs/boundary"},
+    "receipt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "$defs": {
+    "compactReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "WORKFLOW",
+        "SOURCE_QUORUM",
+        "FRESHNESS",
+        "ECONOMICS",
+        "CLASSICAL_BASELINE",
+        "QAOA_COMPARISON",
+        "RUST_VERIFICATION",
+        "ADVERSARIAL_RESULTS",
+        "EXECUTION_LOCKS",
+        "CHARITY_POSTURE",
+        "ROLLBACK",
+        "NEXT_DECISION"
+      ],
+      "properties": {
+        "WORKFLOW": {"const": "GATE_1A1_EVIDENCE_CONVERGENCE"},
+        "SOURCE_QUORUM": {"type": "string", "minLength": 1},
+        "FRESHNESS": {"type": "string", "minLength": 1},
+        "ECONOMICS": {"type": "string", "minLength": 1},
+        "CLASSICAL_BASELINE": {"type": "string", "minLength": 1},
+        "QAOA_COMPARISON": {"type": "string", "minLength": 1},
+        "RUST_VERIFICATION": {"type": "string", "minLength": 1},
+        "ADVERSARIAL_RESULTS": {"type": "string", "minLength": 1},
+        "EXECUTION_LOCKS": {"const": "LOCKED"},
+        "CHARITY_POSTURE": {"type": "string", "minLength": 1},
+        "ROLLBACK": {"type": "string", "minLength": 1},
+        "NEXT_DECISION": {
+          "enum": ["HOLD", "QAOA_RESEARCH_ONLY", "READY_FOR_GATE1B_REVIEW"]
+        }
+      }
+    },
+    "evidenceSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_quorum_decision",
+        "independent_source_count",
+        "exact_pair_present",
+        "same_qubo_hash",
+        "qaoa_value_demonstrated",
+        "rust_reproducible",
+        "viv_blocked",
+        "viv_critical_escaped",
+        "economics_complete",
+        "charity_contract_complete",
+        "rollback_ready"
+      ],
+      "properties": {
+        "source_quorum_decision": {"type": "string", "minLength": 1},
+        "independent_source_count": {"type": "integer", "minimum": 0},
+        "exact_pair_present": {"type": "boolean"},
+        "same_qubo_hash": {"type": "boolean"},
+        "qaoa_value_demonstrated": {"type": "boolean"},
+        "rust_reproducible": {"type": "boolean"},
+        "viv_blocked": {"type": "integer", "minimum": 0},
+        "viv_critical_escaped": {"type": "integer", "minimum": 0},
+        "economics_complete": {"type": "boolean"},
+        "charity_contract_complete": {"type": "boolean"},
+        "rollback_ready": {"type": "boolean"}
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_is_command",
+        "authority",
+        "automatic_gate_promotion",
+        "gate1b_activated",
+        "may_execute",
+        "may_sign",
+        "may_submit_transaction",
+        "may_access_wallet",
+        "may_move_capital",
+        "human_promotion_required"
+      ],
+      "properties": {
+        "artifact_is_command": {"const": false},
+        "authority": {"const": false},
+        "automatic_gate_promotion": {"const": false},
+        "gate1b_activated": {"const": false},
+        "may_execute": {"const": false},
+        "may_sign": {"const": false},
+        "may_submit_transaction": {"const": false},
+        "may_access_wallet": {"const": false},
+        "may_move_capital": {"const": false},
+        "human_promotion_required": {"const": true}
+      }
+    }
+  }
+}
