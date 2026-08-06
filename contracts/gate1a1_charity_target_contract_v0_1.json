@@ -1,0 +1,66 @@
+{
+  "artifact_is_command": false,
+  "authority": false,
+  "automatic_gate_promotion": false,
+  "contract_id": "gate1a1-charity-target:1069e2651f5c31baef559f17",
+  "donation_transfer_evidence": {
+    "receipt_sha256": null,
+    "status": "ABSENT",
+    "transaction_reference": null
+  },
+  "gate1b_activated": false,
+  "human_promotion_required": true,
+  "human_review": {
+    "decision": "PENDING",
+    "required": true,
+    "reviewer": null
+  },
+  "may_access_wallet": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "modeled_contribution": {
+    "assumptions_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "estimate": 0.0,
+    "status": "MODEL_ONLY",
+    "uncertainty_interval": [0.0, 1.0]
+  },
+  "no_data_semantics": {
+    "meaning": "NO_OBSERVATION_AVAILABLE",
+    "not_equivalent_to": [
+      "ZERO_IMPACT",
+      "NEGATIVE_IMPACT",
+      "TRANSFER_FAILED",
+      "NO_CHARITY_VALUE"
+    ]
+  },
+  "observed_outcome_evidence": {
+    "observations": [],
+    "provenance": null,
+    "status": "NO_DATA"
+  },
+  "pipeline": [
+    "telemetry_observed",
+    "counterfactual_impact_estimated",
+    "uncertainty_preserved",
+    "human_review",
+    "no_transfer"
+  ],
+  "reward_posture": {
+    "automatic_update": false,
+    "human_promotion_required": true,
+    "may_rewrite_reward_function": false
+  },
+  "schema_version": "gate1a1-charity-target-contract-v0.1",
+  "transfer_posture": {
+    "attempted": false,
+    "enabled": false,
+    "transaction_submission": false,
+    "wallet_access": false
+  },
+  "unsupported_causal_claim": {
+    "claim": null,
+    "present": false
+  }
+}
