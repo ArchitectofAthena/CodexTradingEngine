@@ -1,0 +1,47 @@
+{
+  "artifact_type": "CodexChangeReceipt",
+  "change_id": "gate1a1-evidence-convergence-v0-1",
+  "generated_at": "2026-08-06T15:46:00Z",
+  "repository": "ArchitectofAthena/CodexTradingEngine",
+  "source_issue": 145,
+  "candidate_branch": "feat/gate1a1-evidence-decision-v0-1",
+  "purpose": "Define the first deterministic evidence schema and decision contract for Gate 1A.1 convergence.",
+  "delivered": [
+    "strict inert evidence-bundle schema",
+    "strict authority-false decision-receipt schema",
+    "deterministic HOLD, QAOA_RESEARCH_ONLY, and READY_FOR_GATE1B_REVIEW engine",
+    "summary-first compact operator surface",
+    "content-addressed evidence and receipt identities",
+    "deterministic research-only seed fixture",
+    "focused failure, authority, determinism, and output tests",
+    "pinned Python 3.11 and 3.13 CI",
+    "operator doctrine and CLI entrypoint"
+  ],
+  "non_goals": [
+    "network telemetry collection",
+    "source aggregation",
+    "route selection",
+    "QAOA execution",
+    "Rust compilation or verifier invocation",
+    "ViV mutation execution",
+    "Gate 1B activation",
+    "wallet access",
+    "signing",
+    "transaction submission",
+    "charity transfer",
+    "capital movement"
+  ],
+  "boundary": {
+    "artifact_is_command": false,
+    "authority": false,
+    "automatic_gate_promotion": false,
+    "gate1b_activated": false,
+    "may_execute": false,
+    "may_sign": false,
+    "may_submit_transaction": false,
+    "may_access_wallet": false,
+    "may_move_capital": false,
+    "automatic_merge": false,
+    "human_promotion_required": true
+  }
+}
