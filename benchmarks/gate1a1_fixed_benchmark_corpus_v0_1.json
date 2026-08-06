@@ -1,0 +1,470 @@
+{
+  "artifact_is_command": false,
+  "authority": false,
+  "automatic_gate_promotion": false,
+  "cases": [
+    {
+      "authority": false,
+      "case_id": "gate1a1-benchmark-case:single-route-choice-v0-1",
+      "classical": {
+        "run": {
+          "assignment": [
+            1,
+            0,
+            0
+          ],
+          "authority": false,
+          "feasible": true,
+          "objective_value": -3.0,
+          "resource_units": 8.0,
+          "run_sha256": "4298dd7bee449151fb79c05eaf27e3ba403115f07eba844f5d051ced39cb61e6",
+          "runtime_ms": 0.08,
+          "verifier_result": "PASS"
+        },
+        "solver": "exact-enumeration",
+        "solver_version": "stdlib-v0.1"
+      },
+      "description": "One bounded route may be selected.",
+      "expected_outcome": "QAOA_ADDS_NO_MEASURABLE_VALUE",
+      "qaoa": {
+        "authority": false,
+        "backend": "local-fixture-statevector",
+        "backend_version": "v0.1",
+        "depth": 1,
+        "optimizer": "precommitted-grid",
+        "optimizer_version": "v0.1",
+        "runs": [
+          {
+            "assignment": [
+              1,
+              0,
+              0
+            ],
+            "authority": false,
+            "feasible": true,
+            "objective_value": -3.0,
+            "resource_units": 64.0,
+            "run_sha256": "70d1c923c6c856d5fff8006e522ff7323e3b4a85abb43a50647ce33484da1ba8",
+            "runtime_ms": 4.2,
+            "seed": 0,
+            "verifier_result": "PASS"
+          },
+          {
+            "assignment": [
+              1,
+              0,
+              0
+            ],
+            "authority": false,
+            "feasible": true,
+            "objective_value": -3.0,
+            "resource_units": 64.0,
+            "run_sha256": "16a8309e4017709ec55102cca0f198847f579dc964f5315e782871c08efc80dc",
+            "runtime_ms": 4.1,
+            "seed": 7331,
+            "verifier_result": "PASS"
+          },
+          {
+            "assignment": [
+              1,
+              0,
+              0
+            ],
+            "authority": false,
+            "feasible": true,
+            "objective_value": -3.0,
+            "resource_units": 64.0,
+            "run_sha256": "4fa2b88f90db0bb42428f825e9dddb2f7961036a34319c6c768a96d1903c2118",
+            "runtime_ms": 4.3,
+            "seed": 424242,
+            "verifier_result": "PASS"
+          }
+        ],
+        "same_qubo_sha256": "e37f77017f16baeb6de113dca480fece97843c1ecc11f1db4a4f27f3c9acfa7b",
+        "sampler": "deterministic-precomputed-statevector",
+        "shots": 1024
+      },
+      "qubo": {
+        "assumptions": {
+          "failure_model_sha256": "16b06693e27fde74d75e07857596f039e194259e90b057204e52d687d247db23",
+          "fee_model_sha256": "88a76dcd8d03a3c3c04534125b34f297ccc16562a1f87a2cde378ff161692f55",
+          "gas_model_sha256": "3aa7a75772475b36ec22b8ead11d48d6f6d8ac9d135b14468c83dd6c863ef71b",
+          "latency_model_sha256": "39b29676ef8cf4ff39590a6e2ff025bf81905cdb2caef08e207d1bcae1fb24d7",
+          "liquidity_model_sha256": "28b1f6059ebb1bdd8dbd97adc21fb6e3ef369e765e99068a2e0b237fa0f2ed1f",
+          "slippage_model_sha256": "6e7a887bd3e720a0bda5c1f92e5f9d1a99a47dd82fc1a79ee46324e8647f3a3f"
+        },
+        "authority": false,
+        "constant": 0.0,
+        "constraints": [
+          {
+            "type": "at_most_one",
+            "variables": [
+              "route_a",
+              "route_b",
+              "route_c"
+            ]
+          }
+        ],
+        "linear": [
+          [
+            "route_a",
+            -3.0
+          ],
+          [
+            "route_b",
+            -2.0
+          ],
+          [
+            "route_c",
+            -1.0
+          ]
+        ],
+        "quadratic": [],
+        "qubo_sha256": "e37f77017f16baeb6de113dca480fece97843c1ecc11f1db4a4f27f3c9acfa7b",
+        "variable_order": [
+          "route_a",
+          "route_b",
+          "route_c"
+        ]
+      }
+    },
+    {
+      "authority": false,
+      "case_id": "gate1a1-benchmark-case:paired-route-choice-v0-1",
+      "classical": {
+        "run": {
+          "assignment": [
+            1,
+            0,
+            1,
+            0
+          ],
+          "authority": false,
+          "feasible": true,
+          "objective_value": -6.0,
+          "resource_units": 16.0,
+          "run_sha256": "1c6554b567e33f3edf6176fe803eee71a9350b685c825c185928072cec8c8063",
+          "runtime_ms": 0.12,
+          "verifier_result": "PASS"
+        },
+        "solver": "exact-enumeration",
+        "solver_version": "stdlib-v0.1"
+      },
+      "description": "One source and one sink must be selected.",
+      "expected_outcome": "QAOA_ADDS_NO_MEASURABLE_VALUE",
+      "qaoa": {
+        "authority": false,
+        "backend": "local-fixture-statevector",
+        "backend_version": "v0.1",
+        "depth": 1,
+        "optimizer": "precommitted-grid",
+        "optimizer_version": "v0.1",
+        "runs": [
+          {
+            "assignment": [
+              1,
+              0,
+              1,
+              0
+            ],
+            "authority": false,
+            "feasible": true,
+            "objective_value": -6.0,
+            "resource_units": 96.0,
+            "run_sha256": "9e0a9bfbcd196423154d0486457080722e94f5e6c3c0d8291c07ba4ba02f4d7d",
+            "runtime_ms": 6.5,
+            "seed": 0,
+            "verifier_result": "PASS"
+          },
+          {
+            "assignment": [
+              1,
+              0,
+              1,
+              0
+            ],
+            "authority": false,
+            "feasible": true,
+            "objective_value": -6.0,
+            "resource_units": 96.0,
+            "run_sha256": "08d0ae7fb6791c9de93c4bd4801f694eb749e5efdb76ae248e7feaec19a6f566",
+            "runtime_ms": 6.4,
+            "seed": 7331,
+            "verifier_result": "PASS"
+          },
+          {
+            "assignment": [
+              1,
+              0,
+              1,
+              0
+            ],
+            "authority": false,
+            "feasible": true,
+            "objective_value": -6.0,
+            "resource_units": 96.0,
+            "run_sha256": "712fd84dc281881279b1d27d012c160f711ec701d734563dfd4b8ab7f022cc71",
+            "runtime_ms": 6.6,
+            "seed": 424242,
+            "verifier_result": "PASS"
+          }
+        ],
+        "same_qubo_sha256": "e1be94e5169785693b609dcaeffbd78c350312f868b990ac00997315b8000fd9",
+        "sampler": "deterministic-precomputed-statevector",
+        "shots": 1024
+      },
+      "qubo": {
+        "assumptions": {
+          "failure_model_sha256": "751dbd2c0e43c6de4ec68b08fde8a09856777e7e2477de5acb6410a50b5f15f9",
+          "fee_model_sha256": "72a479d1cc97ef398c59d193dfbb2e4f6f49e61b403cc1605fa64e3003e41b62",
+          "gas_model_sha256": "a69645473d6865e669f5de0bb77b70b1b1444596df712655c10816c95316612b",
+          "latency_model_sha256": "16cb318b4a472f63793a3b41731a2818e6ecf5eab1e01d942835b81c6e31e070",
+          "liquidity_model_sha256": "57d295ae265dfc1eb32258dd4f658cdb2641ae190f61689b4987a1e36ca109f2",
+          "slippage_model_sha256": "9e99323f7b8ba1b4e22193c70b74b71edd2e15b255db136382e40ca9eb34398e"
+        },
+        "authority": false,
+        "constant": 0.0,
+        "constraints": [
+          {
+            "type": "exactly_one",
+            "variables": [
+              "source_a",
+              "source_b"
+            ]
+          },
+          {
+            "type": "exactly_one",
+            "variables": [
+              "sink_a",
+              "sink_b"
+            ]
+          }
+        ],
+        "linear": [
+          [
+            "source_a",
+            -2.0
+          ],
+          [
+            "source_b",
+            -1.0
+          ],
+          [
+            "sink_a",
+            -3.0
+          ],
+          [
+            "sink_b",
+            -2.0
+          ]
+        ],
+        "quadratic": [
+          [
+            "source_a",
+            "sink_a",
+            -1.0
+          ],
+          [
+            "source_b",
+            "sink_b",
+            -0.5
+          ]
+        ],
+        "qubo_sha256": "e1be94e5169785693b609dcaeffbd78c350312f868b990ac00997315b8000fd9",
+        "variable_order": [
+          "source_a",
+          "source_b",
+          "sink_a",
+          "sink_b"
+        ]
+      }
+    },
+    {
+      "authority": false,
+      "case_id": "gate1a1-benchmark-case:safety-bound-route-choice-v0-1",
+      "classical": {
+        "run": {
+          "assignment": [
+            1,
+            0,
+            1,
+            0,
+            1
+          ],
+          "authority": false,
+          "feasible": true,
+          "objective_value": -5.3,
+          "resource_units": 32.0,
+          "run_sha256": "366243474da25134d5620b11f8f42069eac898fb8f2ed1ea2949594ee78ffedb",
+          "runtime_ms": 0.2,
+          "verifier_result": "PASS"
+        },
+        "solver": "exact-enumeration",
+        "solver_version": "stdlib-v0.1"
+      },
+      "description": "Route selection must retain the explicit safety variable.",
+      "expected_outcome": "QAOA_ADDS_NO_MEASURABLE_VALUE",
+      "qaoa": {
+        "authority": false,
+        "backend": "local-fixture-statevector",
+        "backend_version": "v0.1",
+        "depth": 1,
+        "optimizer": "precommitted-grid",
+        "optimizer_version": "v0.1",
+        "runs": [
+          {
+            "assignment": [
+              1,
+              0,
+              1,
+              0,
+              1
+            ],
+            "authority": false,
+            "feasible": true,
+            "objective_value": -5.3,
+            "resource_units": 128.0,
+            "run_sha256": "ac30627402850f0766923ec1731635c04ae90221255476f0673908d88323b96a",
+            "runtime_ms": 9.8,
+            "seed": 0,
+            "verifier_result": "PASS"
+          },
+          {
+            "assignment": [
+              1,
+              0,
+              1,
+              0,
+              1
+            ],
+            "authority": false,
+            "feasible": true,
+            "objective_value": -5.3,
+            "resource_units": 128.0,
+            "run_sha256": "34cc3fa52a48030e418b50c6b80970bb4d78e08e0ebc48ed4b4477e9b6b8457b",
+            "runtime_ms": 9.7,
+            "seed": 7331,
+            "verifier_result": "PASS"
+          },
+          {
+            "assignment": [
+              1,
+              0,
+              1,
+              0,
+              1
+            ],
+            "authority": false,
+            "feasible": true,
+            "objective_value": -5.3,
+            "resource_units": 128.0,
+            "run_sha256": "0635730d504497045c37100061263a434b965082319f1c631328759a5a6072bb",
+            "runtime_ms": 9.9,
+            "seed": 424242,
+            "verifier_result": "PASS"
+          }
+        ],
+        "same_qubo_sha256": "18809f39d97c4ac8da0c368a998912bfae76ab716749a34e6a5afbbfc2f6e12d",
+        "sampler": "deterministic-precomputed-statevector",
+        "shots": 1024
+      },
+      "qubo": {
+        "assumptions": {
+          "failure_model_sha256": "998ff215b97ab9aad271b712ae8916bd887ce3a539bce559990fe2d92b94b583",
+          "fee_model_sha256": "325d06669392d69930d839878a7a1bd01e0df379063b6e0c3e250ec2b287b093",
+          "gas_model_sha256": "3b37c8fcfa9b5a6d7649bc610e8ac00472c4320dc4e44b94f308b59e6125bc10",
+          "latency_model_sha256": "7a8e1bb8ccefc87c0e44857f44f497e2a5b92809774628d22744129ceb107419",
+          "liquidity_model_sha256": "8fb0f7dc75b110f12f7a3c494646c4d01d604a095907ce9d216651c71f255554",
+          "slippage_model_sha256": "cdc7ec3cdba7302a43f045b9a7d0453d7eff824ab0c5b358b90fe9ce01b5e985"
+        },
+        "authority": false,
+        "constant": 0.0,
+        "constraints": [
+          {
+            "type": "at_most_one",
+            "variables": [
+              "entry_a",
+              "entry_b"
+            ]
+          },
+          {
+            "type": "at_most_one",
+            "variables": [
+              "exit_a",
+              "exit_b"
+            ]
+          },
+          {
+            "type": "exactly_one",
+            "variables": [
+              "safety"
+            ]
+          }
+        ],
+        "linear": [
+          [
+            "entry_a",
+            -2.5
+          ],
+          [
+            "entry_b",
+            -2.4
+          ],
+          [
+            "exit_a",
+            -1.5
+          ],
+          [
+            "exit_b",
+            -1.2
+          ],
+          [
+            "safety",
+            -0.8
+          ]
+        ],
+        "quadratic": [
+          [
+            "entry_a",
+            "exit_a",
+            -0.5
+          ],
+          [
+            "entry_b",
+            "exit_b",
+            -0.6
+          ]
+        ],
+        "qubo_sha256": "18809f39d97c4ac8da0c368a998912bfae76ab716749a34e6a5afbbfc2f6e12d",
+        "variable_order": [
+          "entry_a",
+          "entry_b",
+          "exit_a",
+          "exit_b",
+          "safety"
+        ]
+      }
+    }
+  ],
+  "corpus_id": "gate1a1-benchmark-corpus:ec5938e03968f26b7f02f581",
+  "gate1b_activated": false,
+  "human_promotion_required": true,
+  "may_access_wallet": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "policy": {
+    "candidate_max_resource_ratio": 1.0,
+    "candidate_min_runtime_improvement_fraction": 0.2,
+    "feasibility_not_worse": true,
+    "human_review_required": true,
+    "maximum_objective_spread": 1e-12,
+    "minimum_seed_count": 3,
+    "objective_tolerance": 1e-12,
+    "repeated_seed_stability_required": true,
+    "same_qubo_hash_required": true,
+    "verifier_agreement_required": true
+  },
+  "schema_version": "gate1a1-fixed-benchmark-corpus-v0.1"
+}

@@ -1,0 +1,159 @@
+{
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/gate1a1_fixed_benchmark_corpus_v0_1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_is_command": {"const": false},
+    "authority": {"const": false},
+    "automatic_gate_promotion": {"const": false},
+    "cases": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "authority": {"const": false},
+          "case_id": {"pattern": "^gate1a1-benchmark-case:[a-z0-9-]+$", "type": "string"},
+          "classical": {
+            "additionalProperties": false,
+            "properties": {
+              "run": {
+                "additionalProperties": false,
+                "properties": {
+                  "assignment": {"items": {"enum": [0, 1], "type": "integer"}, "minItems": 1, "type": "array"},
+                  "authority": {"const": false},
+                  "feasible": {"type": "boolean"},
+                  "objective_value": {"type": "number"},
+                  "resource_units": {"minimum": 0, "type": "number"},
+                  "run_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+                  "runtime_ms": {"minimum": 0, "type": "number"},
+                  "verifier_result": {"const": "PASS"}
+                },
+                "required": ["assignment", "objective_value", "feasible", "runtime_ms", "resource_units", "verifier_result", "run_sha256", "authority"],
+                "type": "object"
+              },
+              "solver": {"minLength": 1, "type": "string"},
+              "solver_version": {"minLength": 1, "type": "string"}
+            },
+            "required": ["solver", "solver_version", "run"],
+            "type": "object"
+          },
+          "description": {"minLength": 1, "type": "string"},
+          "expected_outcome": {"enum": ["QAOA_RESEARCH_ONLY", "QAOA_ADDS_NO_MEASURABLE_VALUE", "QAOA_CANDIDATE_FOR_FURTHER_TESTING"]},
+          "qaoa": {
+            "additionalProperties": false,
+            "properties": {
+              "authority": {"const": false},
+              "backend": {"minLength": 1, "type": "string"},
+              "backend_version": {"minLength": 1, "type": "string"},
+              "depth": {"minimum": 1, "type": "integer"},
+              "optimizer": {"minLength": 1, "type": "string"},
+              "optimizer_version": {"minLength": 1, "type": "string"},
+              "runs": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "assignment": {"items": {"enum": [0, 1], "type": "integer"}, "minItems": 1, "type": "array"},
+                    "authority": {"const": false},
+                    "feasible": {"type": "boolean"},
+                    "objective_value": {"type": "number"},
+                    "resource_units": {"minimum": 0, "type": "number"},
+                    "run_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+                    "runtime_ms": {"minimum": 0, "type": "number"},
+                    "seed": {"type": "integer"},
+                    "verifier_result": {"const": "PASS"}
+                  },
+                  "required": ["seed", "assignment", "objective_value", "feasible", "runtime_ms", "resource_units", "verifier_result", "run_sha256", "authority"],
+                  "type": "object"
+                },
+                "minItems": 2,
+                "type": "array"
+              },
+              "same_qubo_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+              "sampler": {"minLength": 1, "type": "string"},
+              "shots": {"minimum": 1, "type": "integer"}
+            },
+            "required": ["sampler", "backend", "backend_version", "depth", "optimizer", "optimizer_version", "shots", "same_qubo_sha256", "runs", "authority"],
+            "type": "object"
+          },
+          "qubo": {
+            "additionalProperties": false,
+            "properties": {
+              "assumptions": {
+                "additionalProperties": false,
+                "properties": {
+                  "failure_model_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+                  "fee_model_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+                  "gas_model_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+                  "latency_model_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+                  "liquidity_model_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+                  "slippage_model_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"}
+                },
+                "required": ["fee_model_sha256", "gas_model_sha256", "latency_model_sha256", "slippage_model_sha256", "liquidity_model_sha256", "failure_model_sha256"],
+                "type": "object"
+              },
+              "authority": {"const": false},
+              "constant": {"type": "number"},
+              "constraints": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {"enum": ["at_most_one", "exactly_one"]},
+                    "variables": {"items": {"type": "string"}, "minItems": 1, "type": "array", "uniqueItems": true}
+                  },
+                  "required": ["type", "variables"],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "linear": {
+                "items": {"items": false, "maxItems": 2, "minItems": 2, "prefixItems": [{"type": "string"}, {"type": "number"}], "type": "array"},
+                "minItems": 1,
+                "type": "array"
+              },
+              "quadratic": {
+                "items": {"items": false, "maxItems": 3, "minItems": 3, "prefixItems": [{"type": "string"}, {"type": "string"}, {"type": "number"}], "type": "array"},
+                "type": "array"
+              },
+              "qubo_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+              "variable_order": {"items": {"minLength": 1, "type": "string"}, "minItems": 1, "type": "array", "uniqueItems": true}
+            },
+            "required": ["variable_order", "linear", "quadratic", "constant", "constraints", "assumptions", "qubo_sha256", "authority"],
+            "type": "object"
+          }
+        },
+        "required": ["case_id", "description", "qubo", "classical", "qaoa", "expected_outcome", "authority"],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "corpus_id": {"pattern": "^gate1a1-benchmark-corpus:[0-9a-f]{24}$", "type": "string"},
+    "gate1b_activated": {"const": false},
+    "human_promotion_required": {"const": true},
+    "may_access_wallet": {"const": false},
+    "may_execute": {"const": false},
+    "may_move_capital": {"const": false},
+    "may_sign": {"const": false},
+    "may_submit_transaction": {"const": false},
+    "policy": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_max_resource_ratio": {"minimum": 0, "type": "number"},
+        "candidate_min_runtime_improvement_fraction": {"minimum": 0, "type": "number"},
+        "feasibility_not_worse": {"const": true},
+        "human_review_required": {"const": true},
+        "maximum_objective_spread": {"minimum": 0, "type": "number"},
+        "minimum_seed_count": {"minimum": 2, "type": "integer"},
+        "objective_tolerance": {"minimum": 0, "type": "number"},
+        "repeated_seed_stability_required": {"const": true},
+        "same_qubo_hash_required": {"const": true},
+        "verifier_agreement_required": {"const": true}
+      },
+      "required": ["same_qubo_hash_required", "feasibility_not_worse", "objective_tolerance", "candidate_min_runtime_improvement_fraction", "candidate_max_resource_ratio", "repeated_seed_stability_required", "minimum_seed_count", "maximum_objective_spread", "verifier_agreement_required", "human_review_required"],
+      "type": "object"
+    },
+    "schema_version": {"const": "gate1a1-fixed-benchmark-corpus-v0.1"}
+  },
+  "required": ["schema_version", "corpus_id", "policy", "cases", "authority", "artifact_is_command", "automatic_gate_promotion", "gate1b_activated", "may_execute", "may_sign", "may_submit_transaction", "may_access_wallet", "may_move_capital", "human_promotion_required"],
+  "title": "Gate 1A.1 Fixed Classical/QAOA Benchmark Corpus v0.1",
+  "type": "object"
+}

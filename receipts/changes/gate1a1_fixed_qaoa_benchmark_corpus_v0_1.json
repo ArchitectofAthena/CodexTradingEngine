@@ -1,0 +1,25 @@
+{
+  "artifact_is_command": false,
+  "authority": false,
+  "automatic_gate_promotion": false,
+  "change_id": "gate1a1_fixed_qaoa_benchmark_corpus_v0_1",
+  "change_type": "fixed_classical_qaoa_benchmark_and_machine_checked_promotion_policy",
+  "gate1b_activated": false,
+  "human_promotion_required": true,
+  "may_access_wallet": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "outcome": "QAOA_ADDS_NO_MEASURABLE_VALUE",
+  "parent_issue": 145,
+  "scope": [
+    "immutable_qubo_corpus",
+    "exact_classical_replay",
+    "fixed_qaoa_seed_evidence",
+    "precommitted_promotion_thresholds",
+    "deterministic_report",
+    "focused_ci"
+  ],
+  "schema_version": "codex-change-receipt-v0.1"
+}
