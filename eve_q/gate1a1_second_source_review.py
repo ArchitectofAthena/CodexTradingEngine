@@ -146,6 +146,7 @@ def evaluate_candidate(
 
     relationship = candidate["candidate"]["relationship_to_primary"]
     terms = candidate["candidate"]["terms_review"]
+    source_review_receipt = candidate["evidence"]["source_review_receipt_sha256"]
     capture = candidate["candidate"]["live_capture_status"]
     capture_receipt = candidate["evidence"]["capture_receipt_sha256"]
     review_expires_at = candidate["candidate"]["review_expires_at"]
@@ -157,6 +158,9 @@ def evaluate_candidate(
     elif terms != "REVIEWED":
         code = "HOLD_TERMS_REVIEW"
         reasons = ["terms and rate-limit review is not complete"]
+    elif source_review_receipt is None:
+        code = "HOLD_TERMS_REVIEW"
+        reasons = ["reviewed source metadata lacks an immutable source-review receipt"]
     elif review_expires_at is None:
         code = "HOLD_TERMS_REVIEW"
         reasons = ["reviewed source metadata is missing a review expiry"]
@@ -171,7 +175,7 @@ def evaluate_candidate(
     else:
         code = "READY_FOR_ELIGIBILITY_REVIEW"
         reasons = [
-            "candidate metadata, terms review, distinct-operator posture, and bounded capture evidence are complete",
+            "candidate metadata, immutable source review, fresh expiry, distinct-operator posture, and bounded capture evidence are complete",
             "human eligibility review remains required",
         ]
 
