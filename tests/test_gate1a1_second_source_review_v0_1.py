@@ -40,6 +40,7 @@ def test_utc_now_emits_parseable_zulu_timestamp() -> None:
     offset = parsed.utcoffset()
 
     assert value.endswith("Z")
+    assert parsed.microsecond == 0
     assert offset is not None
     assert offset.total_seconds() == 0
 
