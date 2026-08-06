@@ -2,6 +2,7 @@
   "artifact_type": "ChangeReceipt",
   "change_id": "gate1a1-publicnode-second-source-v0-1",
   "created_at": "2026-08-06T16:24:00Z",
+  "updated_at": "2026-08-06T16:37:00Z",
   "source_issue": 145,
   "repository": "ArchitectofAthena/CodexTradingEngine",
   "branch": "feat/gate1a1-publicnode-second-source-v0-1",
@@ -13,20 +14,33 @@
     "registry/alpha_testnet_sources_v0_1.json",
     "eve_q/gate1_source_consensus.py"
   ],
+  "hardening_successors": [
+    "f5ea8b3181d75c34c96a46c58058a1487496af30",
+    "34fe88fcb22d4f263116a40e344838e981323a43",
+    "841ed304e2241e59ca13c598d27fdc8e8ddbc9b2",
+    "0128e0c2a60b552990def6e596cf256e5b55cd6e",
+    "2584e745c53021393b601413de64b005079081e2",
+    "deb4f4668052ca40e77783a49e84ff00815e2d58"
+  ],
   "delivered": [
     "exact content-addressed eth_blockNumber request contract",
     "PublicNode candidate metadata on HOLD",
     "distinct-operator candidate classification",
     "terms, capture, and concentration hold decisions",
+    "immutable source-review receipt requirement",
+    "deterministic missing-expiry and expired-review refusal",
+    "capture receipt requirement after fresh source review",
     "deterministic authority-false review receipt",
     "strict JSON Schema",
-    "focused tests",
+    "focused refusal and determinism tests",
     "Python 3.11 and 3.13 CI",
     "operator review doctrine"
   ],
   "current_decision": "HOLD_TERMS_REVIEW",
   "known_absences": [
-    "completed terms and rate-limit review",
+    "completed terms, privacy, rate-limit, and upstream-independence review",
+    "immutable source-review receipt",
+    "review expiry backed by completed source-review evidence",
     "live capture receipt",
     "proven upstream independence",
     "active Gate 1 POST capture membrane",
