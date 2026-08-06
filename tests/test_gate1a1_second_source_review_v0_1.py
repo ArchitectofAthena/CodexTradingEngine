@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,7 @@ from eve_q.gate1a1_second_source_review import (
     evaluate_candidate,
     publicnode_request_body,
     sha256_hex,
+    utc_now,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +32,16 @@ EVALUATED_AT = CANDIDATE["generated_at"]
 
 def review(candidate: dict, *, evaluated_at: str = EVALUATED_AT) -> dict:
     return evaluate_candidate(candidate, schema=SCHEMA, evaluated_at=evaluated_at)
+
+
+def test_utc_now_emits_parseable_zulu_timestamp() -> None:
+    value = utc_now()
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    offset = parsed.utcoffset()
+
+    assert value.endswith("Z")
+    assert offset is not None
+    assert offset.total_seconds() == 0
 
 
 def test_exact_publicnode_request_body_is_content_addressed() -> None:
