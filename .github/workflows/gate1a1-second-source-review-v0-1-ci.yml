@@ -1,6 +1,17 @@
 name: Gate 1A.1 Second Source Review v0.1 CI
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "eve_q/gate1a1_second_source_review.py"
+      - "registry/gate1a1_second_source_candidates_v0_1.json"
+      - "schemas/gate1a1_second_source_candidate_v0_1.schema.json"
+      - "tests/test_gate1a1_second_source_review_v0_1.py"
+      - "docs/source-reviews/ETHEREUM_SEPOLIA_PUBLICNODE_BLOCKNUMBER_CANDIDATE_v0_1.md"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-second-source-review-v0-1-ci.yml"
   pull_request:
     paths:
       - "eve_q/gate1a1_second_source_review.py"
