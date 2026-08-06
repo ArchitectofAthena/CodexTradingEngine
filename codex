@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""Stable source-checkout entrypoint for CodexTradingEngine Alpha v0.1."""
+
+from eve_q.alpha_frontdoor import main
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

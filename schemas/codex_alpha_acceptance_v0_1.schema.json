@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codextradingengine.local/schemas/codex_alpha_acceptance_v0_1.schema.json",
+  "title": "CodexTradingEngine Alpha Acceptance Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "contract_version",
+    "generated_at",
+    "repository",
+    "source_commit",
+    "result",
+    "channels",
+    "steps",
+    "git",
+    "boundary",
+    "receipt_sha256"
+  ],
+  "properties": {
+    "artifact_type": {"const": "CodexAlphaAcceptanceReceipt"},
+    "contract_version": {"const": "codex_alpha_acceptance_v0.1"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "repository": {"const": "ArchitectofAthena/CodexTradingEngine"},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "result": {"enum": ["READY", "HOLD"]},
+    "channels": {"type": "object", "minProperties": 6},
+    "steps": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "returncode",
+          "timed_out",
+          "payload",
+          "stdout_tail",
+          "stderr_tail"
+        ],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "returncode": {"type": "integer"},
+          "timed_out": {"type": "boolean"},
+          "payload": {"type": ["object", "null"]},
+          "stdout_tail": {"type": "string"},
+          "stderr_tail": {"type": "string"}
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["available", "commit", "branch", "dirty"],
+      "properties": {
+        "available": {"type": "boolean"},
+        "commit": {"type": ["string", "null"]},
+        "branch": {"type": ["string", "null"]},
+        "dirty": {"type": ["boolean", "null"]}
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_is_command",
+        "authority",
+        "automatic_network_capture",
+        "may_generate_live_proposal",
+        "may_execute",
+        "may_sign",
+        "may_submit_transaction",
+        "may_access_wallet",
+        "may_move_capital",
+        "automatic_merge",
+        "human_promotion_required"
+      ],
+      "properties": {
+        "artifact_is_command": {"const": false},
+        "authority": {"const": false},
+        "automatic_network_capture": {"const": false},
+        "may_generate_live_proposal": {"const": false},
+        "may_execute": {"const": false},
+        "may_sign": {"const": false},
+        "may_submit_transaction": {"const": false},
+        "may_access_wallet": {"const": false},
+        "may_move_capital": {"const": false},
+        "automatic_merge": {"const": false},
+        "human_promotion_required": {"const": true}
+      }
+    },
+    "receipt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

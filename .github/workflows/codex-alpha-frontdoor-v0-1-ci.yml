@@ -1,0 +1,83 @@
+name: Codex Alpha Front Door v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - "codex"
+      - "eve_q/alpha_frontdoor.py"
+      - "schemas/codex_alpha_acceptance_v0_1.schema.json"
+      - "tests/test_alpha_frontdoor_v0_1.py"
+      - "docs/alpha/ALPHA_ACTIVATION_CHANNELS_v0_1.md"
+      - "ALPHA.md"
+      - "pyproject.toml"
+      - ".github/workflows/codex-alpha-frontdoor-v0-1-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "codex"
+      - "eve_q/alpha_frontdoor.py"
+      - "schemas/codex_alpha_acceptance_v0_1.schema.json"
+      - "tests/test_alpha_frontdoor_v0_1.py"
+      - "docs/alpha/ALPHA_ACTIVATION_CHANNELS_v0_1.md"
+      - "ALPHA.md"
+      - "pyproject.toml"
+      - ".github/workflows/codex-alpha-frontdoor-v0-1-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  alpha-frontdoor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e '.[test]'
+      - run: python -m py_compile codex eve_q/alpha_frontdoor.py
+      - run: python -m pytest -o addopts= --strict-markers tests/test_alpha_frontdoor_v0_1.py
+      - run: python codex channels --json
+      - name: Run complete offline alpha acceptance
+        run: |
+          python codex accept \
+            --generated-at 2026-08-06T13:31:00Z \
+            --output-dir artifacts/alpha-activation/ci \
+            --json > /tmp/codex-alpha-output.json
+      - name: Validate acceptance receipt
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator, FormatChecker
+
+          receipt = json.loads(
+              Path("artifacts/alpha-activation/ci/codex-alpha-acceptance.json")
+              .read_text(encoding="utf-8")
+          )
+          schema = json.loads(
+              Path("schemas/codex_alpha_acceptance_v0_1.schema.json")
+              .read_text(encoding="utf-8")
+          )
+          Draft202012Validator(schema, format_checker=FormatChecker()).validate(receipt)
+          assert receipt["result"] == "READY"
+          assert receipt["boundary"]["authority"] is False
+          assert receipt["boundary"]["automatic_network_capture"] is False
+          assert receipt["boundary"]["may_execute"] is False
+          assert receipt["boundary"]["may_move_capital"] is False
+          PY
+      - name: Compost generated alpha residue
+        run: |
+          python codex compost \
+            --output-dir artifacts/alpha-activation/ci \
+            --apply \
+            --json
+      - run: git diff --exit-code
