@@ -12,7 +12,7 @@ import hashlib
 import json
 import sys
 from collections.abc import Mapping, Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -132,8 +132,7 @@ def _charity_contract_complete(charity: Mapping[str, Any]) -> bool:
 
 def _rollback_ready(rollback: Mapping[str, Any]) -> bool:
     return bool(
-        rollback["kill_switch_ready"] is True
-        and rollback["rollback_replay_passed"] is True
+        rollback["kill_switch_ready"] is True and rollback["rollback_replay_passed"] is True
     )
 
 
@@ -238,13 +237,9 @@ def _compact_report(bundle: Mapping[str, Any], decision: str) -> dict[str, str]:
             "EXACT_PAIR_PRESENT" if benchmark["exact_pair_present"] else "HOLD_MISSING_PAIR"
         ),
         "QAOA_COMPARISON": (
-            "VALUE_DEMONSTRATED"
-            if benchmark["qaoa_value_demonstrated"]
-            else "RESEARCH_ONLY"
+            "VALUE_DEMONSTRATED" if benchmark["qaoa_value_demonstrated"] else "RESEARCH_ONLY"
         ),
-        "RUST_VERIFICATION": (
-            "REPRODUCIBLE" if _rust_reproducible(rust) else "HOLD_UNVERIFIED"
-        ),
+        "RUST_VERIFICATION": ("REPRODUCIBLE" if _rust_reproducible(rust) else "HOLD_UNVERIFIED"),
         "ADVERSARIAL_RESULTS": (
             f"BLOCKED={viv['blocked']};CRITICAL_ESCAPED={viv['critical_escaped']}"
         ),
@@ -339,7 +334,7 @@ def write_receipt(
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def parser() -> argparse.ArgumentParser:
