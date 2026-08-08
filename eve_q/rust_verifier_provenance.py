@@ -197,8 +197,7 @@ def _run_binary(executable: Path, request_bytes: bytes, timeout_seconds: float) 
     completed = subprocess.run(
         [str(executable)],
         input=request_bytes,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
         timeout=timeout_seconds,
         shell=False,
