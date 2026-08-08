@@ -1,0 +1,171 @@
+name: Gate 1A.1 Rust Verifier Provenance v0.1 CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "eve_q/rust_verifier_provenance.py"
+      - "rust/delta-verifier/**"
+      - "rust-toolchain.toml"
+      - "tests/test_rust_verifier_provenance_v0_1.py"
+      - "tests/fixtures/gate1a1_rust_repricing_request_v0_1.json"
+      - "schemas/gate1a1_rust_verifier_*_v0_1.schema.json"
+      - "docs/alpha/GATE1A1_RUST_VERIFIER_PROVENANCE_v0_1.md"
+      - "receipts/changes/gate1a1_rust_verifier_provenance_v0_1.json"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-rust-verifier-provenance-v0-1-ci.yml"
+  pull_request:
+    paths:
+      - "eve_q/rust_verifier_provenance.py"
+      - "rust/delta-verifier/**"
+      - "rust-toolchain.toml"
+      - "tests/test_rust_verifier_provenance_v0_1.py"
+      - "tests/fixtures/gate1a1_rust_repricing_request_v0_1.json"
+      - "schemas/gate1a1_rust_verifier_*_v0_1.schema.json"
+      - "docs/alpha/GATE1A1_RUST_VERIFIER_PROVENANCE_v0_1.md"
+      - "receipts/changes/gate1a1_rust_verifier_provenance_v0_1.json"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-rust-verifier-provenance-v0-1-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate1a1-rust-verifier-provenance-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-membrane:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install focused dependencies
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1 jsonschema==4.25.1 ruff==0.14.14
+      - name: Compile and lint provenance membrane
+        run: |
+          python -m py_compile eve_q/rust_verifier_provenance.py tests/test_rust_verifier_provenance_v0_1.py
+          python -m ruff check eve_q/rust_verifier_provenance.py tests/test_rust_verifier_provenance_v0_1.py
+      - name: Run focused fail-closed tests
+        run: python -m pytest -q tests/test_rust_verifier_provenance_v0_1.py
+      - name: Validate static schema syntax
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          for path in (
+              Path("schemas/gate1a1_rust_verifier_manifest_v0_1.schema.json"),
+              Path("schemas/gate1a1_rust_verifier_report_v0_1.schema.json"),
+          ):
+              schema = json.loads(path.read_text())
+              Draft202012Validator.check_schema(schema)
+          PY
+
+  reproducible-rust:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
+        with:
+          toolchain: 1.85.0
+          target: x86_64-unknown-linux-gnu
+      - name: Require clean checked-out source tree
+        run: test -z "$(git status --porcelain)"
+      - name: Prepare one reviewed dependency lock
+        run: |
+          rm -rf /tmp/codex-rust-source /tmp/build-a /tmp/build-b /tmp/target-a /tmp/target-b
+          cp -R rust/delta-verifier /tmp/codex-rust-source
+          cargo generate-lockfile --manifest-path /tmp/codex-rust-source/Cargo.toml
+      - name: Test the pinned Rust crate
+        run: cargo test --manifest-path /tmp/codex-rust-source/Cargo.toml --locked
+      - name: Build the release binary twice in isolated targets
+        env:
+          CARGO_INCREMENTAL: "0"
+          SOURCE_DATE_EPOCH: "0"
+          RUSTFLAGS: "-C strip=symbols -C debuginfo=0"
+        run: |
+          cp -R /tmp/codex-rust-source /tmp/build-a
+          cp -R /tmp/codex-rust-source /tmp/build-b
+          CARGO_TARGET_DIR=/tmp/target-a cargo build \
+            --manifest-path /tmp/build-a/Cargo.toml \
+            --locked --release --bin codex-delta-verifier \
+            --target x86_64-unknown-linux-gnu
+          CARGO_TARGET_DIR=/tmp/target-b cargo build \
+            --manifest-path /tmp/build-b/Cargo.toml \
+            --locked --release --bin codex-delta-verifier \
+            --target x86_64-unknown-linux-gnu
+          BINARY_A=/tmp/target-a/x86_64-unknown-linux-gnu/release/codex-delta-verifier
+          BINARY_B=/tmp/target-b/x86_64-unknown-linux-gnu/release/codex-delta-verifier
+          test "$(sha256sum "$BINARY_A" | cut -d' ' -f1)" = "$(sha256sum "$BINARY_B" | cut -d' ' -f1)"
+      - name: Emit reviewed manifest and replay report
+        env:
+          BINARY: /tmp/target-a/x86_64-unknown-linux-gnu/release/codex-delta-verifier
+          BUILD_COMMAND: "SOURCE_DATE_EPOCH=0 CARGO_INCREMENTAL=0 RUSTFLAGS='-C strip=symbols -C debuginfo=0' cargo build --locked --release --bin codex-delta-verifier --target x86_64-unknown-linux-gnu"
+        run: |
+          mkdir -p artifacts/gate1a1
+          SOURCE_TREE_SHA=$(find /tmp/codex-rust-source -type f ! -name Cargo.lock -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+          CARGO_MANIFEST_SHA=$(sha256sum /tmp/codex-rust-source/Cargo.toml | cut -d' ' -f1)
+          CARGO_LOCK_SHA=$(sha256sum /tmp/codex-rust-source/Cargo.lock | cut -d' ' -f1)
+          python -m eve_q.rust_verifier_provenance emit-manifest \
+            --source-commit "$GITHUB_SHA" \
+            --source-tree-sha256 "$SOURCE_TREE_SHA" \
+            --cargo-manifest-sha256 "$CARGO_MANIFEST_SHA" \
+            --cargo-lock-sha256 "$CARGO_LOCK_SHA" \
+            --build-command "$BUILD_COMMAND" \
+            --rustc-version "$(rustc --version --verbose | tr '\n' ';')" \
+            --cargo-version "$(cargo --version --verbose | tr '\n' ';')" \
+            --package-origin "github:ArchitectofAthena/CodexTradingEngine@$GITHUB_SHA:rust/delta-verifier/Cargo.toml" \
+            --binary "$BINARY" \
+            --target-triple x86_64-unknown-linux-gnu \
+            --tree-posture CLEAN \
+            --input-schema-version delta-repricing-request-v0.1 \
+            --output-schema-version delta-repricing-response-v0.1 \
+            --output artifacts/gate1a1/rust-verifier-manifest.json
+          python -m eve_q.rust_verifier_provenance verify \
+            --manifest artifacts/gate1a1/rust-verifier-manifest.json \
+            --binary "$BINARY" \
+            --request tests/fixtures/gate1a1_rust_repricing_request_v0_1.json \
+            --output artifacts/gate1a1/rust-verifier-report.json \
+            | tee artifacts/gate1a1/rust-verifier-summary.json
+          grep -q '"outcome": "VERIFIED_RESEARCH_BINARY"' artifacts/gate1a1/rust-verifier-summary.json
+      - name: Validate generated evidence schemas
+        run: |
+          python -m pip install --disable-pip-version-check jsonschema==4.25.1
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          pairs = (
+              ("schemas/gate1a1_rust_verifier_manifest_v0_1.schema.json", "artifacts/gate1a1/rust-verifier-manifest.json"),
+              ("schemas/gate1a1_rust_verifier_report_v0_1.schema.json", "artifacts/gate1a1/rust-verifier-report.json"),
+          )
+          for schema_path, document_path in pairs:
+              schema = json.loads(Path(schema_path).read_text())
+              document = json.loads(Path(document_path).read_text())
+              Draft202012Validator.check_schema(schema)
+              Draft202012Validator(schema).validate(document)
+          PY
+      - name: Preserve repository cleanliness
+        run: test -z "$(git status --porcelain)"
