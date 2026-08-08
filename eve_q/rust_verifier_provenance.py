@@ -16,10 +16,15 @@ import subprocess
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
+from jsonschema import Draft202012Validator
+from jsonschema.exceptions import SchemaError
+
 _MANIFEST_SCHEMA = "gate1a1-rust-verifier-manifest-v0.1"
 _REPORT_SCHEMA = "gate1a1-rust-verifier-report-v0.1"
 _HOLD = "HOLD_UNVERIFIED_BINARY"
 _VERIFIED = "VERIFIED_RESEARCH_BINARY"
+_ROOT = Path(__file__).resolve().parents[1]
+_DEFAULT_RESPONSE_SCHEMA = _ROOT / "schemas" / "delta_repricing_response.schema.json"
 _REQUIRED_LOCKS = {
     "authority": False,
     "artifact_is_command": False,
@@ -213,11 +218,59 @@ def _run_binary(executable: Path, request_bytes: bytes, timeout_seconds: float) 
     return completed.stdout
 
 
+def _validate_replay_response(
+    response: Mapping[str, object],
+    *,
+    request: Mapping[str, object],
+    response_schema: Mapping[str, object],
+) -> None:
+    Draft202012Validator.check_schema(response_schema)
+    validator = Draft202012Validator(response_schema)
+    errors = sorted(
+        validator.iter_errors(response),
+        key=lambda item: tuple(str(part) for part in item.absolute_path),
+    )
+    if errors:
+        rendered = "; ".join(
+            f"{'.'.join(str(part) for part in error.absolute_path) or '<root>'}: {error.message}"
+            for error in errors[:8]
+        )
+        raise ValueError(f"verifier response schema validation failed: {rendered}")
+
+    for field in (
+        "request_id",
+        "snapshot_sha256",
+        "model_sha256",
+        "confidence_receipt_id",
+        "candidate_id",
+    ):
+        if response.get(field) != request.get(field):
+            raise ValueError(f"verifier response changed {field}")
+
+    request_edges = request.get("edges")
+    if not isinstance(request_edges, list) or len(request_edges) != 3:
+        raise ValueError("request edges must contain exactly three entries")
+    edge_rows = [_mapping(edge, "request edge") for edge in request_edges]
+    expected_edge_ids = [str(edge["edge_id"]) for edge in edge_rows]
+    expected_asset_path = [str(edge_rows[0]["source_asset"])] + [
+        str(edge["target_asset"]) for edge in edge_rows
+    ]
+
+    verification = _mapping(response.get("verification"), "verifier response verification")
+    if verification.get("edge_ids") != expected_edge_ids:
+        raise ValueError("verifier response changed edge_ids")
+    if verification.get("asset_path") != expected_asset_path:
+        raise ValueError("verifier response changed asset_path")
+    if verification.get("minimum_log_delta") != request.get("minimum_log_delta"):
+        raise ValueError("verifier response changed minimum_log_delta")
+
+
 def verify_binary(
     manifest: Mapping[str, object],
     *,
     executable: str | Path,
     request: Mapping[str, object],
+    response_schema: Mapping[str, object] | None = None,
     timeout_seconds: float = 3.0,
 ) -> dict[str, object]:
     """Validate provenance and replay a binary twice, returning a fail-closed report."""
@@ -249,20 +302,25 @@ def verify_binary(
         if first != second:
             raise ValueError("deterministic replay output diverged")
         response = json.loads(first.decode("utf-8"))
-        if not isinstance(response, dict):
-            raise ValueError("verifier response must be a JSON object")
+        response = _mapping(response, "verifier response")
         output_schema_version = str(response.get("schema_version", ""))
         if output_schema_version != manifest["output_schema_version"]:
             raise ValueError("response schema does not match the manifest")
-        if response.get("authority") is not False:
-            raise ValueError("verifier response attempted authority escalation")
-        if request.get("request_id") and response.get("request_id") != request.get("request_id"):
-            raise ValueError("verifier response changed request_id")
+        active_response_schema = (
+            response_schema if response_schema is not None else load_json(_DEFAULT_RESPONSE_SCHEMA)
+        )
+        _validate_replay_response(
+            response,
+            request=request,
+            response_schema=active_response_schema,
+        )
         outcome = _VERIFIED
     except (
         json.JSONDecodeError,
+        KeyError,
         OSError,
         RuntimeError,
+        SchemaError,
         subprocess.SubprocessError,
         TypeError,
         ValueError,
@@ -316,6 +374,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     verify.add_argument("--manifest", required=True)
     verify.add_argument("--binary", required=True)
     verify.add_argument("--request", required=True)
+    verify.add_argument("--response-schema", default=str(_DEFAULT_RESPONSE_SCHEMA))
     verify.add_argument("--output", required=True)
 
     args = parser.parse_args(argv)
@@ -343,6 +402,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             load_json(args.manifest),
             executable=Path(args.binary).resolve(),
             request=load_json(args.request),
+            response_schema=load_json(args.response_schema),
         )
         exit_code = 2 if payload["outcome"] == _HOLD else 0
     output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")

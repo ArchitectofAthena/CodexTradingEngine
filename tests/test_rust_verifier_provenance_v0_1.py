@@ -5,7 +5,9 @@ from pathlib import Path
 
 from eve_q.rust_verifier_provenance import build_manifest, file_sha256, verify_binary
 
+ROOT = Path(__file__).resolve().parents[1]
 REQUEST = Path(__file__).parent / "fixtures" / "gate1a1_rust_repricing_request_v0_1.json"
+WORKFLOW = ROOT / ".github" / "workflows" / "gate1a1-rust-verifier-provenance-v0-1-ci.yml"
 
 
 def _fake_verifier(tmp_path: Path) -> Path:
@@ -25,7 +27,9 @@ response = {
     'status': 'verified',
     'verification': {
         'edge_ids': [edge['edge_id'] for edge in request['edges']],
-        'asset_path': ['USD', 'ETH', 'BTC', 'USD'],
+        'asset_path': [request['edges'][0]['source_asset']] + [
+            edge['target_asset'] for edge in request['edges']
+        ],
         'net_multiplier': 1.0,
         'net_log_delta': 0.0,
         'minimum_log_delta': request['minimum_log_delta'],
@@ -36,6 +40,24 @@ response = {
     'authority': False,
 }
 print(json.dumps(response, sort_keys=True, separators=(',', ':')))
+""",
+        encoding="utf-8",
+    )
+    executable.chmod(0o755)
+    return executable
+
+
+def _minimal_spoof_verifier(tmp_path: Path) -> Path:
+    executable = tmp_path / "minimal-spoof-verifier"
+    executable.write_text(
+        """#!/usr/bin/env python3
+import json, sys
+request = json.load(sys.stdin)
+print(json.dumps({
+    'schema_version': 'delta-repricing-response-v0.1',
+    'request_id': request['request_id'],
+    'authority': False,
+}, sort_keys=True, separators=(',', ':')))
 """,
         encoding="utf-8",
     )
@@ -74,6 +96,82 @@ def test_reviewed_binary_replays_deterministically(tmp_path: Path) -> None:
     assert report["authority"] is False
     assert report["gate1b_activated"] is False
     assert report["may_execute"] is False
+
+
+def test_minimal_schema_version_spoof_holds(tmp_path: Path) -> None:
+    executable = _minimal_spoof_verifier(tmp_path)
+    request = json.loads(REQUEST.read_text(encoding="utf-8"))
+
+    report = verify_binary(_manifest(executable), executable=executable.resolve(), request=request)
+
+    assert report["outcome"] == "HOLD_UNVERIFIED_BINARY"
+    assert any("schema validation failed" in reason for reason in report["hold_reasons"])
+
+
+def test_request_derived_candidate_identity_mismatch_holds(tmp_path: Path) -> None:
+    executable = _fake_verifier(tmp_path)
+    source = executable.read_text(encoding="utf-8").replace(
+        "'candidate_id': request['candidate_id']",
+        "'candidate_id': 'triangle:00000000000000000000'",
+    )
+    executable.write_text(source, encoding="utf-8")
+    executable.chmod(0o755)
+    request = json.loads(REQUEST.read_text(encoding="utf-8"))
+
+    report = verify_binary(_manifest(executable), executable=executable.resolve(), request=request)
+
+    assert report["outcome"] == "HOLD_UNVERIFIED_BINARY"
+    assert any("candidate_id" in reason for reason in report["hold_reasons"])
+
+
+def test_request_derived_edge_identity_mismatch_holds(tmp_path: Path) -> None:
+    executable = _fake_verifier(tmp_path)
+    source = executable.read_text(encoding="utf-8").replace(
+        "[edge['edge_id'] for edge in request['edges']]",
+        "['edge:tamper-a', 'edge:tamper-b', 'edge:tamper-c']",
+    )
+    executable.write_text(source, encoding="utf-8")
+    executable.chmod(0o755)
+    request = json.loads(REQUEST.read_text(encoding="utf-8"))
+
+    report = verify_binary(_manifest(executable), executable=executable.resolve(), request=request)
+
+    assert report["outcome"] == "HOLD_UNVERIFIED_BINARY"
+    assert any("edge_ids" in reason for reason in report["hold_reasons"])
+
+
+def test_invalid_response_schema_holds(tmp_path: Path) -> None:
+    executable = _fake_verifier(tmp_path)
+    request = json.loads(REQUEST.read_text(encoding="utf-8"))
+    invalid_schema = {"type": "definitely-not-a-json-schema-type"}
+
+    report = verify_binary(
+        _manifest(executable),
+        executable=executable.resolve(),
+        request=request,
+        response_schema=invalid_schema,
+    )
+
+    assert report["outcome"] == "HOLD_UNVERIFIED_BINARY"
+    assert report["hold_reasons"]
+
+
+def test_workflow_executes_the_recorded_complete_build_command() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+
+    for required in (
+        "BUILD_COMMAND: >-",
+        "SOURCE_DATE_EPOCH=0 CARGO_INCREMENTAL=0",
+        "RUSTFLAGS='-C strip=symbols -C debuginfo=0'",
+        "CARGO_TARGET_DIR=/tmp/target-a cargo build",
+        "--manifest-path /tmp/build-a/Cargo.toml",
+        "--locked --release --bin codex-delta-verifier",
+        "--target x86_64-unknown-linux-gnu",
+        'bash -c "$BUILD_COMMAND"',
+        '--build-command "$BUILD_COMMAND"',
+        "--response-schema schemas/delta_repricing_response.schema.json",
+    ):
+        assert required in text, required
 
 
 def test_unexplained_binary_holds(tmp_path: Path) -> None:
