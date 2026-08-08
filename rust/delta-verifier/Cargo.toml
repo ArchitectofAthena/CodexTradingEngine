@@ -5,6 +5,13 @@ edition = "2021"
 license = "MIT"
 description = "Pure Rust exact verifier for simulation-only triangular arbitrage candidates"
 
+[package.metadata.gate1a1]
+provenance_manifest_schema = "gate1a1-rust-verifier-manifest-v0.1"
+provenance_report_schema = "gate1a1-rust-verifier-report-v0.1"
+input_schema = "delta-repricing-request-v0.1"
+output_schema = "delta-repricing-response-v0.1"
+authority = false
+
 [lib]
 name = "codex_delta_verifier"
 path = "src/lib.rs"
