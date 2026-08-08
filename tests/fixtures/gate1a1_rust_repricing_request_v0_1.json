@@ -1,0 +1,40 @@
+{
+  "authority": false,
+  "candidate_id": "triangle:7e044c52b90c6a919515",
+  "confidence_receipt_id": "qaoa-confidence:000000000000000000000000",
+  "edges": [
+    {
+      "edge_id": "edge:usd-eth",
+      "fee_bps": 5.0,
+      "latency_penalty_bps": 1.0,
+      "quoted_rate": 0.0005,
+      "slippage_bps": 2.0,
+      "source_asset": "USD",
+      "target_asset": "ETH"
+    },
+    {
+      "edge_id": "edge:eth-btc",
+      "fee_bps": 5.0,
+      "latency_penalty_bps": 1.0,
+      "quoted_rate": 0.05,
+      "slippage_bps": 2.0,
+      "source_asset": "ETH",
+      "target_asset": "BTC"
+    },
+    {
+      "edge_id": "edge:btc-usd",
+      "fee_bps": 5.0,
+      "latency_penalty_bps": 1.0,
+      "quoted_rate": 41000.0,
+      "slippage_bps": 2.0,
+      "source_asset": "BTC",
+      "target_asset": "USD"
+    }
+  ],
+  "gas_penalty_log": 0.001,
+  "minimum_log_delta": 0.0,
+  "model_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "request_id": "delta-reprice:000000000000000000000000",
+  "schema_version": "delta-repricing-request-v0.1",
+  "snapshot_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+}
