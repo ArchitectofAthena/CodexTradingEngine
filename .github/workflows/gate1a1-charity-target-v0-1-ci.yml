@@ -1,0 +1,100 @@
+name: Gate 1A.1 Charity Target v0.1 CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "eve_q/gate1a1_charity_target.py"
+      - "contracts/gate1a1_charity_target_contract_v0_1.json"
+      - "tests/test_gate1a1_charity_target_v0_1.py"
+      - "schemas/gate1a1_charity_target_*_v0_1.schema.json"
+      - "docs/alpha/GATE1A1_CHARITY_TARGET_CONTRACT_v0_1.md"
+      - "receipts/changes/gate1a1_charity_target_contract_v0_1.json"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-charity-target-v0-1-ci.yml"
+  pull_request:
+    paths:
+      - "eve_q/gate1a1_charity_target.py"
+      - "contracts/gate1a1_charity_target_contract_v0_1.json"
+      - "tests/test_gate1a1_charity_target_v0_1.py"
+      - "schemas/gate1a1_charity_target_*_v0_1.schema.json"
+      - "docs/alpha/GATE1A1_CHARITY_TARGET_CONTRACT_v0_1.md"
+      - "receipts/changes/gate1a1_charity_target_contract_v0_1.json"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-charity-target-v0-1-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate1a1-charity-target-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  charity-target:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install focused dependencies
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1 jsonschema==4.25.1 ruff==0.14.14
+      - name: Compile and lint charity target membrane
+        run: |
+          python -m py_compile eve_q/gate1a1_charity_target.py tests/test_gate1a1_charity_target_v0_1.py
+          python -m ruff check eve_q/gate1a1_charity_target.py tests/test_gate1a1_charity_target_v0_1.py
+      - name: Validate contract schema
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          schema = json.loads(Path("schemas/gate1a1_charity_target_contract_v0_1.schema.json").read_text())
+          contract = json.loads(Path("contracts/gate1a1_charity_target_contract_v0_1.json").read_text())
+          Draft202012Validator.check_schema(schema)
+          Draft202012Validator(schema).validate(contract)
+          PY
+      - name: Run focused refusal tests
+        run: python -m pytest -q tests/test_gate1a1_charity_target_v0_1.py
+      - name: Exercise installed CLI
+        run: |
+          python -m pip install --no-deps .
+          mkdir -p artifacts/gate1a1
+          codex-gate1a1-charity \
+            contracts/gate1a1_charity_target_contract_v0_1.json \
+            --output artifacts/gate1a1/charity-target-receipt.json \
+            | tee artifacts/gate1a1/charity-target-summary.json
+          grep -q '"status": "SIMULATION_ONLY_CONTRACT_COMPLETE"' artifacts/gate1a1/charity-target-summary.json
+          grep -q '"outcome_evidence_status": "NO_DATA"' artifacts/gate1a1/charity-target-summary.json
+          grep -q '"no_data_means_zero": false' artifacts/gate1a1/charity-target-summary.json
+          grep -q '"transfer_enabled": false' artifacts/gate1a1/charity-target-summary.json
+          grep -q '"reward_update_enabled": false' artifacts/gate1a1/charity-target-summary.json
+          grep -q '"authority": false' artifacts/gate1a1/charity-target-summary.json
+      - name: Validate generated receipt schema
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          schema = json.loads(Path("schemas/gate1a1_charity_target_receipt_v0_1.schema.json").read_text())
+          receipt = json.loads(Path("artifacts/gate1a1/charity-target-receipt.json").read_text())
+          Draft202012Validator.check_schema(schema)
+          Draft202012Validator(schema).validate(receipt)
+          PY
+      - name: Clean generated output and require clean tree
+        run: |
+          rm -rf artifacts/gate1a1
+          git diff --exit-code
