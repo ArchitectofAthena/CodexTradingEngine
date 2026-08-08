@@ -23,9 +23,7 @@ SCHEMA = json.loads(
     )
 )
 CANDIDATE = json.loads(
-    (ROOT / "registry" / "gate1a1_second_source_candidates_v0_1.json").read_text(
-        encoding="utf-8"
-    )
+    (ROOT / "registry" / "gate1a1_second_source_candidates_v0_1.json").read_text(encoding="utf-8")
 )
 EVALUATED_AT = CANDIDATE["generated_at"]
 
@@ -52,9 +50,7 @@ def test_exact_publicnode_request_body_is_content_addressed() -> None:
         "params": [],
         "id": 1,
     }
-    assert sha256_hex(publicnode_request_body()) == CANDIDATE["candidate"][
-        "request_body_sha256"
-    ]
+    assert sha256_hex(publicnode_request_body()) == CANDIDATE["candidate"]["request_body_sha256"]
 
 
 def test_seed_candidate_holds_for_terms_review() -> None:
