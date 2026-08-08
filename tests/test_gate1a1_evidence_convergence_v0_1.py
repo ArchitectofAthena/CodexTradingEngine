@@ -18,19 +18,13 @@ from eve_q.gate1a1_evidence_convergence import (
 
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE_SCHEMA = json.loads(
-    (ROOT / "schemas" / "gate1a1_evidence_bundle_v0_1.schema.json").read_text(
-        encoding="utf-8"
-    )
+    (ROOT / "schemas" / "gate1a1_evidence_bundle_v0_1.schema.json").read_text(encoding="utf-8")
 )
 RECEIPT_SCHEMA = json.loads(
-    (ROOT / "schemas" / "gate1a1_decision_receipt_v0_1.schema.json").read_text(
-        encoding="utf-8"
-    )
+    (ROOT / "schemas" / "gate1a1_decision_receipt_v0_1.schema.json").read_text(encoding="utf-8")
 )
 SEED = json.loads(
-    (ROOT / "benchmarks" / "gate1a1_evidence_bundle_seed_v0_1.json").read_text(
-        encoding="utf-8"
-    )
+    (ROOT / "benchmarks" / "gate1a1_evidence_bundle_seed_v0_1.json").read_text(encoding="utf-8")
 )
 GENERATED_AT = "2026-08-06T16:00:00Z"
 
