@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArchitectofAthena/CodexTradingEngine/schemas/gate1a1_viv_evidence_bundle_v0_1.schema.json",
+  "title": "Gate 1A.1 ViV Evidence Bundle v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "gate1a1-viv-evidence-bundle-v0.1"},
+    "economics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "gas": {"$ref": "#/$defs/valueRecord"},
+        "protocol_fees": {"$ref": "#/$defs/bpsRecord"},
+        "slippage": {"$ref": "#/$defs/bpsRecord"},
+        "liquidity": {"$ref": "#/$defs/capacityRecord"},
+        "latency": {"$ref": "#/$defs/penaltyRecord"}
+      },
+      "required": ["gas", "protocol_fees", "slippage", "liquidity", "latency"]
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {"type": "string", "minLength": 1},
+          "operator": {"type": "string", "minLength": 1},
+          "provenance_group": {"type": "string", "minLength": 1},
+          "observed_value": {"type": "integer", "minimum": 0},
+          "units": {"const": "block_number"},
+          "fresh": {"const": true},
+          "review_state": {"const": "ELIGIBLE"}
+        },
+        "required": ["source_id", "operator", "provenance_group", "observed_value", "units", "fresh", "review_state"]
+      }
+    },
+    "source_consensus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {"const": "ACCEPT_OBSERVATION_ONLY"},
+        "conflict": {"const": false},
+        "concentration": {"const": false}
+      },
+      "required": ["status", "conflict", "concentration"]
+    },
+    "benchmark": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "classical_qubo_sha256": {"$ref": "#/$defs/sha256"},
+        "qaoa_qubo_sha256": {"$ref": "#/$defs/sha256"},
+        "classical_constraints_sha256": {"$ref": "#/$defs/sha256"},
+        "qaoa_constraints_sha256": {"$ref": "#/$defs/sha256"},
+        "classical_solver_strength": {"const": "EXACT"},
+        "qaoa_seeds": {"const": [0, 7331, 424242]},
+        "complete_run_disclosure": {"const": true},
+        "run_disposition_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "passed": {"const": 3},
+            "failed": {"const": 0},
+            "infeasible": {"const": 0}
+          },
+          "required": ["passed", "failed", "infeasible"]
+        },
+        "outcome": {"const": "QAOA_ADDS_NO_MEASURABLE_VALUE"}
+      },
+      "required": ["classical_qubo_sha256", "qaoa_qubo_sha256", "classical_constraints_sha256", "qaoa_constraints_sha256", "classical_solver_strength", "qaoa_seeds", "complete_run_disclosure", "run_disposition_counts", "outcome"]
+    },
+    "language": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "environment": {"const": "testnet"},
+        "profitability_claim": {"const": "RESEARCH_ONLY"},
+        "target_chain_gas_status": {"const": "HYPOTHESIS"}
+      },
+      "required": ["environment", "profitability_claim", "target_chain_gas_status"]
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "receipt_success": {"const": true},
+        "receipt_grants_permission": {"const": false},
+        "gate1b_activated": {"const": false},
+        "rollback_enabled": {"const": true},
+        "kill_switch_enabled": {"const": true}
+      },
+      "required": ["receipt_success", "receipt_grants_permission", "gate1b_activated", "rollback_enabled", "kill_switch_enabled"]
+    },
+    "charity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "transfer_evidence": {"type": "null"},
+        "outcome_evidence": {"type": "null"},
+        "impact_claim": {"const": "NO_CAUSAL_CLAIM"},
+        "telemetry_grants_authority": {"const": false},
+        "automatic_reward": {"const": false}
+      },
+      "required": ["transfer_evidence", "outcome_evidence", "impact_claim", "telemetry_grants_authority", "automatic_reward"]
+    },
+    "human_promotion_required": {"const": true},
+    "authority": {"const": false},
+    "artifact_is_command": {"const": false},
+    "may_execute": {"const": false},
+    "may_sign": {"const": false},
+    "may_submit_transaction": {"const": false},
+    "may_access_wallet": {"const": false},
+    "may_move_capital": {"const": false},
+    "automatic_gate_promotion": {"const": false}
+  },
+  "required": ["schema_version", "economics", "sources", "source_consensus", "benchmark", "language", "gate", "charity", "human_promotion_required", "authority", "artifact_is_command", "may_execute", "may_sign", "may_submit_transaction", "may_access_wallet", "may_move_capital", "automatic_gate_promotion"],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "valueRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"included": {"const": true}, "value": {"const": 0.001}, "status": {"const": "MEASURED"}},
+      "required": ["included", "value", "status"]
+    },
+    "bpsRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"included": {"const": true}, "value_bps": {"type": "number", "minimum": 0}, "status": {"const": "MEASURED"}},
+      "required": ["included", "value_bps", "status"]
+    },
+    "capacityRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"included": {"const": true}, "capacity": {"const": 1000000.0}, "status": {"const": "MEASURED"}},
+      "required": ["included", "capacity", "status"]
+    },
+    "penaltyRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"included": {"const": true}, "penalty_bps": {"const": 1.0}, "status": {"const": "MEASURED"}},
+      "required": ["included", "penalty_bps", "status"]
+    }
+  }
+}

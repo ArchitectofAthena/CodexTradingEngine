@@ -1,0 +1,26 @@
+{
+  "artifact_is_command": false,
+  "authority": false,
+  "change_id": "gate1a1_viv_economic_epistemic_pack_v0_1",
+  "change_type": "existing_viv_enclosure_extended_with_gate1a1_economic_epistemic_gate_and_charity_mutations",
+  "gate1b_activated": false,
+  "human_promotion_required": true,
+  "may_access_wallet": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "mutation_families": 18,
+  "parent_issue": 145,
+  "self_certifying": false,
+  "scope": [
+    "economics_completeness",
+    "source_freshness_conflict_and_concentration",
+    "classical_qaoa_pairing_and_seed_disclosure",
+    "testnet_language_and_gate_permission",
+    "rollback_and_kill_switch",
+    "target_chain_hypothesis_posture",
+    "charity_evidence_reward_and_authority"
+  ],
+  "schema_version": "codex-change-receipt-v0.1"
+}

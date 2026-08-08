@@ -1,0 +1,98 @@
+{
+  "artifact_is_command": false,
+  "authority": false,
+  "automatic_gate_promotion": false,
+  "benchmark": {
+    "classical_constraints_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "classical_qubo_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "classical_solver_strength": "EXACT",
+    "complete_run_disclosure": true,
+    "outcome": "QAOA_ADDS_NO_MEASURABLE_VALUE",
+    "qaoa_constraints_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "qaoa_qubo_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "qaoa_seeds": [0, 7331, 424242],
+    "run_disposition_counts": {
+      "failed": 0,
+      "infeasible": 0,
+      "passed": 3
+    }
+  },
+  "charity": {
+    "automatic_reward": false,
+    "impact_claim": "NO_CAUSAL_CLAIM",
+    "outcome_evidence": null,
+    "telemetry_grants_authority": false,
+    "transfer_evidence": null
+  },
+  "economics": {
+    "gas": {
+      "included": true,
+      "status": "MEASURED",
+      "value": 0.001
+    },
+    "latency": {
+      "included": true,
+      "penalty_bps": 1.0,
+      "status": "MEASURED"
+    },
+    "liquidity": {
+      "capacity": 1000000.0,
+      "included": true,
+      "status": "MEASURED"
+    },
+    "protocol_fees": {
+      "included": true,
+      "status": "MEASURED",
+      "value_bps": 5.0
+    },
+    "slippage": {
+      "included": true,
+      "status": "MEASURED",
+      "value_bps": 2.0
+    }
+  },
+  "gate": {
+    "gate1b_activated": false,
+    "kill_switch_enabled": true,
+    "receipt_grants_permission": false,
+    "receipt_success": true,
+    "rollback_enabled": true
+  },
+  "human_promotion_required": true,
+  "language": {
+    "environment": "testnet",
+    "profitability_claim": "RESEARCH_ONLY",
+    "target_chain_gas_status": "HYPOTHESIS"
+  },
+  "may_access_wallet": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "schema_version": "gate1a1-viv-evidence-bundle-v0.1",
+  "source_consensus": {
+    "concentration": false,
+    "conflict": false,
+    "status": "ACCEPT_OBSERVATION_ONLY"
+  },
+  "sources": [
+    {
+      "fresh": true,
+      "observed_value": 9145000,
+      "operator": "PublicNode",
+      "provenance_group": "publicnode-independent-operations",
+      "review_state": "ELIGIBLE",
+      "source_id": "ethereum-sepolia-publicnode-blocknumber",
+      "units": "block_number"
+    },
+    {
+      "fresh": true,
+      "observed_value": 9145000,
+      "operator": "ReviewedPrimaryProvider",
+      "provenance_group": "reviewed-primary-independent-operations",
+      "review_state": "ELIGIBLE",
+      "source_id": "ethereum-sepolia-reviewed-primary-blocknumber",
+      "units": "block_number"
+    }
+  ]
+}

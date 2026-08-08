@@ -1,0 +1,105 @@
+name: Gate 1A.1 ViV Economic and Epistemic v0.1 CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "eve_q/gate1a1_viv_gauntlet.py"
+      - "eve_q/viv_adversarial.py"
+      - "tests/test_gate1a1_viv_gauntlet_v0_1.py"
+      - "tests/fixtures/gate1a1_viv_evidence_bundle_v0_1.json"
+      - "schemas/gate1a1_viv_evidence_bundle_v0_1.schema.json"
+      - "schemas/viv_adversarial_receipt_v0_1.schema.json"
+      - "docs/alpha/GATE1A1_VIV_ECONOMIC_EPISTEMIC_GAUNTLET_v0_1.md"
+      - "receipts/changes/gate1a1_viv_economic_epistemic_pack_v0_1.json"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-viv-economic-epistemic-v0-1-ci.yml"
+  pull_request:
+    paths:
+      - "eve_q/gate1a1_viv_gauntlet.py"
+      - "eve_q/viv_adversarial.py"
+      - "tests/test_gate1a1_viv_gauntlet_v0_1.py"
+      - "tests/fixtures/gate1a1_viv_evidence_bundle_v0_1.json"
+      - "schemas/gate1a1_viv_evidence_bundle_v0_1.schema.json"
+      - "schemas/viv_adversarial_receipt_v0_1.schema.json"
+      - "docs/alpha/GATE1A1_VIV_ECONOMIC_EPISTEMIC_GAUNTLET_v0_1.md"
+      - "receipts/changes/gate1a1_viv_economic_epistemic_pack_v0_1.json"
+      - "pyproject.toml"
+      - ".github/workflows/gate1a1-viv-economic-epistemic-v0-1-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate1a1-viv-economic-epistemic-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  convergence-gauntlet:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install focused dependencies
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1 jsonschema==4.25.1 ruff==0.14.14
+      - name: Compile and lint the extended ViV lane
+        run: |
+          python -m py_compile eve_q/gate1a1_viv_gauntlet.py tests/test_gate1a1_viv_gauntlet_v0_1.py
+          python -m ruff check eve_q/gate1a1_viv_gauntlet.py tests/test_gate1a1_viv_gauntlet_v0_1.py
+      - name: Validate baseline bundle schema
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          schema = json.loads(Path("schemas/gate1a1_viv_evidence_bundle_v0_1.schema.json").read_text())
+          bundle = json.loads(Path("tests/fixtures/gate1a1_viv_evidence_bundle_v0_1.json").read_text())
+          Draft202012Validator.check_schema(schema)
+          Draft202012Validator(schema).validate(bundle)
+          PY
+      - name: Run focused mutation tests
+        run: python -m pytest -q tests/test_gate1a1_viv_gauntlet_v0_1.py tests/test_viv_adversarial_v0_1.py
+      - name: Exercise installed CLI and capture receipt
+        run: |
+          python -m pip install --no-deps .
+          mkdir -p artifacts/gate1a1
+          codex-gate1a1-viv \
+            --candidate tests/fixtures/gate1a1_viv_evidence_bundle_v0_1.json \
+            --seed 145 \
+            --receipt-out artifacts/gate1a1/viv-receipt.json \
+            | tee artifacts/gate1a1/viv-summary.json
+          grep -q '"case_count": 18' artifacts/gate1a1/viv-summary.json
+          grep -q '"blocked_count": 18' artifacts/gate1a1/viv-summary.json
+          grep -q '"escaped_count": 0' artifacts/gate1a1/viv-summary.json
+          grep -q '"overall_outcome": "pass"' artifacts/gate1a1/viv-summary.json
+          grep -q '"self_certifying": false' artifacts/gate1a1/viv-summary.json
+          grep -q '"authority": false' artifacts/gate1a1/viv-summary.json
+      - name: Validate ViV receipt schema
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          schema = json.loads(Path("schemas/viv_adversarial_receipt_v0_1.schema.json").read_text())
+          receipt = json.loads(Path("artifacts/gate1a1/viv-receipt.json").read_text())
+          Draft202012Validator.check_schema(schema)
+          Draft202012Validator(schema).validate(receipt)
+          PY
+      - name: Clean generated output and require clean tree
+        run: |
+          rm -rf artifacts/gate1a1
+          git diff --exit-code
