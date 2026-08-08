@@ -78,6 +78,8 @@ jobs:
   reproducible-rust:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      EVIDENCE_DIR: ${{ runner.temp }}/gate1a1-rust-verifier-provenance-v0-1
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -94,7 +96,7 @@ jobs:
         run: test -z "$(git status --porcelain)"
       - name: Prepare reviewed dependency lock and source digest
         run: |
-          rm -rf /tmp/codex-rust-source /tmp/build-a /tmp/build-b /tmp/target-a /tmp/target-b /tmp/test-target
+          rm -rf /tmp/codex-rust-source /tmp/build-a /tmp/build-b /tmp/target-a /tmp/target-b /tmp/test-target "$EVIDENCE_DIR"
           rm -f /tmp/codex-rust-source.sha256
           cp -R rust/delta-verifier /tmp/codex-rust-source
           cargo generate-lockfile --manifest-path /tmp/codex-rust-source/Cargo.toml
@@ -127,11 +129,11 @@ jobs:
           BINARY: /tmp/target-a/x86_64-unknown-linux-gnu/release/codex-delta-verifier
           BUILD_COMMAND: "SOURCE_DATE_EPOCH=0 CARGO_INCREMENTAL=0 RUSTFLAGS='-C strip=symbols -C debuginfo=0' cargo build --locked --release --bin codex-delta-verifier --target x86_64-unknown-linux-gnu"
         run: |
-          mkdir -p artifacts/gate1a1
+          mkdir -p "$EVIDENCE_DIR"
           SOURCE_TREE_SHA=$(cat /tmp/codex-rust-source.sha256)
           CARGO_MANIFEST_SHA=$(sha256sum /tmp/codex-rust-source/Cargo.toml | cut -d' ' -f1)
           CARGO_LOCK_SHA=$(sha256sum /tmp/codex-rust-source/Cargo.lock | cut -d' ' -f1)
-          cp /tmp/codex-rust-source/Cargo.lock artifacts/gate1a1/Cargo.lock
+          cp /tmp/codex-rust-source/Cargo.lock "$EVIDENCE_DIR/Cargo.lock"
           python -m eve_q.rust_verifier_provenance emit-manifest \
             --source-commit "$GITHUB_SHA" \
             --source-tree-sha256 "$SOURCE_TREE_SHA" \
@@ -146,29 +148,31 @@ jobs:
             --tree-posture CLEAN \
             --input-schema-version delta-repricing-request-v0.1 \
             --output-schema-version delta-repricing-response-v0.1 \
-            --output artifacts/gate1a1/rust-verifier-manifest.json
+            --output "$EVIDENCE_DIR/rust-verifier-manifest.json"
           python -m eve_q.rust_verifier_provenance verify \
-            --manifest artifacts/gate1a1/rust-verifier-manifest.json \
+            --manifest "$EVIDENCE_DIR/rust-verifier-manifest.json" \
             --binary "$BINARY" \
             --request tests/fixtures/gate1a1_rust_repricing_request_v0_1.json \
-            --output artifacts/gate1a1/rust-verifier-report.json \
-            | tee artifacts/gate1a1/rust-verifier-summary.json
-          grep -q '"outcome": "VERIFIED_RESEARCH_BINARY"' artifacts/gate1a1/rust-verifier-summary.json
+            --output "$EVIDENCE_DIR/rust-verifier-report.json" \
+            | tee "$EVIDENCE_DIR/rust-verifier-summary.json"
+          grep -q '"outcome": "VERIFIED_RESEARCH_BINARY"' "$EVIDENCE_DIR/rust-verifier-summary.json"
       - name: Validate generated evidence schemas
         run: |
           python -m pip install --disable-pip-version-check jsonschema==4.25.1
           python - <<'PY'
           import json
+          import os
           from pathlib import Path
           from jsonschema import Draft202012Validator
 
+          evidence_dir = Path(os.environ["EVIDENCE_DIR"])
           pairs = (
-              ("schemas/gate1a1_rust_verifier_manifest_v0_1.schema.json", "artifacts/gate1a1/rust-verifier-manifest.json"),
-              ("schemas/gate1a1_rust_verifier_report_v0_1.schema.json", "artifacts/gate1a1/rust-verifier-report.json"),
+              (Path("schemas/gate1a1_rust_verifier_manifest_v0_1.schema.json"), evidence_dir / "rust-verifier-manifest.json"),
+              (Path("schemas/gate1a1_rust_verifier_report_v0_1.schema.json"), evidence_dir / "rust-verifier-report.json"),
           )
           for schema_path, document_path in pairs:
-              schema = json.loads(Path(schema_path).read_text())
-              document = json.loads(Path(document_path).read_text())
+              schema = json.loads(schema_path.read_text())
+              document = json.loads(document_path.read_text())
               Draft202012Validator.check_schema(schema)
               Draft202012Validator(schema).validate(document)
           PY
@@ -179,6 +183,6 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: gate1a1-rust-verifier-provenance-v0-1
-          path: artifacts/gate1a1
+          path: ${{ runner.temp }}/gate1a1-rust-verifier-provenance-v0-1
           if-no-files-found: warn
           retention-days: 30
