@@ -92,13 +92,17 @@ jobs:
           target: x86_64-unknown-linux-gnu
       - name: Require clean checked-out source tree
         run: test -z "$(git status --porcelain)"
-      - name: Prepare one reviewed dependency lock
+      - name: Prepare reviewed dependency lock and source digest
         run: |
-          rm -rf /tmp/codex-rust-source /tmp/build-a /tmp/build-b /tmp/target-a /tmp/target-b
+          rm -rf /tmp/codex-rust-source /tmp/build-a /tmp/build-b /tmp/target-a /tmp/target-b /tmp/test-target
+          rm -f /tmp/codex-rust-source.sha256
           cp -R rust/delta-verifier /tmp/codex-rust-source
           cargo generate-lockfile --manifest-path /tmp/codex-rust-source/Cargo.toml
-      - name: Test the pinned Rust crate
-        run: cargo test --manifest-path /tmp/codex-rust-source/Cargo.toml --locked
+          SOURCE_TREE_SHA="$(find /tmp/codex-rust-source -type f ! -name Cargo.lock ! -path '*/target/*' -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)"
+          test -n "$SOURCE_TREE_SHA"
+          printf '%s\n' "$SOURCE_TREE_SHA" > /tmp/codex-rust-source.sha256
+      - name: Test the pinned Rust crate outside the source tree
+        run: CARGO_TARGET_DIR=/tmp/test-target cargo test --manifest-path /tmp/codex-rust-source/Cargo.toml --locked
       - name: Build the release binary twice in isolated targets
         env:
           CARGO_INCREMENTAL: "0"
@@ -124,9 +128,10 @@ jobs:
           BUILD_COMMAND: "SOURCE_DATE_EPOCH=0 CARGO_INCREMENTAL=0 RUSTFLAGS='-C strip=symbols -C debuginfo=0' cargo build --locked --release --bin codex-delta-verifier --target x86_64-unknown-linux-gnu"
         run: |
           mkdir -p artifacts/gate1a1
-          SOURCE_TREE_SHA=$(find /tmp/codex-rust-source -type f ! -name Cargo.lock -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+          SOURCE_TREE_SHA=$(cat /tmp/codex-rust-source.sha256)
           CARGO_MANIFEST_SHA=$(sha256sum /tmp/codex-rust-source/Cargo.toml | cut -d' ' -f1)
           CARGO_LOCK_SHA=$(sha256sum /tmp/codex-rust-source/Cargo.lock | cut -d' ' -f1)
+          cp /tmp/codex-rust-source/Cargo.lock artifacts/gate1a1/Cargo.lock
           python -m eve_q.rust_verifier_provenance emit-manifest \
             --source-commit "$GITHUB_SHA" \
             --source-tree-sha256 "$SOURCE_TREE_SHA" \
@@ -169,3 +174,11 @@ jobs:
           PY
       - name: Preserve repository cleanliness
         run: test -z "$(git status --porcelain)"
+      - name: Upload provenance evidence and generated lock
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: gate1a1-rust-verifier-provenance-v0-1
+          path: artifacts/gate1a1
+          if-no-files-found: warn
+          retention-days: 30
