@@ -1,13 +1,20 @@
 from __future__ import annotations
 
 import json
+from importlib.resources import files
 from pathlib import Path
 
-from eve_q.rust_verifier_provenance import build_manifest, file_sha256, verify_binary
+from eve_q.rust_verifier_provenance import (
+    build_manifest,
+    canonical_response_schema_sha256,
+    file_sha256,
+    verify_binary,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUEST = Path(__file__).parent / "fixtures" / "gate1a1_rust_repricing_request_v0_1.json"
 WORKFLOW = ROOT / ".github" / "workflows" / "gate1a1-rust-verifier-provenance-v0-1-ci.yml"
+SOURCE_SCHEMA = ROOT / "schemas" / "delta_repricing_response.schema.json"
 
 
 def _fake_verifier(tmp_path: Path) -> Path:
@@ -71,6 +78,7 @@ def _manifest(executable: Path) -> dict[str, object]:
         source_tree_sha256="b" * 64,
         cargo_manifest_sha256="c" * 64,
         cargo_lock_sha256="d" * 64,
+        response_schema_sha256=canonical_response_schema_sha256(),
         build_command="cargo build --locked --release --bin codex-delta-verifier",
         rustc_version="rustc 1.85.0",
         cargo_version="cargo 1.85.0",
@@ -81,6 +89,14 @@ def _manifest(executable: Path) -> dict[str, object]:
         input_schema_version="delta-repricing-request-v0.1",
         output_schema_version="delta-repricing-response-v0.1",
     )
+
+
+def test_packaged_response_schema_matches_repository_canonical() -> None:
+    packaged = files("eve_q").joinpath("delta_repricing_response.schema.json").read_bytes()
+    source = SOURCE_SCHEMA.read_bytes()
+
+    assert packaged == source
+    assert canonical_response_schema_sha256() == file_sha256(SOURCE_SCHEMA)
 
 
 def test_reviewed_binary_replays_deterministically(tmp_path: Path) -> None:
@@ -96,6 +112,18 @@ def test_reviewed_binary_replays_deterministically(tmp_path: Path) -> None:
     assert report["authority"] is False
     assert report["gate1b_activated"] is False
     assert report["may_execute"] is False
+
+
+def test_schema_digest_tamper_holds(tmp_path: Path) -> None:
+    executable = _fake_verifier(tmp_path)
+    request = json.loads(REQUEST.read_text(encoding="utf-8"))
+    manifest = _manifest(executable)
+    manifest["response_schema_sha256"] = "0" * 64
+
+    report = verify_binary(manifest, executable=executable.resolve(), request=request)
+
+    assert report["outcome"] == "HOLD_UNVERIFIED_BINARY"
+    assert any("canonical response schema digest" in reason for reason in report["hold_reasons"])
 
 
 def test_minimal_schema_version_spoof_holds(tmp_path: Path) -> None:
@@ -140,23 +168,7 @@ def test_request_derived_edge_identity_mismatch_holds(tmp_path: Path) -> None:
     assert any("edge_ids" in reason for reason in report["hold_reasons"])
 
 
-def test_invalid_response_schema_holds(tmp_path: Path) -> None:
-    executable = _fake_verifier(tmp_path)
-    request = json.loads(REQUEST.read_text(encoding="utf-8"))
-    invalid_schema = {"type": "definitely-not-a-json-schema-type"}
-
-    report = verify_binary(
-        _manifest(executable),
-        executable=executable.resolve(),
-        request=request,
-        response_schema=invalid_schema,
-    )
-
-    assert report["outcome"] == "HOLD_UNVERIFIED_BINARY"
-    assert report["hold_reasons"]
-
-
-def test_workflow_executes_the_recorded_complete_build_command() -> None:
+def test_workflow_executes_recorded_build_and_binds_schema_digest() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
 
     for required in (
@@ -169,9 +181,11 @@ def test_workflow_executes_the_recorded_complete_build_command() -> None:
         "--target x86_64-unknown-linux-gnu",
         'bash -c "$BUILD_COMMAND"',
         '--build-command "$BUILD_COMMAND"',
-        "--response-schema schemas/delta_repricing_response.schema.json",
+        '--response-schema-sha256 "$RESPONSE_SCHEMA_SHA"',
     ):
         assert required in text, required
+
+    assert "--response-schema " not in text
 
 
 def test_unexplained_binary_holds(tmp_path: Path) -> None:
