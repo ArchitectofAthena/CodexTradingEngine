@@ -1,0 +1,24 @@
+{
+  "artifact_is_command": false,
+  "authority": false,
+  "change_id": "gate1a1_rust_verifier_provenance_v0_1",
+  "change_type": "reproducible_rust_verifier_origin_binary_and_replay_membrane",
+  "gate1b_activated": false,
+  "human_promotion_required": true,
+  "may_access_wallet": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "parent_issue": 145,
+  "scope": [
+    "source_commit_and_tree_digest",
+    "cargo_manifest_and_lock_digest",
+    "pinned_toolchain_and_target",
+    "double_build_binary_digest",
+    "deterministic_request_replay",
+    "hold_unverified_binary",
+    "strict_manifest_and_report_schemas"
+  ],
+  "schema_version": "codex-change-receipt-v0.1"
+}
