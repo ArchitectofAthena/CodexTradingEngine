@@ -79,7 +79,7 @@ jobs:
           python -m ruff check \
             eve_q/gate1a1_second_source_review.py \
             tests/test_gate1a1_second_source_review_v0_1.py
-          python -m black --check --diff \
+          python -m black --check \
             eve_q/gate1a1_second_source_review.py \
             tests/test_gate1a1_second_source_review_v0_1.py
 
