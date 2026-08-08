@@ -71,7 +71,7 @@ jobs:
           Draft202012Validator(schema).validate(bundle)
           PY
       - name: Run focused mutation tests
-        run: python -m pytest -q tests/test_gate1a1_viv_gauntlet_v0_1.py tests/test_viv_adversarial_v0_1.py
+        run: python -m pytest -q -o addopts='' tests/test_gate1a1_viv_gauntlet_v0_1.py tests/test_viv_adversarial_v0_1.py
       - name: Exercise installed CLI and capture receipt
         run: |
           python -m pip install --no-deps .
