@@ -178,9 +178,7 @@ def evaluate_candidate(
         reasons = ["source review is expired at the candidate evaluation time"]
     elif capture != "PASS" or capture_receipt is None:
         code = "HOLD_CAPTURE_EVIDENCE"
-        reasons = [
-            "no bounded live capture receipt proves endpoint and response-contract behavior"
-        ]
+        reasons = ["no bounded live capture receipt proves endpoint and response-contract behavior"]
     else:
         code = "READY_FOR_ELIGIBILITY_REVIEW"
         reasons = [
