@@ -80,11 +80,13 @@ jobs:
     timeout-minutes: 20
     env:
       EVIDENCE_DIR: ${{ runner.temp }}/gate1a1-rust-verifier-provenance-v0-1
+      SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 1
+          ref: ${{ env.SOURCE_COMMIT }}
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
@@ -93,7 +95,9 @@ jobs:
           toolchain: 1.85.0
           target: x86_64-unknown-linux-gnu
       - name: Require clean checked-out source tree
-        run: test -z "$(git status --porcelain)"
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test -z "$(git status --porcelain)"
       - name: Prepare reviewed dependency lock and source digest
         run: |
           rm -rf /tmp/codex-rust-source /tmp/build-a /tmp/build-b /tmp/target-a /tmp/target-b /tmp/test-target "$EVIDENCE_DIR"
@@ -135,14 +139,14 @@ jobs:
           CARGO_LOCK_SHA=$(sha256sum /tmp/codex-rust-source/Cargo.lock | cut -d' ' -f1)
           cp /tmp/codex-rust-source/Cargo.lock "$EVIDENCE_DIR/Cargo.lock"
           python -m eve_q.rust_verifier_provenance emit-manifest \
-            --source-commit "$GITHUB_SHA" \
+            --source-commit "$SOURCE_COMMIT" \
             --source-tree-sha256 "$SOURCE_TREE_SHA" \
             --cargo-manifest-sha256 "$CARGO_MANIFEST_SHA" \
             --cargo-lock-sha256 "$CARGO_LOCK_SHA" \
             --build-command "$BUILD_COMMAND" \
             --rustc-version "$(rustc --version --verbose | tr '\n' ';')" \
             --cargo-version "$(cargo --version --verbose | tr '\n' ';')" \
-            --package-origin "github:ArchitectofAthena/CodexTradingEngine@$GITHUB_SHA:rust/delta-verifier/Cargo.toml" \
+            --package-origin "github:ArchitectofAthena/CodexTradingEngine@$SOURCE_COMMIT:rust/delta-verifier/Cargo.toml" \
             --binary "$BINARY" \
             --target-triple x86_64-unknown-linux-gnu \
             --tree-posture CLEAN \
