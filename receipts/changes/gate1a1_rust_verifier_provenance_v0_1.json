@@ -15,8 +15,11 @@
     "source_commit_and_tree_digest",
     "cargo_manifest_and_lock_digest",
     "pinned_toolchain_and_target",
+    "exact_executed_replayable_build_command",
     "double_build_binary_digest",
     "deterministic_request_replay",
+    "full_delta_response_schema_validation",
+    "request_derived_identity_and_route_binding",
     "hold_unverified_binary",
     "strict_manifest_and_report_schemas"
   ],
