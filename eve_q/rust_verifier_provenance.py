@@ -1,8 +1,9 @@
 """Fail-closed provenance membrane for local Rust verifier binaries.
 
 A binary is trusted only when an explicit build manifest binds its source,
-toolchain, package origin, target, schemas, binary digest, and deterministic
-replay. Matching output alone never grants provenance or execution authority.
+toolchain, package origin, target, canonical schemas, binary digest, and
+deterministic replay. Matching output alone never grants provenance or
+execution authority.
 """
 
 from __future__ import annotations
@@ -14,17 +15,17 @@ import math
 import os
 import subprocess
 from collections.abc import Mapping, Sequence
+from importlib.resources import files
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
 
-_MANIFEST_SCHEMA = "gate1a1-rust-verifier-manifest-v0.1"
+_MANIFEST_SCHEMA = "gate1a1-rust-verifier-manifest-v0.2"
 _REPORT_SCHEMA = "gate1a1-rust-verifier-report-v0.1"
 _HOLD = "HOLD_UNVERIFIED_BINARY"
 _VERIFIED = "VERIFIED_RESEARCH_BINARY"
-_ROOT = Path(__file__).resolve().parents[1]
-_DEFAULT_RESPONSE_SCHEMA = _ROOT / "schemas" / "delta_repricing_response.schema.json"
+_CANONICAL_RESPONSE_SCHEMA_RESOURCE = "delta_repricing_response.schema.json"
 _REQUIRED_LOCKS = {
     "authority": False,
     "artifact_is_command": False,
@@ -49,6 +50,19 @@ def file_sha256(path: str | Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _canonical_response_schema_bytes() -> bytes:
+    return files("eve_q").joinpath(_CANONICAL_RESPONSE_SCHEMA_RESOURCE).read_bytes()
+
+
+def canonical_response_schema_sha256() -> str:
+    return hashlib.sha256(_canonical_response_schema_bytes()).hexdigest()
+
+
+def _canonical_response_schema() -> Mapping[str, object]:
+    payload = json.loads(_canonical_response_schema_bytes().decode("utf-8"))
+    return _mapping(payload, "packaged canonical response schema")
 
 
 def _mapping(value: object, context: str) -> Mapping[str, object]:
@@ -89,6 +103,7 @@ def build_manifest(
     source_tree_sha256: str,
     cargo_manifest_sha256: str,
     cargo_lock_sha256: str,
+    response_schema_sha256: str,
     build_command: str,
     rustc_version: str,
     cargo_version: str,
@@ -106,6 +121,7 @@ def build_manifest(
         (source_tree_sha256, "source_tree_sha256"),
         (cargo_manifest_sha256, "cargo_manifest_sha256"),
         (cargo_lock_sha256, "cargo_lock_sha256"),
+        (response_schema_sha256, "response_schema_sha256"),
     ):
         _sha(digest, context)
     if len(source_commit) != 40 or any(ch not in "0123456789abcdef" for ch in source_commit):
@@ -130,6 +146,7 @@ def build_manifest(
         "source_tree_sha256": source_tree_sha256,
         "cargo_manifest_sha256": cargo_manifest_sha256,
         "cargo_lock_sha256": cargo_lock_sha256,
+        "response_schema_sha256": response_schema_sha256,
         "build_command": build_command,
         "rustc_version": rustc_version,
         "cargo_version": cargo_version,
@@ -154,6 +171,7 @@ def validate_manifest(manifest: Mapping[str, object]) -> None:
             "source_tree_sha256",
             "cargo_manifest_sha256",
             "cargo_lock_sha256",
+            "response_schema_sha256",
             "build_command",
             "rustc_version",
             "cargo_version",
@@ -174,6 +192,7 @@ def validate_manifest(manifest: Mapping[str, object]) -> None:
         "source_tree_sha256",
         "cargo_manifest_sha256",
         "cargo_lock_sha256",
+        "response_schema_sha256",
         "binary_sha256",
     ):
         _sha(manifest[key], f"manifest.{key}")
@@ -270,7 +289,6 @@ def verify_binary(
     *,
     executable: str | Path,
     request: Mapping[str, object],
-    response_schema: Mapping[str, object] | None = None,
     timeout_seconds: float = 3.0,
 ) -> dict[str, object]:
     """Validate provenance and replay a binary twice, returning a fail-closed report."""
@@ -282,6 +300,11 @@ def verify_binary(
     output_schema_version = ""
     try:
         validate_manifest(manifest)
+        canonical_schema_bytes = _canonical_response_schema_bytes()
+        canonical_schema_sha256 = hashlib.sha256(canonical_schema_bytes).hexdigest()
+        if canonical_schema_sha256 != manifest["response_schema_sha256"]:
+            raise ValueError("packaged canonical response schema digest does not match the manifest")
+        response_schema = _canonical_response_schema()
         if not executable_path.is_absolute() or not executable_path.is_file():
             raise ValueError("verifier executable must be an existing absolute file")
         if file_sha256(executable_path) != manifest["binary_sha256"]:
@@ -306,13 +329,10 @@ def verify_binary(
         output_schema_version = str(response.get("schema_version", ""))
         if output_schema_version != manifest["output_schema_version"]:
             raise ValueError("response schema does not match the manifest")
-        active_response_schema = (
-            response_schema if response_schema is not None else load_json(_DEFAULT_RESPONSE_SCHEMA)
-        )
         _validate_replay_response(
             response,
             request=request,
-            response_schema=active_response_schema,
+            response_schema=response_schema,
         )
         outcome = _VERIFIED
     except (
@@ -359,6 +379,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     emit.add_argument("--source-tree-sha256", required=True)
     emit.add_argument("--cargo-manifest-sha256", required=True)
     emit.add_argument("--cargo-lock-sha256", required=True)
+    emit.add_argument("--response-schema-sha256", required=True)
     emit.add_argument("--build-command", required=True)
     emit.add_argument("--rustc-version", required=True)
     emit.add_argument("--cargo-version", required=True)
@@ -374,7 +395,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     verify.add_argument("--manifest", required=True)
     verify.add_argument("--binary", required=True)
     verify.add_argument("--request", required=True)
-    verify.add_argument("--response-schema", default=str(_DEFAULT_RESPONSE_SCHEMA))
     verify.add_argument("--output", required=True)
 
     args = parser.parse_args(argv)
@@ -386,6 +406,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             source_tree_sha256=args.source_tree_sha256,
             cargo_manifest_sha256=args.cargo_manifest_sha256,
             cargo_lock_sha256=args.cargo_lock_sha256,
+            response_schema_sha256=args.response_schema_sha256,
             build_command=args.build_command,
             rustc_version=args.rustc_version,
             cargo_version=args.cargo_version,
@@ -402,7 +423,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             load_json(args.manifest),
             executable=Path(args.binary).resolve(),
             request=load_json(args.request),
-            response_schema=load_json(args.response_schema),
         )
         exit_code = 2 if payload["outcome"] == _HOLD else 0
     output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
