@@ -1,0 +1,26 @@
+{
+  "schema_version": "gate1a1-benchmark-seal-v0.1",
+  "seal_id": "gate1a1-benchmark-seal:v0.1",
+  "source_commit": "15351318fedf5523a38a9f345d588b7546ecdb75",
+  "corpus_path": "benchmarks/gate1a1_fixed_benchmark_corpus_v0_1.json",
+  "corpus_git_blob_sha": "1d6719ffba8178660ed02a5d271a0f2260d9f1ba",
+  "expected_report_path": "benchmarks/gate1a1_fixed_benchmark_expected_report_v0_1.json",
+  "expected_report_git_blob_sha": "47f2222cd60512ea112a27d1091e39b3dad334ae",
+  "corpus_sha256": "741751277f3aa3a225e99b4b5a5686e9bbf95a83c1ce7863892efe7bb604eb16",
+  "case_qubo_sha256": [
+    "e37f77017f16baeb6de113dca480fece97843c1ecc11f1db4a4f27f3c9acfa7b",
+    "e1be94e5169785693b609dcaeffbd78c350312f868b990ac00997315b8000fd9",
+    "18809f39d97c4ac8da0c368a998912bfae76ab716749a34e6a5afbbfc2f6e12d"
+  ],
+  "expected_outcome": "QAOA_ADDS_NO_MEASURABLE_VALUE",
+  "authority": false,
+  "artifact_is_command": false,
+  "automatic_gate_promotion": false,
+  "gate1b_activated": false,
+  "may_execute": false,
+  "may_sign": false,
+  "may_submit_transaction": false,
+  "may_access_wallet": false,
+  "may_move_capital": false,
+  "human_promotion_required": true
+}
