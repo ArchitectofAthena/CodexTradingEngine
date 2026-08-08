@@ -17,6 +17,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
+from jsonschema.exceptions import SchemaError
 
 _MANIFEST_SCHEMA = "gate1a1-rust-verifier-manifest-v0.1"
 _REPORT_SCHEMA = "gate1a1-rust-verifier-report-v0.1"
@@ -223,6 +224,7 @@ def _validate_replay_response(
     request: Mapping[str, object],
     response_schema: Mapping[str, object],
 ) -> None:
+    Draft202012Validator.check_schema(response_schema)
     validator = Draft202012Validator(response_schema)
     errors = sorted(
         validator.iter_errors(response),
@@ -315,8 +317,10 @@ def verify_binary(
         outcome = _VERIFIED
     except (
         json.JSONDecodeError,
+        KeyError,
         OSError,
         RuntimeError,
+        SchemaError,
         subprocess.SubprocessError,
         TypeError,
         ValueError,
