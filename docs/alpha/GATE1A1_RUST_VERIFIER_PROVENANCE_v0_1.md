@@ -1,8 +1,8 @@
-# Gate 1A.1 Rust Verifier Provenance Membrane v0.1
+# Gate 1A.1 Rust Verifier Provenance Membrane v0.2
 
 ## Purpose
 
-A verifier answer is admissible only when its binary has a reviewable origin and deterministic replay chain.
+A verifier answer is admissible only when its binary and its validation law have reviewable, content-addressed origins.
 
 ```text
 source commit or reviewed source digest
@@ -13,7 +13,8 @@ source commit or reviewed source digest
 + target triple
 + clean-tree posture
 + binary SHA-256
-+ full response-schema validation
++ packaged canonical response-schema SHA-256
++ full canonical response validation
 + request-derived identity binding
 + byte-identical replay
 → VERIFIED_RESEARCH_BINARY | HOLD_UNVERIFIED_BINARY
@@ -23,16 +24,38 @@ source commit or reviewed source digest
 binary exists != binary trusted
 matching output != verified origin
 schema-version string != schema-valid response
+caller-provided schema != admission law
 Rust verification != execution authority
 ```
 
-## Manifest
+## Canonical response law
+
+The authoritative response schema remains repository source:
+
+```text
+schemas/delta_repricing_response.schema.json
+```
+
+An exact byte-for-byte mirror is packaged inside `eve_q`:
+
+```text
+eve_q/delta_repricing_response.schema.json
+```
+
+CI requires the two files to be identical. The packaged resource is included in the wheel so `codex-rust-verifier-provenance verify` can operate outside a repository checkout.
+
+Manifest v0.2 records `response_schema_sha256`. Verification loads only the packaged canonical resource and requires its SHA-256 to match the reviewed manifest before validating any replay output.
+
+There is no caller-selectable response-schema override in the verification path. A weaker external schema cannot redefine admission.
+
+## Manifest v0.2
 
 The manifest records:
 
 - source commit;
 - complete reviewed source-tree digest;
 - `Cargo.toml` and generated `Cargo.lock` digests;
+- canonical response-schema digest;
 - the same replayable build command used for the first CI release build;
 - `rustc` and `cargo` versions;
 - package origin;
@@ -41,97 +64,48 @@ The manifest records:
 - clean or reviewed-digest tree posture;
 - expected request and response schema versions.
 
-The manifest is itself content-addressed. Re-sealing one changed field without updating the full manifest identity is rejected.
+The manifest is content-addressed. Changing the canonical schema digest changes the manifest identity.
 
-## Deterministic build proof
+## Deterministic build and replay proof
 
 The CI lane:
 
 1. pins Rust `1.85.0` and `x86_64-unknown-linux-gnu`;
-2. copies the verifier source into a temporary clean build context;
+2. copies verifier source into a temporary clean build context;
 3. generates one dependency lock and records its digest;
-4. records a complete build command containing the fixed reproducibility environment, `CARGO_TARGET_DIR`, `--manifest-path`, lock posture, binary name, and target;
+4. records the complete build-A command, including reproducibility environment, target directory and manifest path;
 5. executes that recorded command for build A;
 6. builds the same release binary independently as build B;
 7. requires identical binary SHA-256 values;
-8. emits the provenance manifest;
-9. runs the binary twice over the same bounded request;
-10. requires byte-identical output;
-11. validates the complete output against `schemas/delta_repricing_response.schema.json`;
-12. binds `request_id`, snapshot hash, model hash, confidence receipt, candidate identity, edge identities, asset path, and minimum margin back to the request;
-13. validates generated manifest and replay report schemas.
+8. proves the source and packaged response schemas are byte-identical;
+9. records the packaged canonical schema SHA-256 in the manifest;
+10. runs the binary twice over the same bounded request;
+11. requires byte-identical output;
+12. validates the complete output against the packaged canonical schema;
+13. binds request ID, snapshot hash, model hash, confidence receipt, candidate identity, edge identities, asset path and minimum margin back to the request;
+14. validates generated manifest and replay report schemas.
 
-The generated lock digest is invocation evidence. It does not silently rewrite the repository.
-
-## Exact replay command
-
-The recorded command is executable as written and includes the source and target locations actually used for build A:
-
-```bash
-SOURCE_DATE_EPOCH=0 \
-CARGO_INCREMENTAL=0 \
-RUSTFLAGS='-C strip=symbols -C debuginfo=0' \
-CARGO_TARGET_DIR=/tmp/target-a \
-cargo build \
-  --manifest-path /tmp/build-a/Cargo.toml \
-  --locked \
-  --release \
-  --bin codex-delta-verifier \
-  --target x86_64-unknown-linux-gnu
-```
-
-## Replay response admission
-
-A response cannot earn `VERIFIED_RESEARCH_BINARY` from a matching schema-version string alone.
-
-The membrane first validates the whole response document against the repository's canonical delta repricing response schema, including required identifiers, verifier status, nested verification result, numerical field types, and both authority-false locks. It then checks that request-derived identity fields and route fields are unchanged from the input.
-
-This prevents a deterministic but incomplete, malformed, or identity-spoofed response from being promoted as verified provenance evidence.
+The full simulation suite also builds a wheel, installs it into a clean virtual environment and requires the packaged response schema to be present and readable there.
 
 ## Fail-closed posture
 
 `HOLD_UNVERIFIED_BINARY` is mandatory for:
 
-- missing manifest;
+- missing or malformed manifest;
 - manifest identity mismatch;
+- canonical schema digest mismatch;
+- absent packaged canonical schema;
+- source/package schema drift;
 - unknown or dirty source posture;
 - binary digest mismatch;
-- missing source, toolchain, target, package, build, or schema fields;
-- missing or invalid canonical response schema;
+- missing source, toolchain, target, package, build or schema fields;
 - request or response schema mismatch;
 - incomplete or malformed verifier output;
-- changed request, snapshot, model, confidence, candidate, edge, asset-path, or minimum-margin identity;
+- changed request-derived identity or route fields;
 - deterministic replay divergence;
 - authority escalation.
 
-A binary that emits a plausible numerical answer but fails provenance still holds.
-
-## CLI
-
-```bash
-codex-rust-verifier-provenance emit-manifest \
-  --source-commit "$SOURCE_COMMIT" \
-  --source-tree-sha256 "$SOURCE_TREE_SHA" \
-  --cargo-manifest-sha256 "$CARGO_MANIFEST_SHA" \
-  --cargo-lock-sha256 "$CARGO_LOCK_SHA" \
-  --build-command "$BUILD_COMMAND" \
-  --rustc-version "$(rustc --version --verbose | tr '\n' ' ')" \
-  --cargo-version "$(cargo --version --verbose | tr '\n' ' ')" \
-  --package-origin "github:ArchitectofAthena/CodexTradingEngine@$SOURCE_COMMIT:rust/delta-verifier/Cargo.toml" \
-  --binary "$BINARY" \
-  --target-triple x86_64-unknown-linux-gnu \
-  --tree-posture CLEAN \
-  --input-schema-version delta-repricing-request-v0.1 \
-  --output-schema-version delta-repricing-response-v0.1 \
-  --output artifacts/gate1a1/rust-verifier-manifest.json
-
-codex-rust-verifier-provenance verify \
-  --manifest artifacts/gate1a1/rust-verifier-manifest.json \
-  --binary "$BINARY" \
-  --request tests/fixtures/gate1a1_rust_repricing_request_v0_1.json \
-  --response-schema schemas/delta_repricing_response.schema.json \
-  --output artifacts/gate1a1/rust-verifier-report.json
-```
+A deterministic binary and a permissive caller-supplied schema are never sufficient for admission.
 
 ## Boundary
 
@@ -147,4 +121,4 @@ gate1b_activated: false
 human_promotion_required: true
 ```
 
-> Provenance before trust. Replay before admission. Verification never becomes authority.
+> Provenance before trust. The validator's law is provenance too.

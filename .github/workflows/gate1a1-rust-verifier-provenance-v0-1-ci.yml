@@ -1,4 +1,4 @@
-name: Gate 1A.1 Rust Verifier Provenance v0.1 CI
+name: Gate 1A.1 Rust Verifier Provenance v0.2 CI
 
 on:
   push:
@@ -6,12 +6,14 @@ on:
       - main
     paths:
       - "eve_q/rust_verifier_provenance.py"
+      - "eve_q/delta_repricing_response.schema.json"
       - "rust/delta-verifier/**"
       - "rust-toolchain.toml"
       - "tests/test_rust_verifier_provenance_v0_1.py"
       - "tests/fixtures/gate1a1_rust_repricing_request_v0_1.json"
       - "schemas/delta_repricing_response.schema.json"
-      - "schemas/gate1a1_rust_verifier_*_v0_1.schema.json"
+      - "schemas/gate1a1_rust_verifier_manifest_v0_2.schema.json"
+      - "schemas/gate1a1_rust_verifier_report_v0_1.schema.json"
       - "docs/alpha/GATE1A1_RUST_VERIFIER_PROVENANCE_v0_1.md"
       - "receipts/changes/gate1a1_rust_verifier_provenance_v0_1.json"
       - "pyproject.toml"
@@ -19,12 +21,14 @@ on:
   pull_request:
     paths:
       - "eve_q/rust_verifier_provenance.py"
+      - "eve_q/delta_repricing_response.schema.json"
       - "rust/delta-verifier/**"
       - "rust-toolchain.toml"
       - "tests/test_rust_verifier_provenance_v0_1.py"
       - "tests/fixtures/gate1a1_rust_repricing_request_v0_1.json"
       - "schemas/delta_repricing_response.schema.json"
-      - "schemas/gate1a1_rust_verifier_*_v0_1.schema.json"
+      - "schemas/gate1a1_rust_verifier_manifest_v0_2.schema.json"
+      - "schemas/gate1a1_rust_verifier_report_v0_1.schema.json"
       - "docs/alpha/GATE1A1_RUST_VERIFIER_PROVENANCE_v0_1.md"
       - "receipts/changes/gate1a1_rust_verifier_provenance_v0_1.json"
       - "pyproject.toml"
@@ -35,7 +39,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: gate1a1-rust-verifier-provenance-v0-1-${{ github.ref }}
+  group: gate1a1-rust-verifier-provenance-v0-2-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -60,10 +64,9 @@ jobs:
         run: |
           python -m py_compile eve_q/rust_verifier_provenance.py tests/test_rust_verifier_provenance_v0_1.py
           python -m ruff check eve_q/rust_verifier_provenance.py tests/test_rust_verifier_provenance_v0_1.py
-      - name: Run focused fail-closed tests
-        run: python -m pytest -q -o addopts='' tests/test_rust_verifier_provenance_v0_1.py
-      - name: Validate static schema syntax
+      - name: Verify canonical response schema mirror
         run: |
+          cmp -s schemas/delta_repricing_response.schema.json eve_q/delta_repricing_response.schema.json
           python - <<'PY'
           import json
           from pathlib import Path
@@ -71,18 +74,21 @@ jobs:
 
           for path in (
               Path("schemas/delta_repricing_response.schema.json"),
-              Path("schemas/gate1a1_rust_verifier_manifest_v0_1.schema.json"),
+              Path("eve_q/delta_repricing_response.schema.json"),
+              Path("schemas/gate1a1_rust_verifier_manifest_v0_2.schema.json"),
               Path("schemas/gate1a1_rust_verifier_report_v0_1.schema.json"),
           ):
               schema = json.loads(path.read_text())
               Draft202012Validator.check_schema(schema)
           PY
+      - name: Run focused fail-closed tests
+        run: python -m pytest -q -o addopts='' tests/test_rust_verifier_provenance_v0_1.py
 
   reproducible-rust:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      EVIDENCE_DIR: ${{ runner.temp }}/gate1a1-rust-verifier-provenance-v0-1
+      EVIDENCE_DIR: ${{ runner.temp }}/gate1a1-rust-verifier-provenance-v0-2
       SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
       BUILD_COMMAND: >-
         SOURCE_DATE_EPOCH=0 CARGO_INCREMENTAL=0 RUSTFLAGS='-C strip=symbols -C debuginfo=0'
@@ -135,15 +141,18 @@ jobs:
           BINARY: /tmp/target-a/x86_64-unknown-linux-gnu/release/codex-delta-verifier
         run: |
           mkdir -p "$EVIDENCE_DIR"
+          cmp -s schemas/delta_repricing_response.schema.json eve_q/delta_repricing_response.schema.json
           SOURCE_TREE_SHA=$(cat /tmp/codex-rust-source.sha256)
           CARGO_MANIFEST_SHA=$(sha256sum /tmp/codex-rust-source/Cargo.toml | cut -d' ' -f1)
           CARGO_LOCK_SHA=$(sha256sum /tmp/codex-rust-source/Cargo.lock | cut -d' ' -f1)
+          RESPONSE_SCHEMA_SHA=$(sha256sum eve_q/delta_repricing_response.schema.json | cut -d' ' -f1)
           cp /tmp/codex-rust-source/Cargo.lock "$EVIDENCE_DIR/Cargo.lock"
           python -m eve_q.rust_verifier_provenance emit-manifest \
             --source-commit "$SOURCE_COMMIT" \
             --source-tree-sha256 "$SOURCE_TREE_SHA" \
             --cargo-manifest-sha256 "$CARGO_MANIFEST_SHA" \
             --cargo-lock-sha256 "$CARGO_LOCK_SHA" \
+            --response-schema-sha256 "$RESPONSE_SCHEMA_SHA" \
             --build-command "$BUILD_COMMAND" \
             --rustc-version "$(rustc --version --verbose | tr '\n' ';')" \
             --cargo-version "$(cargo --version --verbose | tr '\n' ';')" \
@@ -158,7 +167,6 @@ jobs:
             --manifest "$EVIDENCE_DIR/rust-verifier-manifest.json" \
             --binary "$BINARY" \
             --request tests/fixtures/gate1a1_rust_repricing_request_v0_1.json \
-            --response-schema schemas/delta_repricing_response.schema.json \
             --output "$EVIDENCE_DIR/rust-verifier-report.json" \
             | tee "$EVIDENCE_DIR/rust-verifier-summary.json"
           grep -q '"outcome": "VERIFIED_RESEARCH_BINARY"' "$EVIDENCE_DIR/rust-verifier-summary.json"
@@ -173,7 +181,7 @@ jobs:
 
           evidence_dir = Path(os.environ["EVIDENCE_DIR"])
           pairs = (
-              (Path("schemas/gate1a1_rust_verifier_manifest_v0_1.schema.json"), evidence_dir / "rust-verifier-manifest.json"),
+              (Path("schemas/gate1a1_rust_verifier_manifest_v0_2.schema.json"), evidence_dir / "rust-verifier-manifest.json"),
               (Path("schemas/gate1a1_rust_verifier_report_v0_1.schema.json"), evidence_dir / "rust-verifier-report.json"),
           )
           for schema_path, document_path in pairs:
@@ -188,7 +196,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: gate1a1-rust-verifier-provenance-v0-1
-          path: ${{ runner.temp }}/gate1a1-rust-verifier-provenance-v0-1
+          name: gate1a1-rust-verifier-provenance-v0-2
+          path: ${{ runner.temp }}/gate1a1-rust-verifier-provenance-v0-2
           if-no-files-found: warn
           retention-days: 30

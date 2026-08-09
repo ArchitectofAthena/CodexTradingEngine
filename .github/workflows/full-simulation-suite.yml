@@ -49,6 +49,10 @@ jobs:
           /tmp/codex-wheel-smoke/bin/python -m pip install --upgrade pip
           /tmp/codex-wheel-smoke/bin/python -m pip install dist/*.whl
           /tmp/codex-wheel-smoke/bin/python - <<'PY'
+          import hashlib
+          import json
+          from importlib.resources import files
+
           import eve_q
           import eveq_failsafe_receipt
           import models
@@ -56,6 +60,7 @@ jobs:
           import proof_adapters
           import shadow_cycle_runner
           from eve_q.research_cli import main
+          from eve_q.rust_verifier_provenance import canonical_response_schema_sha256
 
           assert eve_q is not None
           assert eveq_failsafe_receipt is not None
@@ -64,8 +69,14 @@ jobs:
           assert proof_adapters is not None
           assert shadow_cycle_runner is not None
           assert main is not None
+
+          schema_bytes = files("eve_q").joinpath("delta_repricing_response.schema.json").read_bytes()
+          schema = json.loads(schema_bytes)
+          assert schema["properties"]["schema_version"]["const"] == "delta-repricing-response-v0.1"
+          assert hashlib.sha256(schema_bytes).hexdigest() == canonical_response_schema_sha256()
           PY
           /tmp/codex-wheel-smoke/bin/codex-research --help
+          /tmp/codex-wheel-smoke/bin/codex-rust-verifier-provenance verify --help
 
       - name: Test and build isolated Rust verifiers
         run: |
