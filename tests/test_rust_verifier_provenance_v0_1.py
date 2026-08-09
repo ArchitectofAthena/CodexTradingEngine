@@ -105,7 +105,7 @@ def test_reviewed_binary_replays_deterministically(tmp_path: Path) -> None:
 
     report = verify_binary(_manifest(executable), executable=executable.resolve(), request=request)
 
-    assert report["outcome"] == "VERIFIED_RESEARCH_BINARY"
+    assert report["outcome"] == "VERIFIED_RESEARCH_BINARY", report["hold_reasons"]
     assert report["hold_reasons"] == []
     assert report["deterministic_replay"] is True
     assert report["output_sha256"] == report["replay_sha256"]
