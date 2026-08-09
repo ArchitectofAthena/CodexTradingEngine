@@ -8,6 +8,8 @@ from eve_q.rust_verifier_provenance import (
     build_manifest,
     canonical_response_schema_sha256,
     file_sha256,
+    manifest_seed,
+    stable_sha256,
     verify_binary,
 )
 
@@ -91,6 +93,10 @@ def _manifest(executable: Path) -> dict[str, object]:
     )
 
 
+def _reseal_manifest(manifest: dict[str, object]) -> None:
+    manifest["manifest_id"] = f"rust-verifier-manifest:{stable_sha256(manifest_seed(manifest))[:24]}"
+
+
 def test_packaged_response_schema_matches_repository_canonical() -> None:
     packaged = files("eve_q").joinpath("delta_repricing_response.schema.json").read_bytes()
     source = SOURCE_SCHEMA.read_bytes()
@@ -114,11 +120,12 @@ def test_reviewed_binary_replays_deterministically(tmp_path: Path) -> None:
     assert report["may_execute"] is False
 
 
-def test_schema_digest_tamper_holds(tmp_path: Path) -> None:
+def test_schema_digest_tamper_holds_after_manifest_reseal(tmp_path: Path) -> None:
     executable = _fake_verifier(tmp_path)
     request = json.loads(REQUEST.read_text(encoding="utf-8"))
     manifest = _manifest(executable)
     manifest["response_schema_sha256"] = "0" * 64
+    _reseal_manifest(manifest)
 
     report = verify_binary(manifest, executable=executable.resolve(), request=request)
 
