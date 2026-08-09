@@ -1,8 +1,8 @@
 {
   "artifact_is_command": false,
   "authority": false,
-  "change_id": "gate1a1_rust_verifier_provenance_v0_1",
-  "change_type": "reproducible_rust_verifier_origin_binary_and_replay_membrane",
+  "change_id": "gate1a1_rust_verifier_provenance_v0_2",
+  "change_type": "reproducible_rust_verifier_origin_binary_schema_and_replay_membrane",
   "gate1b_activated": false,
   "human_promotion_required": true,
   "may_access_wallet": false,
@@ -18,8 +18,12 @@
     "exact_executed_replayable_build_command",
     "double_build_binary_digest",
     "deterministic_request_replay",
+    "packaged_canonical_response_schema",
+    "canonical_response_schema_sha256_binding",
     "full_delta_response_schema_validation",
     "request_derived_identity_and_route_binding",
+    "no_caller_selectable_admission_schema",
+    "wheel_resource_smoke",
     "hold_unverified_binary",
     "strict_manifest_and_report_schemas"
   ],
