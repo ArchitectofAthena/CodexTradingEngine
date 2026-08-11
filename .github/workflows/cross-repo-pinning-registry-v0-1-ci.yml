@@ -1,0 +1,74 @@
+name: Cross-Repository Pinning Registry v0.1 CI
+
+on:
+  pull_request:
+    paths:
+      - "contracts/PINNING.json"
+      - "contracts/*cross_repo*.manifest.json"
+      - "eve_q/pinning_registry.py"
+      - "tests/test_pinning_registry.py"
+      - "schemas/proposal_artifact_v0_1.schema.json"
+      - "schemas/evidence_bundle_v0_1.schema.json"
+      - "schemas/gate_decision_v0_1.schema.json"
+      - "schemas/human_promotion_receipt_v0_1.schema.json"
+      - "schemas/registry_entry_v0_1.schema.json"
+      - "schemas/execution_receipt_v0_1.schema.json"
+      - ".github/workflows/cross-repo-pinning-registry-v0-1-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "contracts/PINNING.json"
+      - "contracts/*cross_repo*.manifest.json"
+      - "eve_q/pinning_registry.py"
+      - "tests/test_pinning_registry.py"
+      - "schemas/proposal_artifact_v0_1.schema.json"
+      - "schemas/evidence_bundle_v0_1.schema.json"
+      - "schemas/gate_decision_v0_1.schema.json"
+      - "schemas/human_promotion_receipt_v0_1.schema.json"
+      - "schemas/registry_entry_v0_1.schema.json"
+      - "schemas/execution_receipt_v0_1.schema.json"
+      - ".github/workflows/cross-repo-pinning-registry-v0-1-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cross-repo-pinning-registry-v0-1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pinning:
+    name: Pinning membrane (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Parse registry and compile validator
+        run: |
+          python -m json.tool contracts/PINNING.json >/dev/null
+          python -m py_compile eve_q/pinning_registry.py tests/test_pinning_registry.py
+
+      - name: Run pinning invariants
+        run: python -m pytest -q --no-cov tests/test_pinning_registry.py
+
+      - name: Validate live registered pins
+        run: python -m eve_q.pinning_registry --root . --registry contracts/PINNING.json
