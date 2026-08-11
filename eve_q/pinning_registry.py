@@ -20,8 +20,10 @@ def sha256_hex(data: bytes) -> str:
 
 
 def git_blob_sha1(data: bytes) -> str:
+    # Git v0.1 blob IDs are SHA-1 by contract; this is identity compatibility,
+    # not a security primitive.
     header = f"blob {len(data)}\0".encode("utf-8")
-    return hashlib.sha1(header + data).hexdigest()
+    return hashlib.sha1(header + data, usedforsecurity=False).hexdigest()
 
 
 def _load_json_object(path: Path) -> tuple[bytes, dict[str, Any]]:
