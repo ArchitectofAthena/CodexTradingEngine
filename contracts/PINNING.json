@@ -1,0 +1,29 @@
+{
+  "registry_version": "cross_repo_pinning_registry_v0.1",
+  "purpose": "Fail-closed registry of review-only cross-repository contract pins. Registry membership records provenance and drift expectations; it grants no execution or promotion authority.",
+  "drift_policy": "fail_closed",
+  "watched_globs": [
+    "contracts/*cross_repo*.manifest.json"
+  ],
+  "pins": [
+    {
+      "pin_id": "eve_q_cross_repo_contract_v0_1",
+      "path": "contracts/eve_q_cross_repo_contract_v0_1.manifest.json",
+      "raw_sha256": "6a655c8826c6bea46599c5a3f7adc55838e66075b878e4a743b2fa2edd606f98",
+      "expected_json": {
+        "contract_version": "eve_q_cross_repo_v0.1",
+        "source_repository": "ArchitectofAthena/spiralbloom-os",
+        "source_commit": "981aa240ff5bd73fb4562c4e351789aa9cfb307c",
+        "producer_repository": "ArchitectofAthena/CodexTradingEngine"
+      },
+      "verify_manifest_schema_git_blobs": true,
+      "drift_policy": "fail_closed",
+      "authority": false
+    }
+  ],
+  "artifact_is_command": false,
+  "authority": false,
+  "may_execute": false,
+  "may_move_capital": false,
+  "human_promotion_required": true
+}
