@@ -104,6 +104,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
+      - name: Install provenance runtime dependency
+        run: python -m pip install --disable-pip-version-check jsonschema==4.25.1
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
         with:
           toolchain: 1.85.0
@@ -173,7 +175,6 @@ jobs:
           grep -q '"outcome": "VERIFIED_RESEARCH_BINARY"' "$EVIDENCE_DIR/rust-verifier-summary.json"
       - name: Validate generated evidence schemas
         run: |
-          python -m pip install --disable-pip-version-check jsonschema==4.25.1
           python - <<'PY'
           import json
           import os
