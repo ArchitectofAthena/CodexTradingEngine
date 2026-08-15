@@ -81,6 +81,8 @@ jobs:
           /tmp/codex-wheel-smoke/bin/codex-rust-verifier-provenance verify --help
 
       - name: Test and build isolated Rust verifiers
+        env:
+          RUSTUP_TOOLCHAIN: 1.85.0
         run: |
           cargo test --manifest-path rust/delta-verifier/Cargo.toml
           cargo build --manifest-path rust/delta-verifier/Cargo.toml --bins
