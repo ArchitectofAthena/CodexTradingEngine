@@ -88,13 +88,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      EVIDENCE_DIR: ${{ runner.temp }}/gate1a1-rust-verifier-provenance-v0-2
       SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
       BUILD_COMMAND: >-
         SOURCE_DATE_EPOCH=0 CARGO_INCREMENTAL=0 RUSTFLAGS='-C strip=symbols -C debuginfo=0'
         CARGO_TARGET_DIR=/tmp/target-a cargo build --manifest-path /tmp/build-a/Cargo.toml
         --locked --release --bin codex-delta-verifier --target x86_64-unknown-linux-gnu
     steps:
+      - name: Configure runner-local evidence directory
+        run: echo "EVIDENCE_DIR=$RUNNER_TEMP/gate1a1-rust-verifier-provenance-v0-2" >> "$GITHUB_ENV"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -103,6 +104,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
+      - name: Install provenance runtime dependency
+        run: python -m pip install --disable-pip-version-check jsonschema==4.25.1
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
         with:
           toolchain: 1.85.0
@@ -172,7 +175,6 @@ jobs:
           grep -q '"outcome": "VERIFIED_RESEARCH_BINARY"' "$EVIDENCE_DIR/rust-verifier-summary.json"
       - name: Validate generated evidence schemas
         run: |
-          python -m pip install --disable-pip-version-check jsonschema==4.25.1
           python - <<'PY'
           import json
           import os
