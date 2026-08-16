@@ -9,6 +9,7 @@ on:
       - "benchmarks/gate1a1_fixed_benchmark_*.json"
       - "schemas/gate1a1_fixed_benchmark_corpus_v0_1.schema.json"
       - "tests/test_gate1a1_benchmark_corpus_v0_1.py"
+      - "tests/test_gate1a1_benchmark_seal_v0_1.py"
       - "docs/alpha/GATE1A1_FIXED_QAOA_BENCHMARK_CORPUS_v0_1.md"
       - "receipts/changes/gate1a1_fixed_qaoa_benchmark_corpus_v0_1.json"
       - "pyproject.toml"
@@ -19,6 +20,7 @@ on:
       - "benchmarks/gate1a1_fixed_benchmark_*.json"
       - "schemas/gate1a1_fixed_benchmark_corpus_v0_1.schema.json"
       - "tests/test_gate1a1_benchmark_corpus_v0_1.py"
+      - "tests/test_gate1a1_benchmark_seal_v0_1.py"
       - "docs/alpha/GATE1A1_FIXED_QAOA_BENCHMARK_CORPUS_v0_1.md"
       - "receipts/changes/gate1a1_fixed_qaoa_benchmark_corpus_v0_1.json"
       - "pyproject.toml"
@@ -53,7 +55,11 @@ jobs:
       - name: Install focused dependencies
         run: python -m pip install --disable-pip-version-check pytest==9.1.1 jsonschema==4.25.1 ruff==0.14.14
       - name: Compile benchmark module and tests
-        run: python -m py_compile eve_q/gate1a1_benchmark_corpus.py tests/test_gate1a1_benchmark_corpus_v0_1.py
+        run: |
+          python -m py_compile \
+            eve_q/gate1a1_benchmark_corpus.py \
+            tests/test_gate1a1_benchmark_corpus_v0_1.py \
+            tests/test_gate1a1_benchmark_seal_v0_1.py
       - name: Validate corpus schema
         run: |
           python - <<'PY'
@@ -67,9 +73,16 @@ jobs:
           Draft202012Validator(schema).validate(corpus)
           PY
       - name: Run focused tests
-        run: python -m pytest -q -o addopts='' tests/test_gate1a1_benchmark_corpus_v0_1.py
+        run: |
+          python -m pytest -q -o addopts='' \
+            tests/test_gate1a1_benchmark_corpus_v0_1.py \
+            tests/test_gate1a1_benchmark_seal_v0_1.py
       - name: Check lint
-        run: python -m ruff check eve_q/gate1a1_benchmark_corpus.py tests/test_gate1a1_benchmark_corpus_v0_1.py
+        run: |
+          python -m ruff check \
+            eve_q/gate1a1_benchmark_corpus.py \
+            tests/test_gate1a1_benchmark_corpus_v0_1.py \
+            tests/test_gate1a1_benchmark_seal_v0_1.py
       - name: Exercise installed CLI
         run: |
           python -m pip install --no-deps .
