@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime
+from typing import Any
 
+from .config_tools import positive_int
 from .db import TelemetryDB
 from .models import Event
 
@@ -18,11 +19,13 @@ class SignalObserver:
     intentionally read-only and contains no action hooks.
     """
 
-    def __init__(self, db: TelemetryDB, config: Dict[str, Any]) -> None:
+    def __init__(self, db: TelemetryDB, config: dict[str, Any]) -> None:
         self.db = db
         self.config = config
         self.name = str(config.get("name", "signal"))
-        self.poll_interval_seconds = int(config.get("poll_interval_seconds", 30))
+        self.poll_interval_seconds = positive_int(
+            config.get("poll_interval_seconds", 30), "poll_interval_seconds"
+        )
 
     async def run_forever(self) -> None:
         logger.info("Signal observer starting for %s", self.name)
@@ -36,7 +39,7 @@ class SignalObserver:
             await asyncio.sleep(self.poll_interval_seconds)
 
     async def poll_once(self) -> None:
-        observed_at = datetime.now(timezone.utc).isoformat()
+        observed_at = datetime.now(UTC).isoformat()
         event = Event(
             event_type="signal_tick",
             chain=None,
@@ -46,6 +49,12 @@ class SignalObserver:
             dedupe_key=f"signal_tick:{self.name}:{observed_at}",
             title=f"{self.name} signal tick",
             summary="Context observer heartbeat recorded.",
-            data={"observer": self.name},
+            data={
+                "observer": self.name,
+                "signal_kind": "liveness_only",
+                "market_evidence": False,
+                "authority": False,
+                "artifact_is_command": False,
+            },
         )
         self.db.save_event(event)

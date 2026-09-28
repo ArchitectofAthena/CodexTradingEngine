@@ -3,13 +3,30 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 
 def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
+
+
+def timestamp_age_seconds(value: Any) -> float | None:
+    """Age of an explicit timezone-aware ISO/RSS timestamp; never assume UTC."""
+    if not isinstance(value, str):
+        return None
+    try:
+        try:
+            stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            stamp = parsedate_to_datetime(value)
+        if stamp.tzinfo is None or stamp.utcoffset() is None:
+            return None
+        return (datetime.now(UTC) - stamp).total_seconds()
+    except (ValueError, TypeError, OverflowError):
+        return None
 
 
 @dataclass(slots=True)

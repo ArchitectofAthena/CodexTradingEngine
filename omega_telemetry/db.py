@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any
 
 from .models import Event
 
@@ -88,7 +89,7 @@ class TelemetryDB:
             )
 
     def is_duplicate(self, dedupe_key: str, cooldown_minutes: int) -> bool:
-        cutoff = (datetime.now(timezone.utc) - timedelta(minutes=cooldown_minutes)).isoformat()
+        cutoff = (datetime.now(UTC) - timedelta(minutes=cooldown_minutes)).isoformat()
         with self.connect() as conn:
             row = conn.execute(
                 """
@@ -112,12 +113,12 @@ class TelemetryDB:
                     channel,
                     1 if delivered else 0,
                     response,
-                    datetime.now(timezone.utc).isoformat(),
+                    datetime.now(UTC).isoformat(),
                 ),
             )
 
     def set_state(self, key: str, value: str) -> None:
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         with self.connect() as conn:
             conn.execute(
                 """
@@ -129,7 +130,27 @@ class TelemetryDB:
                 (key, value, now),
             )
 
-    def get_state(self, key: str) -> Optional[str]:
+    def alert_suppression_reason(
+        self, dedupe_key: str, cooldown_minutes: int, window_seconds: int, max_alerts: int
+    ) -> str | None:
+        """Use delivery time, not a feed-controlled event time, across restarts."""
+        now = datetime.now(UTC)
+        with self.connect() as conn:
+            duplicate = conn.execute(
+                "SELECT 1 FROM alert_log WHERE dedupe_key = ? AND delivered = 1 "
+                "AND created_at >= ? LIMIT 1",
+                (dedupe_key, (now - timedelta(minutes=cooldown_minutes)).isoformat()),
+            ).fetchone()
+            if duplicate:
+                return "duplicate_cooldown"
+            count = conn.execute(
+                "SELECT COUNT(DISTINCT dedupe_key) FROM alert_log WHERE delivered = 1 "
+                "AND created_at >= ?",
+                ((now - timedelta(seconds=window_seconds)).isoformat(),),
+            ).fetchone()[0]
+        return "rate_limited" if count >= max_alerts else None
+
+    def get_state(self, key: str) -> str | None:
         with self.connect() as conn:
             row = conn.execute(
                 "SELECT state_value FROM state WHERE state_key = ?",
@@ -138,9 +159,9 @@ class TelemetryDB:
         return None if row is None else str(row["state_value"])
 
     def recent_events(
-        self, event_type: Optional[str] = None, minutes: int = 60
-    ) -> List[Dict[str, Any]]:
-        cutoff = (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat()
+        self, event_type: str | None = None, minutes: int = 60
+    ) -> list[dict[str, Any]]:
+        cutoff = (datetime.now(UTC) - timedelta(minutes=minutes)).isoformat()
         sql = """
             SELECT payload_json FROM events
             WHERE occurred_at >= ?

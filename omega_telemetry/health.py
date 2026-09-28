@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 
 class HealthWriter:
@@ -11,9 +11,9 @@ class HealthWriter:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
-    def write(self, payload: Dict[str, Any]) -> None:
+    def write(self, payload: dict[str, Any]) -> None:
         body = {
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
             **payload,
         }
         self.path.write_text(json.dumps(body, indent=2), encoding="utf-8")
