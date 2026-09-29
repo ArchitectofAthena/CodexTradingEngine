@@ -4,30 +4,57 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
+from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from decimal import Decimal
-from typing import Any, Sequence
+from datetime import UTC, datetime
+from decimal import Decimal, localcontext
+from typing import Any
 from urllib.parse import urlparse
 
 import aiohttp
 
+from .config_tools import positive_int
 from .db import TelemetryDB
-from .models import WhaleEvent
+from .models import PricePoint, WhaleEvent, timestamp_age_seconds
 from .pricing import PriceResolver
 
 logger = logging.getLogger(__name__)
 
-TRANSFER_TOPIC = (
-    "0xddf252ad1be2c89b69c2b068fc378daa"
-    "952ba7f163c4a11628f55a4df523b3ef"
-)
+TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa" "952ba7f163c4a11628f55a4df523b3ef"
 
 
 def hex_to_int(value: str | None) -> int:
     if not value:
         return 0
     return int(value, 16)
+
+
+def uint256(value: Any) -> int:
+    if not isinstance(value, str) or not re.fullmatch(r"0x[0-9a-fA-F]{1,64}", value):
+        raise ValueError("expected uint256 hex quantity")
+    return int(value, 16)
+
+
+def valid_hex(value: Any, digits: int) -> bool:
+    return (
+        isinstance(value, str)
+        and re.fullmatch(r"0x[0-9a-fA-F]{" + str(digits) + "}", value) is not None
+    )
+
+
+def token_decimals(value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= 255:
+        raise ValueError("asset decimals must be an integer between 0 and 255")
+    return value
+
+
+def transfer_value(raw: Any, decimals: int, price: PricePoint) -> tuple[Decimal, Decimal]:
+    # uint256 has up to 78 significant digits; preserve every unit before comparing.
+    with localcontext() as context:
+        context.prec = 80 + len(price.usd.as_tuple().digits)
+        amount = Decimal(uint256(raw)).scaleb(-decimals)
+        return amount, amount * price.usd
 
 
 def normalize_address(value: str | None) -> str:
@@ -64,9 +91,7 @@ class TokenConfig:
 class JsonRpcClient:
     """Minimal JSON-RPC reader with an explicit method allowlist."""
 
-    ALLOWED_METHODS = frozenset(
-        {"eth_blockNumber", "eth_getBlockByNumber", "eth_getLogs"}
-    )
+    ALLOWED_METHODS = frozenset({"eth_blockNumber", "eth_getBlockByNumber", "eth_getLogs"})
 
     def __init__(
         self,
@@ -81,9 +106,7 @@ class JsonRpcClient:
 
     async def call(self, method: str, params: Sequence[Any]) -> Any:
         if method not in self.ALLOWED_METHODS:
-            raise ValueError(
-                f"RPC method is outside the read-only allowlist: {method}"
-            )
+            raise ValueError(f"RPC method is outside the read-only allowlist: {method}")
         self._request_id += 1
         payload = {
             "jsonrpc": "2.0",
@@ -96,13 +119,22 @@ class JsonRpcClient:
             self.rpc_url,
             json=payload,
             timeout=timeout,
+            allow_redirects=False,
         ) as response:
+            if 300 <= response.status < 400:
+                raise RuntimeError("RPC redirects are disabled")
             response.raise_for_status()
             data: Any = await response.json()
         if not isinstance(data, dict):
             raise RuntimeError("RPC response must be an object")
+        if (
+            data.get("jsonrpc") != "2.0"
+            or type(data.get("id")) is not int
+            or data["id"] != payload["id"]
+        ):
+            raise RuntimeError("RPC response does not match request identity")
         if "error" in data:
-            raise RuntimeError(f"RPC error calling {method}: {data['error']}")
+            raise RuntimeError(f"RPC error calling {method}")
         if "result" not in data:
             raise RuntimeError(f"RPC response for {method} omitted result")
         return data["result"]
@@ -131,25 +163,28 @@ class WhaleWatcher:
         if not isinstance(native, dict):
             raise ValueError("native_asset must be an object")
         self.native_symbol = str(native["symbol"]).upper()
-        self.native_decimals = int(native.get("decimals", 18))
+        self.native_decimals = token_decimals(native.get("decimals", 18))
         self.native_usd_threshold = Decimal(str(native["usd_threshold"]))
         self.token_usd_threshold = Decimal(
             str(config.get("token_usd_threshold", self.native_usd_threshold))
         )
-        self.cooldown_minutes = int(config.get("cooldown_minutes", 10))
-        self.poll_interval_seconds = int(
-            config.get("poll_interval_seconds", 15)
+        if any(
+            not value.is_finite() or value <= 0
+            for value in (self.native_usd_threshold, self.token_usd_threshold)
+        ):
+            raise ValueError("transfer thresholds must be positive and finite")
+        self.cooldown_minutes = positive_int(config.get("cooldown_minutes", 10), "cooldown_minutes")
+        self.poll_interval_seconds = positive_int(
+            config.get("poll_interval_seconds", 15), "poll_interval_seconds"
         )
-        self.max_blocks_per_poll = max(
-            1,
-            int(config.get("max_blocks_per_poll", 25)),
+        self.max_blocks_per_poll = positive_int(
+            config.get("max_blocks_per_poll", 25), "max_blocks_per_poll", 1000
         )
         labels = config.get("exchange_labels", {}) or {}
         if not isinstance(labels, dict):
             raise ValueError("exchange_labels must be an object")
         self.exchange_labels = {
-            normalize_address(str(address)): str(label)
-            for address, label in labels.items()
+            normalize_address(str(address)): str(label) for address, label in labels.items()
         }
         self.rpc = JsonRpcClient(
             session,
@@ -165,7 +200,7 @@ class WhaleWatcher:
             TokenConfig(
                 symbol=str(token["symbol"]).upper(),
                 contract=normalize_address(str(token["contract"])),
-                decimals=int(token.get("decimals", 18)),
+                decimals=token_decimals(token.get("decimals", 18)),
                 enabled=bool(token.get("enabled", True)),
             )
             for token in raw_tokens
@@ -186,14 +221,10 @@ class WhaleWatcher:
             await asyncio.sleep(self.poll_interval_seconds)
 
     async def poll_once(self) -> None:
-        latest_block = hex_to_int(
-            await self.rpc.call("eth_blockNumber", [])
-        )
+        latest_block = uint256(await self.rpc.call("eth_blockNumber", []))
         state_key = f"whale_watcher:last_block:{self.chain_name}"
         last_seen = self.db.get_state(state_key)
-        start_block = (
-            latest_block if last_seen is None else int(last_seen) + 1
-        )
+        start_block = latest_block if last_seen is None else int(last_seen) + 1
         if start_block > latest_block:
             return
         bounded_start = max(
@@ -216,8 +247,10 @@ class WhaleWatcher:
             "eth_getBlockByNumber",
             [hex(block_number), True],
         )
-        if not isinstance(block, dict):
-            return
+        if not isinstance(block, dict) or uint256(block.get("number")) != block_number:
+            raise ValueError("RPC block missing or does not match requested height")
+        if not isinstance(block.get("transactions"), list):
+            raise ValueError("RPC block transactions must be an array")
         await self._scan_native_transfers(block)
         await self._scan_erc20_logs(block_number)
 
@@ -225,24 +258,31 @@ class WhaleWatcher:
         self,
         block: dict[str, Any],
     ) -> None:
-        price = await self.price_resolver.get_usd_price(
-            self.native_symbol
-        )
-        if price is None:
+        price = await self.price_resolver.get_usd_price(self.native_symbol)
+        if not self._usable_price(price, self.native_symbol):
             logger.warning("No price available for %s", self.native_symbol)
             return
+        assert price is not None
         transactions = block.get("transactions", [])
         if not isinstance(transactions, list):
             return
         for transaction in transactions:
             if not isinstance(transaction, dict):
                 continue
-            value_wei = Decimal(hex_to_int(transaction.get("value")))
-            if value_wei <= 0:
+            try:
+                amount, usd_value = transfer_value(
+                    transaction.get("value"), self.native_decimals, price
+                )
+            except ValueError:
+                logger.warning("Malformed native transfer rejected")
                 continue
-            amount = value_wei / (Decimal(10) ** self.native_decimals)
-            usd_value = amount * price.usd
-            if usd_value < self.native_usd_threshold:
+            if amount <= 0 or usd_value < self.native_usd_threshold:
+                continue
+            if not all(
+                valid_hex(transaction.get(key), digits)
+                for key, digits in (("from", 40), ("to", 40), ("hash", 64))
+            ):
+                logger.warning("Native transfer identity missing or malformed")
                 continue
             self._persist_transfer(
                 event_source="json_rpc",
@@ -252,19 +292,16 @@ class WhaleWatcher:
                 usd_value=usd_value,
                 from_address=normalize_address(transaction.get("from")),
                 to_address=normalize_address(transaction.get("to")),
-                tx_hash=(
-                    None
-                    if transaction.get("hash") is None
-                    else str(transaction.get("hash"))
-                ),
+                tx_hash=(None if transaction.get("hash") is None else str(transaction.get("hash"))),
                 block_number=hex_to_int(block.get("number")),
             )
 
     async def _scan_erc20_logs(self, block_number: int) -> None:
         for token in (token for token in self.tokens if token.enabled):
             price = await self.price_resolver.get_usd_price(token.symbol)
-            if price is None:
+            if not self._usable_price(price, token.symbol):
                 continue
+            assert price is not None
             logs = await self.rpc.call(
                 "eth_getLogs",
                 [
@@ -277,25 +314,34 @@ class WhaleWatcher:
                 ],
             )
             if not isinstance(logs, list):
-                continue
+                raise ValueError("RPC logs must be an array")
             for log in logs:
                 if not isinstance(log, dict):
                     continue
                 topics = log.get("topics", [])
-                if not isinstance(topics, list) or len(topics) < 3:
+                if (
+                    not isinstance(topics, list)
+                    or len(topics) != 3
+                    or topics[0] != TRANSFER_TOPIC
+                    or not all(
+                        valid_hex(topic, 64) and topic[2:26] == "0" * 24 for topic in topics[1:]
+                    )
+                    or log.get("removed", False) is not False
+                    or not valid_hex(log.get("address"), 40)
+                    or normalize_address(log["address"]) != token.contract
+                    or not valid_hex(log.get("transactionHash"), 64)
+                ):
                     continue
-                amount = Decimal(hex_to_int(log.get("data"))) / (
-                    Decimal(10) ** token.decimals
-                )
-                usd_value = amount * price.usd
-                if usd_value < self.token_usd_threshold:
+                try:
+                    if uint256(log.get("blockNumber")) != block_number:
+                        continue
+                    log_index = uint256(log.get("logIndex"))
+                    amount, usd_value = transfer_value(log.get("data"), token.decimals, price)
+                except ValueError:
+                    logger.warning("Malformed ERC-20 log rejected")
                     continue
-                raw_log_index = log.get("logIndex")
-                log_index = (
-                    None
-                    if raw_log_index is None
-                    else hex_to_int(str(raw_log_index))
-                )
+                if amount <= 0 or usd_value < self.token_usd_threshold:
+                    continue
                 self._persist_transfer(
                     event_source="erc20_logs",
                     threshold=self.token_usd_threshold,
@@ -314,6 +360,13 @@ class WhaleWatcher:
                     log_index=log_index,
                 )
 
+    @staticmethod
+    def _usable_price(price: PricePoint | None, symbol: str) -> bool:
+        if price is None or price.symbol.upper() != symbol.upper():
+            return False
+        age = timestamp_age_seconds(price.observed_at)
+        return price.usd.is_finite() and price.usd > 0 and age is not None and -30 <= age <= 60
+
     def _persist_transfer(
         self,
         *,
@@ -329,6 +382,13 @@ class WhaleWatcher:
         contract: str | None = None,
         log_index: int | None = None,
     ) -> WhaleEvent | None:
+        if (
+            any(not value.is_finite() or value <= 0 for value in (threshold, amount, usd_value))
+            or usd_value < threshold
+        ):
+            return None
+        from_address = normalize_address(from_address)
+        to_address = normalize_address(to_address)
         from_label = self.exchange_labels.get(from_address)
         to_label = self.exchange_labels.get(to_address)
         event_type = "large_transfer"
@@ -341,10 +401,7 @@ class WhaleWatcher:
             dedupe_identity += f":contract:{normalize_address(contract)}"
         if log_index is not None:
             dedupe_identity += f":log:{log_index}"
-        dedupe_key = (
-            f"{self.chain_name}:{event_type}:"
-            f"{dedupe_identity}:{asset_symbol}"
-        )
+        dedupe_key = f"{self.chain_name}:{event_type}:" f"{dedupe_identity}:{asset_symbol}"
         if self.db.is_duplicate(dedupe_key, self.cooldown_minutes):
             return None
         summary = (
@@ -352,6 +409,21 @@ class WhaleWatcher:
             f"from {from_label or short_addr(from_address)} "
             f"to {to_label or short_addr(to_address)}"
         )
+        quality_flags = [
+            "transfer_not_trade",
+            "beneficial_ownership_unknown",
+            "price_publication_time_unverified",
+            "chain_finality_unverified",
+            "block_freshness_unverified",
+        ]
+        if event_source == "json_rpc":
+            quality_flags.append("execution_status_unverified")
+        if from_address and from_address == to_address:
+            quality_flags.append("self_transfer")
+        elif from_label and to_label:
+            quality_flags.append(
+                "exchange_internal" if from_label == to_label else "exchange_to_exchange"
+            )
         data: dict[str, Any] = {
             "tx_hash": tx_hash,
             "block_number": block_number,
@@ -362,6 +434,12 @@ class WhaleWatcher:
             "to_address": to_address,
             "from_label": from_label,
             "to_label": to_label,
+            "usd_value_exact": str(usd_value),
+            "confidence": "low",
+            "directional_signal": "unknown",
+            "quality_flags": quality_flags,
+            "authority": False,
+            "artifact_is_command": False,
         }
         if contract is not None:
             data["contract"] = contract
@@ -371,17 +449,10 @@ class WhaleWatcher:
             event_type=event_type,
             chain=self.chain_name,
             source=event_source,
-            severity=(
-                "critical"
-                if usd_value >= threshold * Decimal(10)
-                else "high"
-            ),
-            occurred_at=datetime.now(timezone.utc).isoformat(),
+            severity=("critical" if usd_value >= threshold * Decimal(10) else "high"),
+            occurred_at=datetime.now(UTC).isoformat(),
             dedupe_key=dedupe_key,
-            title=(
-                f"{self.chain_name} whale "
-                f"{event_type.replace('_', ' ')}"
-            ),
+            title=(f"{self.chain_name} whale " f"{event_type.replace('_', ' ')}"),
             summary=summary,
             data=data,
             amount=str(amount),

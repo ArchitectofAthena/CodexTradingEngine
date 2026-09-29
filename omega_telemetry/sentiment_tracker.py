@@ -7,19 +7,22 @@ import hashlib
 import ipaddress
 import json
 import logging
+import math
 import re
 import socket
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any
 from urllib.parse import urlparse
 
 import aiohttp
 import feedparser
 
+from .config_tools import positive_int
 from .db import TelemetryDB
-from .models import SentimentEvent
+from .models import SentimentEvent, timestamp_age_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -86,18 +89,12 @@ def validate_source_config(source_config: Mapping[str, Any]) -> None:
         raise FeedBoundaryError("allowed_hosts must be a non-empty array of strings")
     validate_feed_url(url, allowed_hosts)
 
-    timeout_seconds = float(
-        source_config.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)
-    )
+    timeout_seconds = float(source_config.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
     if not 0 < timeout_seconds <= 60:
         raise FeedBoundaryError("timeout_seconds must be greater than zero and at most 60")
-    max_response_bytes = int(
-        source_config.get("max_response_bytes", DEFAULT_MAX_RESPONSE_BYTES)
-    )
+    max_response_bytes = int(source_config.get("max_response_bytes", DEFAULT_MAX_RESPONSE_BYTES))
     if not 1 <= max_response_bytes <= MAX_RESPONSE_BYTES:
-        raise FeedBoundaryError(
-            f"max_response_bytes must be between 1 and {MAX_RESPONSE_BYTES}"
-        )
+        raise FeedBoundaryError(f"max_response_bytes must be between 1 and {MAX_RESPONSE_BYTES}")
     if source_type == "json":
         items_path = source_config.get("items_path", [])
         if not isinstance(items_path, list) or not all(
@@ -153,17 +150,13 @@ async def read_bounded_body(
         except ValueError as exc:
             raise FeedBoundaryError("invalid Content-Length from sentiment feed") from exc
         if declared_size > max_response_bytes:
-            raise FeedBoundaryError(
-                f"sentiment feed response exceeds {max_response_bytes} bytes"
-            )
+            raise FeedBoundaryError(f"sentiment feed response exceeds {max_response_bytes} bytes")
 
     body = bytearray()
     async for chunk in response.content.iter_chunked(65_536):
         body.extend(chunk)
         if len(body) > max_response_bytes:
-            raise FeedBoundaryError(
-                f"sentiment feed response exceeds {max_response_bytes} bytes"
-            )
+            raise FeedBoundaryError(f"sentiment feed response exceeds {max_response_bytes} bytes")
     return bytes(body)
 
 
@@ -187,11 +180,14 @@ class RuleEngine:
                 isinstance(value, str) for value in patterns
             ):
                 continue
+            weight = float(item.get("weight", 0.0))
+            if not math.isfinite(weight):
+                raise ValueError("rule weight must be finite")
             rules.append(
                 Rule(
                     name=str(item.get("name", "unnamed")),
                     category=str(item.get("category", "signal")),
-                    weight=float(item.get("weight", 0.0)),
+                    weight=weight,
                     patterns=tuple(patterns),
                     case_sensitive=bool(item.get("case_sensitive", False)),
                 )
@@ -228,9 +224,7 @@ class FeedAdapter:
         self.url = str(source_config["url"])
         self.allowed_hosts = tuple(str(item) for item in source_config["allowed_hosts"])
         self.host = validate_feed_url(self.url, self.allowed_hosts)
-        self.timeout_seconds = float(
-            source_config.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)
-        )
+        self.timeout_seconds = float(source_config.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
         self.max_response_bytes = int(
             source_config.get("max_response_bytes", DEFAULT_MAX_RESPONSE_BYTES)
         )
@@ -288,6 +282,7 @@ class FeedAdapter:
                 "summary": entry.get("summary", ""),
                 "url": entry.get("link", ""),
                 "author": entry.get("author", ""),
+                "published_at": entry.get("published") or entry.get("updated"),
             }
             for entry in parsed.entries
         ]
@@ -302,15 +297,9 @@ class FeedAdapter:
             try:
                 cursor = cursor[part]
             except (KeyError, IndexError, TypeError) as exc:
-                raise FeedBoundaryError(
-                    "sentiment JSON items_path does not resolve"
-                ) from exc
-        if not isinstance(cursor, list) or not all(
-            isinstance(item, dict) for item in cursor
-        ):
-            raise FeedBoundaryError(
-                "sentiment JSON items_path must resolve to a list of objects"
-            )
+                raise FeedBoundaryError("sentiment JSON items_path does not resolve") from exc
+        if not isinstance(cursor, list) or not all(isinstance(item, dict) for item in cursor):
+            raise FeedBoundaryError("sentiment JSON items_path must resolve to a list of objects")
         return [dict(item) for item in cursor]
 
 
@@ -331,20 +320,28 @@ class SentimentTracker:
     ) -> None:
         self.session = session
         self.db = db
-        self.cooldown_minutes = int(config.get("cooldown_minutes", 10))
-        self.poll_interval_seconds = int(config.get("poll_interval_seconds", 60))
+        self.cooldown_minutes = positive_int(config.get("cooldown_minutes", 10), "cooldown_minutes")
+        self.poll_interval_seconds = positive_int(
+            config.get("poll_interval_seconds", 60), "poll_interval_seconds"
+        )
         self.min_score = float(config.get("min_score", 3.0))
-        self.spike_window_minutes = int(config.get("spike_window_minutes", 15))
-        self.spike_threshold_count = int(config.get("spike_threshold_count", 5))
+        if not math.isfinite(self.min_score) or self.min_score <= 0:
+            raise ValueError("min_score must be positive and finite")
+        self.spike_window_minutes = positive_int(
+            config.get("spike_window_minutes", 15), "spike_window_minutes"
+        )
+        self.spike_threshold_count = positive_int(
+            config.get("spike_threshold_count", 5), "spike_threshold_count"
+        )
+        if self.spike_threshold_count < 2:
+            raise ValueError("spike_threshold_count must be at least 2")
         with Path(rules_path).open("r", encoding="utf-8") as handle:
             payload = json.load(handle)
         if not isinstance(payload, dict):
             raise ValueError("sentiment rules root must be an object")
         self.rules = RuleEngine(payload)
         sources = config.get("sources", [])
-        if not isinstance(sources, list) or not all(
-            isinstance(item, dict) for item in sources
-        ):
+        if not isinstance(sources, list) or not all(isinstance(item, dict) for item in sources):
             raise ValueError("sentiment sources must be an array of objects")
         self.adapters = [FeedAdapter(session, source) for source in sources]
 
@@ -361,7 +358,11 @@ class SentimentTracker:
 
     async def poll_once(self) -> None:
         for adapter in self.adapters:
-            items = await adapter.fetch_items()
+            try:
+                items = await adapter.fetch_items()
+            except (TimeoutError, FeedBoundaryError, aiohttp.ClientError):
+                logger.warning("Sentiment feed unavailable or rejected")
+                continue
             source_name = str(adapter.source_config.get("name", "unknown"))
             for item in items:
                 self._process_item(item, source_name)
@@ -372,11 +373,17 @@ class SentimentTracker:
         item: dict[str, Any],
         source_name: str,
     ) -> SentimentEvent | None:
+        if any(
+            key in item and item[key] is not None and not isinstance(item[key], str)
+            for key in ("title", "summary", "author", "url")
+        ):
+            logger.warning("Malformed sentiment item rejected")
+            return None
         text = "\n".join(
             value
             for value in (
-                str(item.get("title", "")),
-                str(item.get("summary", "")),
+                item.get("title") or "",
+                item.get("summary") or "",
             )
             if value
         ).strip()
@@ -387,18 +394,26 @@ class SentimentTracker:
         if score_value < self.min_score:
             return None
 
+        published_at = item.get("published_at") or item.get("timestamp") or item.get("published")
+        age = timestamp_age_seconds(published_at)
+        quality_flags = ["keyword_only", "authenticity_unverified", "single_post"]
+        if age is None:
+            quality_flags.append("publication_time_unknown")
+        elif age < -30:
+            quality_flags.append("future_publication_time")
+        elif age > self.spike_window_minutes * 60:
+            quality_flags.append("stale_publication_time")
+        spike_eligible = age is not None and -30 <= age <= self.spike_window_minutes * 60
+        fingerprint = hashlib.sha256(" ".join(text.casefold().split()).encode("utf-8")).hexdigest()
+
         tickers = sorted(set(TICKER_RE.findall(text)))
         severity = (
             "critical"
             if score_value >= self.min_score * 3
-            else "high"
-            if score_value >= self.min_score * 2
-            else "medium"
+            else "high" if score_value >= self.min_score * 2 else "medium"
         )
         identity = str(item.get("id") or item.get("url") or text)
-        stable_id = hashlib.sha256(
-            f"{source_name}\0{identity}".encode("utf-8")
-        ).hexdigest()[:24]
+        stable_id = hashlib.sha256(f"{source_name}\0{identity}".encode()).hexdigest()[:24]
         dedupe_key = f"sentiment:{source_name}:{stable_id}"
         if self.db.is_duplicate(dedupe_key, self.cooldown_minutes):
             return None
@@ -411,7 +426,7 @@ class SentimentTracker:
             chain=None,
             source=source_name,
             severity=severity,
-            occurred_at=datetime.now(timezone.utc).isoformat(),
+            occurred_at=datetime.now(UTC).isoformat(),
             dedupe_key=dedupe_key,
             title=f"Sentiment signal from {source_name}",
             summary=summary,
@@ -423,14 +438,17 @@ class SentimentTracker:
                 "matched_rules": matched_rules,
                 "tickers": tickers,
                 "raw_title": item.get("title", ""),
+                "confidence": "low",
+                "quality_flags": quality_flags,
+                "published_at": published_at,
+                "spike_eligible": spike_eligible,
+                "content_fingerprint": fingerprint,
+                "authority": False,
+                "artifact_is_command": False,
             },
             post_id=None if item.get("id") is None else str(item.get("id")),
-            source_url=(
-                None if item.get("url") is None else str(item.get("url"))
-            ),
-            author=(
-                None if item.get("author") is None else str(item.get("author"))
-            ),
+            source_url=(None if item.get("url") is None else str(item.get("url"))),
+            author=(None if item.get("author") is None else str(item.get("author"))),
             score_value=score_value,
             matched_rules=matched_rules,
             tickers=tickers,
@@ -444,13 +462,33 @@ class SentimentTracker:
             minutes=self.spike_window_minutes,
         )
         ticker_counts: dict[str, int] = {}
-        for event in recent:
-            tickers = event.get("tickers") or event.get("data", {}).get("tickers") or []
+        seen: set[tuple[str, str]] = set()
+        sources: dict[str, set[str]] = {}
+        authors: dict[str, set[str]] = {}
+        for record in recent:
+            data = record.get("data", {})
+            age = timestamp_age_seconds(data.get("published_at"))
+            if (
+                not data.get("spike_eligible")
+                or age is None
+                or not -30 <= age <= self.spike_window_minutes * 60
+            ):
+                continue
+            fingerprint = data.get("content_fingerprint")
+            if not isinstance(fingerprint, str) or not fingerprint:
+                continue
+            tickers = record.get("tickers") or record.get("data", {}).get("tickers") or []
             if not isinstance(tickers, Sequence) or isinstance(tickers, (str, bytes)):
                 continue
             for ticker in tickers:
                 ticker_text = str(ticker)
+                identity = (ticker_text, fingerprint)
+                if identity in seen:
+                    continue
+                seen.add(identity)
                 ticker_counts[ticker_text] = ticker_counts.get(ticker_text, 0) + 1
+                sources.setdefault(ticker_text, set()).add(str(record.get("source", "unknown")))
+                authors.setdefault(ticker_text, set()).add(str(record.get("author") or "unknown"))
 
         emitted: list[SentimentEvent] = []
         for ticker, count in ticker_counts.items():
@@ -463,12 +501,8 @@ class SentimentTracker:
                 event_type="sentiment_spike",
                 chain=None,
                 source="burst_detector",
-                severity=(
-                    "high"
-                    if count < self.spike_threshold_count * 2
-                    else "critical"
-                ),
-                occurred_at=datetime.now(timezone.utc).isoformat(),
+                severity=("high" if count < self.spike_threshold_count * 2 else "critical"),
+                occurred_at=datetime.now(UTC).isoformat(),
                 dedupe_key=dedupe_key,
                 title=f"Sentiment spike for ${ticker}",
                 summary=(
@@ -479,6 +513,18 @@ class SentimentTracker:
                     "ticker": ticker,
                     "count": count,
                     "window_minutes": self.spike_window_minutes,
+                    "confidence": "low",
+                    "quality_flags": [
+                        "keyword_only",
+                        "authenticity_unverified",
+                        "coordination_not_excluded",
+                    ]
+                    + (["single_source"] if len(sources[ticker]) == 1 else [])
+                    + (["single_author"] if len(authors[ticker]) == 1 else []),
+                    "unique_sources": len(sources[ticker]),
+                    "unique_claimed_authors": len(authors[ticker]),
+                    "authority": False,
+                    "artifact_is_command": False,
                 },
                 score_value=float(count),
                 matched_rules=["burst_detector"],
