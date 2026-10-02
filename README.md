@@ -113,15 +113,9 @@ No single charity may become the whole definition of good.
 - telemetry-source reliability;
 - provenance.
 
-Every decision keeps `hold_transfer: true`. Missing provenance, low confidence, low source reliability, or limited absorptive capacity raises review flags instead of authorizing a transfer.
+Geodesic scoring still enters held. Missing provenance, low confidence, low source reliability, or limited absorptive capacity raises review flags instead of authorizing a transfer.
 
-`eve_q/allocation/charity_router.py` adds the anti-monoculture portfolio guard:
-
-- a maximum single-charity weight;
-- a reserved exploration budget;
-- concentration-review thresholds;
-- visible residual allocation caused by caps;
-- mandatory human review before promotion.
+`eve_q/allocation/charity_router.py` adds the anti-monoculture portfolio guard and is the only place that may clear `hold_transfer`. A clean diversified book — provenance present, no risk flags, no concentration review, non-zero guarded weight — may set `hold_transfer: false` and `router_hold: released_proposal_only`. That release is not transfer authority. Every decision still stamps `transfer_authority: false`, and promotion remains human. Zero-weight books, missing provenance, and concentration caps stay held.
 
 The default policy caps any single current allocation at `0.45`, reserves `0.10` for exploration, and routes concentrated proposals toward review. The guard degrades concentration gracefully rather than allowing one measurement, charity, or theory of impact to consume the whole definition of good.
 
@@ -230,8 +224,8 @@ Repository modules also produce typed intermediate evidence including QAOA confi
 | Organ contract | `contracts/organ_contract.json` | Defines allowed outputs, forbidden capabilities, modes, promotion path, and hard invariants. |
 | Organ validator | `eve_q/organ_contract.py` | Validates records against the local constitutional membrane. |
 | Receipt emitter | `eve_q/receipt_emitter.py` | Emits canonical artifact-only receipts. |
-| Charity geodesic policy | `eve_q/allocation/geodesic_policy.py` | Scores bounded impact/need proposals while holding transfers for review. |
-| Charity diversity guard | `eve_q/allocation/charity_router.py` | Caps concentration, reserves exploration budget, and requires human promotion. |
+| Charity geodesic policy | `eve_q/allocation/geodesic_policy.py` | Scores bounded impact/need proposals. Enters held. |
+| Charity diversity guard | `eve_q/allocation/charity_router.py` | Caps concentration, reserves exploration budget, and may clear the router hold without granting transfer authority. |
 | QAOA delta core | `eve_q/qaoa_delta.py` | Enumerates triangular cycles and builds QUBO/Ising models. |
 | QAOA sampling | `eve_q/qaoa_sampling.py` | Emits deterministic confidence evidence and exact classical comparisons. |
 | Rust repricing bridge | `eve_q/rust_repricing.py` | Invokes and validates the isolated exact verifier. |
