@@ -107,16 +107,33 @@ def _add_review_reason(decision: dict, reason: str) -> None:
     decision["requires_human_review"] = True
 
 
+def _release_router_hold(decision: dict, guarded: float) -> bool:
+    """Clear the router hold only on a clean, non-zero proposal.
+
+    A released hold is still not transfer authority. Geodesic scoring may
+    enter held; the router may clear that flag when provenance is present,
+    risk flags are empty, review was not required, and the guarded weight
+    is non-zero. Concentration, caps, and zero-weight books stay held.
+    """
+
+    provenance = (decision.get("inputs") or {}).get("provenance") or []
+    risk_flags = decision.get("risk_flags") or []
+    return (
+        guarded > EPSILON
+        and bool(provenance)
+        and not risk_flags
+        and not decision.get("requires_human_review")
+    )
+
+
 def propose_allocations(
     signals,
     policy: AllocationDiversityPolicy = DEFAULT_POLICY,
 ):
     """Return ranked allocation proposals with graceful degradation metadata.
 
-    This function proposes weights only. It keeps transfer posture held and
-    review-first. Concentration is degraded gracefully by capping recommended
-    weights and reserving exploration budget instead of hard-stopping the
-    entire allocation process.
+    This function proposes weights only. A clean book may clear the router
+    hold. Clearing the hold does not authorize a transfer.
     """
 
     _validate_policy(policy)
@@ -147,14 +164,16 @@ def propose_allocations(
             "human_review_required_for_promotion": True,
         }
 
-        # Proposals remain review-first. This router never authorizes transfer.
-        decision["hold_transfer"] = True
-
         if normalized >= policy.concentration_review_threshold:
             _add_review_reason(decision, "concentration_review_required")
 
         if guarded + EPSILON < normalized * allocation_pool:
             _add_review_reason(decision, "single_charity_cap_applied")
+
+        released = _release_router_hold(decision, guarded)
+        decision["hold_transfer"] = not released
+        decision["transfer_authority"] = False
+        decision["router_hold"] = "released_proposal_only" if released else "held"
 
     return sorted(
         decisions,

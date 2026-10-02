@@ -62,6 +62,8 @@ def test_guarded_weight_caps_dominant_charity_and_reserves_exploration():
     assert "single_charity_cap_applied" in dominant["human_review_reasons"]
     assert "concentration_review_required" in dominant["human_review_reasons"]
     assert dominant["requires_human_review"] is True
+    assert dominant["hold_transfer"] is True
+    assert dominant["transfer_authority"] is False
 
 
 def test_router_preserves_raw_normalized_signal_separate_from_guarded_signal():
@@ -110,6 +112,8 @@ def test_zero_weight_inputs_stay_zero_and_held():
     assert all(decision["guarded_recommended_weight"] == 0.0 for decision in decisions)
     assert all(decision["normalized_recommended_weight"] == 0.0 for decision in decisions)
     assert all(decision["hold_transfer"] is True for decision in decisions)
+    assert all(decision["router_hold"] == "held" for decision in decisions)
+    assert all(decision["transfer_authority"] is False for decision in decisions)
 
 
 def test_portfolio_guard_requires_human_promotion():
@@ -121,9 +125,38 @@ def test_portfolio_guard_requires_human_promotion():
         ]
     )
 
-    assert all(decision["hold_transfer"] is True for decision in decisions)
     assert all(
         decision["portfolio_guard"]["human_review_required_for_promotion"] is True
         for decision in decisions
     )
+    assert all(decision["transfer_authority"] is False for decision in decisions)
     assert all("guarded_recommended_weight" in decision for decision in decisions)
+
+
+def test_clean_diversified_book_releases_router_hold_without_authority():
+    decisions = propose_allocations(
+        [
+            signal("nets"),
+            signal("food"),
+            signal("education"),
+        ]
+    )
+
+    assert all(decision["hold_transfer"] is False for decision in decisions)
+    assert all(decision["router_hold"] == "released_proposal_only" for decision in decisions)
+    assert all(decision["transfer_authority"] is False for decision in decisions)
+    assert all(decision["requires_human_review"] is False for decision in decisions)
+
+
+def test_missing_provenance_keeps_router_hold():
+    decisions = propose_allocations(
+        [
+            signal("nets", provenance=None),
+            signal("food", provenance=None),
+            signal("education", provenance=None),
+        ]
+    )
+
+    assert all(decision["hold_transfer"] is True for decision in decisions)
+    assert all(decision["router_hold"] == "held" for decision in decisions)
+    assert all(decision["transfer_authority"] is False for decision in decisions)
