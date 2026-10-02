@@ -98,7 +98,7 @@ The Rust verifier lane independently checks modeled route identity and declared 
 
 ### Charity-allocation research
 
-The repository currently produces non-authoritative charity-allocation proposals and applies concentration safeguards. Every current allocation decision preserves `hold_transfer: true`.
+The repository currently produces non-authoritative charity-allocation proposals and applies concentration safeguards. Geodesic scoring still enters held. The charity router may clear `hold_transfer` on a clean diversified book and stamps `router_hold: released_proposal_only`. That clear is not transfer authority: `transfer_authority` remains false, and human promotion is still required. Zero-weight, missing-provenance, and concentration cases stay held.
 
 There is no active 15-percent transfer, autonomous donation mechanism, or deployed reinforcement-learning reward loop.
 
