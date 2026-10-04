@@ -1,0 +1,11 @@
+vulnerabilities:
+  - id: GHSA-6v7p-g79w-8964
+    purls:
+      - "pkg:pypi/msgpack@1.1.2"
+    expired_at: 2026-09-01
+    statement: "The pinned python:3.14-slim base image carries a stale third-party SBOM entry for msgpack 1.1.2. The final runtime image is independently required to contain msgpack >=1.2.1 before vulnerability enforcement runs."
+  - id: CVE-2025-47273
+    purls:
+      - "pkg:pypi/setuptools@70.3.0"
+    expired_at: 2026-09-01
+    statement: "The pinned python:3.14-slim base image carries a stale third-party SBOM entry for setuptools 70.3.0. The final runtime image is independently required to contain setuptools >=78.1.1 before vulnerability enforcement runs."
