@@ -28,6 +28,11 @@ RUN python -m pip install --upgrade \
     && mkdir -p /artifacts \
     && chown -R codex:codex /artifacts /home/codex
 
+# pip's vendored dependencies and ensurepip's bundled wheel are build tools,
+# not application dependencies. Remove their code and inventories together.
+RUN python -m pip uninstall --yes pip \
+    && python -c "import shutil, sysconfig; shutil.rmtree(sysconfig.get_path('stdlib') + '/ensurepip')"
+
 USER 10001:10001
 
 ENTRYPOINT ["codex-gate1"]
