@@ -196,7 +196,7 @@ jobs:
         run: test -z "$(git status --porcelain)"
       - name: Upload provenance evidence and generated lock
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: gate1a1-rust-verifier-provenance-v0-2
           path: ${{ runner.temp }}/gate1a1-rust-verifier-provenance-v0-2
