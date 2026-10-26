@@ -18,7 +18,7 @@ SKIP = {".git", ".venv", "venv", "node_modules", "dist", "build", "htmlcov", "__
 RUNTIME_SKIP = SKIP | {"tests", "test", "fixtures"}
 TEXT_SUFFIXES = {".py", ".yml", ".yaml", ".json", ".toml", ".ini", ".cfg", ".env", ".md", ".txt", ".js", ".ts", ".sh"}
 FULL_SHA = re.compile(r"^[0-9a-fA-F]{40}$")
-USES = re.compile(r"^\s*uses:\s*([^\s#]+)", re.M)
+USES = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s#]+)", re.M)
 CURL_PIPE = re.compile(r"(?i)\b(?:curl|wget)\b[^\n|]*\|\s*(?:sudo\s+)?(?:sh|bash|zsh)\b")
 AUTHORITY_TRUE = re.compile(r"(?m)^\s*(?:AUTHORITY|execution_authority|capital_movement_authority|wallet_authority|signing_authority)\s*[:=]\s*True\b")
 SECRET_PATTERNS = (
