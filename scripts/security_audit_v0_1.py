@@ -18,7 +18,7 @@ SKIP = {".git", ".venv", "venv", "node_modules", "dist", "build", "htmlcov", "__
 RUNTIME_SKIP = SKIP | {"tests", "test", "fixtures"}
 TEXT_SUFFIXES = {".py", ".yml", ".yaml", ".json", ".toml", ".ini", ".cfg", ".env", ".md", ".txt", ".js", ".ts", ".sh"}
 FULL_SHA = re.compile(r"^[0-9a-fA-F]{40}$")
-USES = re.compile(r"^\s*uses:\s*([^\s#]+)", re.M)
+USES = re.compile(r"""^[ \t]*(?:-[ \t]+)?uses:\s*["']?([^\s#'"]+)""", re.M)
 CURL_PIPE = re.compile(r"(?i)\b(?:curl|wget)\b[^\n|]*\|\s*(?:sudo\s+)?(?:sh|bash|zsh)\b")
 AUTHORITY_TRUE = re.compile(r"(?m)^\s*(?:AUTHORITY|execution_authority|capital_movement_authority|wallet_authority|signing_authority)\s*[:=]\s*True\b")
 SECRET_PATTERNS = (
@@ -223,7 +223,8 @@ def markdown(findings: Sequence[Finding], suppressed: int) -> str:
     if findings:
         lines += ["| Severity | Rule | Location | Finding | Fingerprint |", "|---|---|---|---|---|"]
         for item in findings:
-            lines.append(f"| {item.severity} | `{item.rule_id}` | `{item.path}:{item.line}` | {item.message.replace('|', '\\|')} | `{item.fingerprint}` |")
+            escaped_message = item.message.replace("|", "\\|")
+            lines.append(f"| {item.severity} | `{item.rule_id}` | `{item.path}:{item.line}` | {escaped_message} | `{item.fingerprint}` |")
         lines += ["", "Suspected secret values are always redacted."]
     else:
         lines.append("No findings.")
