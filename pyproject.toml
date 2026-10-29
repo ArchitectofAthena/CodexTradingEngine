@@ -70,7 +70,7 @@ py-modules = [
 include = ["eve_q*", "models*", "omega_telemetry*"]
 
 [tool.setuptools.package-data]
-eve_q = ["organ_contract.json", "delta_repricing_response.schema.json"]
+eve_q = ["organ_contract.json", "delta_repricing_response.schema.json", "evm_capability_registry_v0_1.schema.json"]
 
 [tool.black]
 line-length = 100

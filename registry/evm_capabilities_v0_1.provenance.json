@@ -1,0 +1,49 @@
+{
+  "assumed": [
+    "all chain identities and display names are original Stage A proposed assertions; canonical documentation and endpoint identity not independently verified"
+  ],
+  "authority": false,
+  "derived": [
+    "canonical hashes and refusal reasons; synthetic route calculations"
+  ],
+  "human_verification": "UNVERIFIED",
+  "may_execute": false,
+  "may_move_capital": false,
+  "may_sign": false,
+  "observed": [
+    "local archive/member bytes and offline test outcomes only"
+  ],
+  "original_archive_sha256": "df2c3f3afb054a667760b64a33b289c434dadc60eaa40ad1a19b2fa1177599b8",
+  "registry_sha256": "7a1595fcab02975449ba4bbe8df3165ac1ac659de69644022d56c5845b1508db",
+  "signed_off_by_human": "",
+  "status": "NON_AUTHORITATIVE_RECONCILED_PROPOSAL",
+  "synthetic_alias_mapping": [
+    {
+      "chain_id": "8453",
+      "original_network_id": "base-mainnet",
+      "synthetic_fixture_id": "base-mainnet"
+    },
+    {
+      "chain_id": "84532",
+      "original_network_id": "base-testnet",
+      "synthetic_fixture_id": "base-sepolia"
+    },
+    {
+      "chain_id": "42161",
+      "original_network_id": "arbitrum-mainnet",
+      "synthetic_fixture_id": "arbitrum-one"
+    },
+    {
+      "chain_id": "421614",
+      "original_network_id": "arbitrum-testnet",
+      "synthetic_fixture_id": "arbitrum-sepolia"
+    }
+  ],
+  "unknown": [
+    "live endpoint identity",
+    "source authenticity/operator independence",
+    "liquidity and provider support",
+    "economics",
+    "human promotion authority"
+  ]
+}

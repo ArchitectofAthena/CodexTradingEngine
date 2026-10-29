@@ -1,0 +1,558 @@
+{
+  "contract_id": "eve_q.evm_capability_negative_tests.v0.1",
+  "document_status": "PROPOSAL_ONLY",
+  "as_of_utc": "2026-10-29T00:00:00Z",
+  "producer_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7",
+  "fixture": "evm_capability_registry_proposal_v0_1.json",
+  "schema": "evm_capability_registry_v0_1.schema.json",
+  "harness": "validate_registry_proposal.py",
+  "expected_baseline": "ACCEPT_AS_NON_AUTHORITATIVE_PROPOSAL",
+  "current_product_tests_ran": false,
+  "cases": [
+    {
+      "id": "N01",
+      "category": "schema",
+      "mutation": {
+        "op": "replace",
+        "path": "/authority",
+        "value": true
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "Root authority may not become true",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N02",
+      "category": "schema",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/enabled",
+        "value": true
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "No individual chain enables itself",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N03",
+      "category": "schema",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/authority/may_sign",
+        "value": true
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "Signing prohibited",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N04",
+      "category": "schema",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/authority/may_submit",
+        "value": true
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "Broadcast prohibited",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N05",
+      "category": "schema",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/read_only_transport/mode",
+        "value": "LIVE_RPC"
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "No network transport in planning artifact",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N06",
+      "category": "schema",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/read_only_transport/allowed_methods",
+        "value": [
+          "POST"
+        ]
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "POST cannot inherit approved Gate 1A GET/HEAD permissions",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N07",
+      "category": "schema",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/risk_boundary/bridge_exposure",
+        "value": "ACCEPTED"
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "Bridge risk not silently authorized",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N08",
+      "category": "schema",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/risk_boundary/cross_chain_atomicity_assumed",
+        "value": true
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "Cross-chain route not assumed atomic",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N09",
+      "category": "schema",
+      "mutation": {
+        "op": "add",
+        "path": "/networks/0/wallet_private_key",
+        "value": "do-not-store-secrets"
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "Secret material field rejected",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N10",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/chain_id",
+        "value": "42161"
+      },
+      "expected": "HOLD",
+      "reason_code": "CHAIN_ID_MISMATCH",
+      "rationale": "Base mainnet must not inherit Arbitrum chain ID",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N11",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/1/network_id",
+        "value": "base-mainnet"
+      },
+      "expected": "HOLD",
+      "reason_code": "NETWORK_ID_DUPLICATE",
+      "rationale": "Duplicated network ID rejected",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N12",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/1/environment",
+        "value": "mainnet"
+      },
+      "expected": "HOLD",
+      "reason_code": "NETWORK_ID_ENVIRONMENT_MISMATCH",
+      "rationale": "Testnet may not masquerade as mainnet",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N13",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/wave",
+        "value": "DEFERRED"
+      },
+      "expected": "HOLD",
+      "reason_code": "WAVE_BINDING_MISMATCH",
+      "rationale": "Wave assignment must be reviewed rather than silently drift",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N14",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/capabilities/flash_liquidity",
+        "value": "PASS"
+      },
+      "expected": "HOLD",
+      "reason_code": "CAPABILITY_PASS_UNPROVEN",
+      "rationale": "Cannot assert PASS without immutable evidence",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N15",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/evidence/review_sha256",
+        "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "expected": "HOLD",
+      "reason_code": "EVIDENCE_PROVENANCE_INCOMPLETE",
+      "rationale": "A hash alone is not reviewed evidence",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N16",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/source_reviews",
+        "value": [
+          {
+            "source_id": "expired-sepolia",
+            "chain_id": "8453",
+            "network_id": "base-mainnet",
+            "method": "GET",
+            "url": "https://example.org/stats",
+            "allowed_hosts": [
+              "example.org"
+            ],
+            "provider": "Example",
+            "provenance_group": "example",
+            "disposition": "REVIEWED",
+            "review_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "reviewed_at": "2026-08-01T00:00:00Z",
+            "review_expires_at": "2026-09-04T00:00:00Z"
+          }
+        ]
+      },
+      "expected": "HOLD",
+      "reason_code": "SOURCE_REVIEW_EXPIRED",
+      "rationale": "A previously reviewed source expires and fails closed",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N17",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/source_reviews",
+        "value": [
+          {
+            "source_id": "wrong-chain",
+            "chain_id": "42161",
+            "network_id": "arbitrum-mainnet",
+            "method": "GET",
+            "url": "https://example.org/stats",
+            "allowed_hosts": [
+              "example.org"
+            ],
+            "provider": "Example",
+            "provenance_group": "example",
+            "disposition": "PENDING",
+            "review_sha256": null,
+            "reviewed_at": null,
+            "review_expires_at": null
+          }
+        ]
+      },
+      "expected": "HOLD",
+      "reason_code": "SOURCE_CHAIN_ID_MISMATCH",
+      "rationale": "Cross-chain provenance contamination",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N18",
+      "category": "schema",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/source_reviews",
+        "value": [
+          {
+            "source_id": "post-only",
+            "chain_id": "8453",
+            "network_id": "base-mainnet",
+            "method": "POST",
+            "url": "https://example.org",
+            "allowed_hosts": [
+              "example.org"
+            ],
+            "provider": "Example",
+            "provenance_group": "example",
+            "disposition": "PENDING",
+            "review_sha256": null,
+            "reviewed_at": null,
+            "review_expires_at": null
+          }
+        ]
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "POST endpoint rejected in current source model",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N19",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/source_reviews",
+        "value": [
+          {
+            "source_id": "internal-host",
+            "chain_id": "8453",
+            "network_id": "base-mainnet",
+            "method": "GET",
+            "url": "https://127.0.0.1/internal",
+            "allowed_hosts": [
+              "127.0.0.1"
+            ],
+            "provider": "Example",
+            "provenance_group": "example",
+            "disposition": "PENDING",
+            "review_sha256": null,
+            "reviewed_at": null,
+            "review_expires_at": null
+          }
+        ]
+      },
+      "expected": "HOLD",
+      "reason_code": "SOURCE_PRIVATE_HOST",
+      "rationale": "Private IP hosts fail closed",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N20",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/0/source_reviews",
+        "value": [
+          {
+            "source_id": "name-drift",
+            "chain_id": "8453",
+            "network_id": "base-mainnet",
+            "method": "GET",
+            "url": "https://source.example/stats",
+            "allowed_hosts": [
+              "another.example"
+            ],
+            "provider": "Example",
+            "provenance_group": "example",
+            "disposition": "PENDING",
+            "review_sha256": null,
+            "reviewed_at": null,
+            "review_expires_at": null
+          }
+        ]
+      },
+      "expected": "HOLD",
+      "reason_code": "SOURCE_HOST_MISMATCH",
+      "rationale": "URL hostname and allowlist must agree",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N21",
+      "category": "semantic",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/12/wave",
+        "value": "EVM_WAVE_1"
+      },
+      "expected": "HOLD",
+      "reason_code": "WAVE_BINDING_MISMATCH",
+      "rationale": "Ethereum mainnet remains deferred",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "N22",
+      "category": "schema",
+      "mutation": {
+        "op": "replace",
+        "path": "/networks/13/authority/may_execute",
+        "value": true
+      },
+      "expected": "HOLD",
+      "reason_code": "SCHEMA_REJECT",
+      "rationale": "Even Ethereum Sepolia may not execute in this artifact",
+      "test_kind": "LOCAL_CONTRACT",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F01",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "PROVIDER_DISAGREEMENT",
+      "rationale": "Independent providers disagree on block height, pool reserves or timestamps; HOLD pending adjudication",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F02",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "STALE_SNAPSHOT_REENTRY",
+      "rationale": "Previously valid but stale snapshot reappears after restart; cannot restore source approval",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F03",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "REVOKED_HUMAN_APPROVAL",
+      "rationale": "Revoked promotion receipt cannot regain authority from cached decisions",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F04",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "CROSS_CHAIN_APPROVAL_INHERITANCE",
+      "rationale": "Base evidence or approval may not promote Arbitrum or any other network",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F05",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "REORG_FINALITY",
+      "rationale": "Reorg invalidates observed pool snapshot before route research",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F06",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "MISSING_FEE_COMPONENT",
+      "rationale": "Missing L1-data-fee estimate or flash-loan premium disallows positive edge claim",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F07",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "NEGATIVE_ECONOMICS",
+      "rationale": "Gross profit below gas + DEX + flash + slippage + reverts + margin yields HOLD",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F08",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "ENDPOINT_IDENTITY_DRIFT",
+      "rationale": "Endpoint changes returned eth_chainId after review; source and chain HOLD",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F09",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "SIGNING_BOUNDARY",
+      "rationale": "A simulated wallet/signing interface appears anywhere in Gate 1A; hard reject",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F10",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "RESTORE_RESTART_REPLAY",
+      "rationale": "Restart restores old enabled=true / authority=true from snapshot; fail closed",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F11",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "CROSS_CHAIN_NON_ATOMIC",
+      "rationale": "Cross-chain bridge/settlement cannot be mislabeled atomic flash-loan trade",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F12",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "CIRCUIT_BREAKER",
+      "rationale": "Network kill switch on one chain cannot be bypassed by a global success metric",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F13",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "WITHDRAWN_CONSENT",
+      "rationale": "Human operator withdraws permission; no further invocation, no retaliatory fallback",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F14",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "SIGNATURE_SPOOFING",
+      "rationale": "An arbitrary approved_by name without authenticated receipt cannot count as proof of human approval",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    },
+    {
+      "id": "F15",
+      "category": "integration",
+      "mutation": null,
+      "expected": "HOLD",
+      "reason_code": "OLD_SOURCE_EXPIRATION",
+      "rationale": "Historical registry ELIGIBLE string never overrides expired review timestamp",
+      "test_kind": "FUTURE_INTEGRATION",
+      "product_behavior_verified": false
+    }
+  ]
+}

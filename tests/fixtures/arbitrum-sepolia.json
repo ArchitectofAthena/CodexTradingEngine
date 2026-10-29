@@ -1,0 +1,86 @@
+{
+  "fees": {
+    "capacity": "1000",
+    "expected_revert_cost": "1",
+    "flash_premium_bps": 5,
+    "gas_cost": "1",
+    "l1_data_cost": "1",
+    "latency_bps": 5,
+    "max_slippage_bps": 500,
+    "principal": "100",
+    "provenance": "ASSUMED_SYNTHETIC",
+    "safety_margin": "1",
+    "slippage_bps": 5
+  },
+  "snapshot": {
+    "payload": {
+      "chain_id": "421614",
+      "environment": "testnet",
+      "fixture_kind": "SYNTHETIC",
+      "observed_at": "2026-10-29T11:59:00Z",
+      "pools": [
+        {
+          "chain_id": "421614",
+          "dex_fee_bps": 30,
+          "pool_id": "synthetic-0",
+          "protocol": "synthetic_xyk",
+          "reserve_in": "10000000000",
+          "reserve_out": "11000000000",
+          "source_asset": "SYN-A",
+          "target_asset": "SYN-B"
+        },
+        {
+          "chain_id": "421614",
+          "dex_fee_bps": 30,
+          "pool_id": "synthetic-1",
+          "protocol": "synthetic_xyk",
+          "reserve_in": "10000000000",
+          "reserve_out": "11000000000",
+          "source_asset": "SYN-B",
+          "target_asset": "SYN-C"
+        },
+        {
+          "chain_id": "421614",
+          "dex_fee_bps": 30,
+          "pool_id": "synthetic-2",
+          "protocol": "synthetic_xyk",
+          "reserve_in": "10000000000",
+          "reserve_out": "11000000000",
+          "source_asset": "SYN-C",
+          "target_asset": "SYN-A"
+        }
+      ],
+      "profile_id": "arbitrum-sepolia",
+      "provenance": {
+        "assumed": [
+          "all_market_quantities",
+          "borrowed_token_equals_usd"
+        ],
+        "derived": [],
+        "observed": [],
+        "unknown": [
+          "live_liquidity",
+          "provider_support"
+        ]
+      },
+      "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7",
+      "tokens": [
+        {
+          "decimals": 6,
+          "id": "SYN-A"
+        },
+        {
+          "decimals": 6,
+          "id": "SYN-B"
+        },
+        {
+          "decimals": 6,
+          "id": "SYN-C"
+        }
+      ],
+      "ttl_seconds": 120,
+      "units": "raw_integer_token_units"
+    },
+    "payload_sha256": "b68e9cf7bed843904de0547991c42e3073a5483b4cf9660d6a292ffb01aa95fa"
+  }
+}

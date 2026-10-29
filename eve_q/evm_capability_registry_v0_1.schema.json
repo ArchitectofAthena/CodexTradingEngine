@@ -1,0 +1,403 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/eve_q/evm_capability_registry_v0_1.schema.json",
+  "title": "EVE_Q++ EVM Capability Registry v0.1 (proposal-only)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "document_status",
+    "as_of_utc",
+    "producer_repo",
+    "producer_commit",
+    "authority",
+    "human_promotion_required",
+    "networks"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "eve_q.evm_capability_registry.v0.1"
+    },
+    "document_status": {
+      "const": "PROPOSAL_ONLY"
+    },
+    "as_of_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer_repo": {
+      "const": "ArchitectofAthena/CodexTradingEngine"
+    },
+    "producer_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "authority": {
+      "const": false
+    },
+    "human_promotion_required": {
+      "const": true
+    },
+    "networks": {
+      "type": "array",
+      "minItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "network_id",
+          "display_name",
+          "family",
+          "environment",
+          "chain_id",
+          "wave",
+          "enabled",
+          "readiness",
+          "read_only_transport",
+          "source_reviews",
+          "capabilities",
+          "risk_boundary",
+          "authority",
+          "evidence"
+        ],
+        "properties": {
+          "network_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+-(mainnet|testnet)$"
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "family": {
+            "const": "EVM"
+          },
+          "environment": {
+            "enum": [
+              "mainnet",
+              "testnet"
+            ]
+          },
+          "chain_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "wave": {
+            "enum": [
+              "EVM_WAVE_1",
+              "EVM_WAVE_2",
+              "DEFERRED"
+            ]
+          },
+          "enabled": {
+            "const": false
+          },
+          "readiness": {
+            "const": "HOLD"
+          },
+          "read_only_transport": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mode",
+              "allowed_methods",
+              "allowed_hosts"
+            ],
+            "properties": {
+              "mode": {
+                "const": "NO_NETWORK"
+              },
+              "allowed_methods": {
+                "const": []
+              },
+              "allowed_hosts": {
+                "const": []
+              }
+            }
+          },
+          "source_reviews": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source_id",
+                "chain_id",
+                "network_id",
+                "method",
+                "url",
+                "allowed_hosts",
+                "provider",
+                "provenance_group",
+                "disposition",
+                "review_sha256",
+                "reviewed_at",
+                "review_expires_at"
+              ],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "chain_id": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                },
+                "network_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "method": {
+                  "enum": [
+                    "GET",
+                    "HEAD"
+                  ]
+                },
+                "url": {
+                  "type": "string",
+                  "pattern": "^https://"
+                },
+                "allowed_hosts": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 4
+                  },
+                  "uniqueItems": true
+                },
+                "provider": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "provenance_group": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "disposition": {
+                  "enum": [
+                    "PENDING",
+                    "HOLD",
+                    "REVIEWED"
+                  ]
+                },
+                "review_sha256": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  ]
+                },
+                "reviewed_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "review_expires_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "capabilities": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "flash_liquidity",
+              "dex_availability",
+              "liquidity_depth",
+              "fee_model",
+              "slippage_model",
+              "reliability",
+              "tooling",
+              "chain_identity",
+              "finality_reorg_handling"
+            ],
+            "properties": {
+              "flash_liquidity": {
+                "enum": [
+                  "UNKNOWN",
+                  "HOLD",
+                  "PASS",
+                  "FAIL",
+                  "NOT_APPLICABLE"
+                ]
+              },
+              "dex_availability": {
+                "enum": [
+                  "UNKNOWN",
+                  "HOLD",
+                  "PASS",
+                  "FAIL",
+                  "NOT_APPLICABLE"
+                ]
+              },
+              "liquidity_depth": {
+                "enum": [
+                  "UNKNOWN",
+                  "HOLD",
+                  "PASS",
+                  "FAIL",
+                  "NOT_APPLICABLE"
+                ]
+              },
+              "fee_model": {
+                "enum": [
+                  "UNKNOWN",
+                  "HOLD",
+                  "PASS",
+                  "FAIL",
+                  "NOT_APPLICABLE"
+                ]
+              },
+              "slippage_model": {
+                "enum": [
+                  "UNKNOWN",
+                  "HOLD",
+                  "PASS",
+                  "FAIL",
+                  "NOT_APPLICABLE"
+                ]
+              },
+              "reliability": {
+                "enum": [
+                  "UNKNOWN",
+                  "HOLD",
+                  "PASS",
+                  "FAIL",
+                  "NOT_APPLICABLE"
+                ]
+              },
+              "tooling": {
+                "enum": [
+                  "UNKNOWN",
+                  "HOLD",
+                  "PASS",
+                  "FAIL",
+                  "NOT_APPLICABLE"
+                ]
+              },
+              "chain_identity": {
+                "enum": [
+                  "UNKNOWN",
+                  "HOLD",
+                  "PASS",
+                  "FAIL",
+                  "NOT_APPLICABLE"
+                ]
+              },
+              "finality_reorg_handling": {
+                "enum": [
+                  "UNKNOWN",
+                  "HOLD",
+                  "PASS",
+                  "FAIL",
+                  "NOT_APPLICABLE"
+                ]
+              }
+            }
+          },
+          "risk_boundary": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bridge_exposure",
+              "cross_chain_atomicity_assumed"
+            ],
+            "properties": {
+              "bridge_exposure": {
+                "const": "PROHIBITED"
+              },
+              "cross_chain_atomicity_assumed": {
+                "const": false
+              }
+            }
+          },
+          "authority": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "may_observe",
+              "may_generate_live_proposal",
+              "may_sign",
+              "may_submit",
+              "may_execute",
+              "may_move_capital",
+              "may_promote"
+            ],
+            "properties": {
+              "may_observe": {
+                "const": false
+              },
+              "may_generate_live_proposal": {
+                "const": false
+              },
+              "may_sign": {
+                "const": false
+              },
+              "may_submit": {
+                "const": false
+              },
+              "may_execute": {
+                "const": false
+              },
+              "may_move_capital": {
+                "const": false
+              },
+              "may_promote": {
+                "const": false
+              }
+            }
+          },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "review_sha256",
+              "last_reviewed_at",
+              "review_expires_at",
+              "source_commit"
+            ],
+            "properties": {
+              "review_sha256": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                ]
+              },
+              "last_reviewed_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "review_expires_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source_commit": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,319 @@
+[
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L01",
+    "path": [
+      "networks",
+      1,
+      "enabled"
+    ],
+    "value": true,
+    "historical_path": [
+      "profiles",
+      1,
+      "enabled"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L02",
+    "path": [
+      "networks",
+      1,
+      "authority",
+      "may_observe"
+    ],
+    "value": true,
+    "historical_path": [
+      "profiles",
+      1,
+      "authority"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L03",
+    "path": [
+      "networks",
+      1,
+      "authority",
+      "may_sign"
+    ],
+    "value": true,
+    "historical_path": [
+      "profiles",
+      1,
+      "may_sign"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L04",
+    "path": [
+      "networks",
+      1,
+      "authority",
+      "may_submit"
+    ],
+    "value": true,
+    "historical_path": [
+      "profiles",
+      1,
+      "may_submit"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L05",
+    "path": [
+      "networks",
+      1,
+      "authority",
+      "may_execute"
+    ],
+    "value": true,
+    "historical_path": [
+      "profiles",
+      1,
+      "may_execute"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L06",
+    "path": [
+      "networks",
+      1,
+      "authority",
+      "may_move_capital"
+    ],
+    "value": true,
+    "historical_path": [
+      "profiles",
+      1,
+      "may_move_capital"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L07",
+    "path": [
+      "networks",
+      1,
+      "read_only_transport",
+      "allowed_methods"
+    ],
+    "value": [
+      "POST"
+    ],
+    "historical_path": [
+      "profiles",
+      1,
+      "allowed_methods"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L08",
+    "path": [
+      "networks",
+      1,
+      "read_only_transport",
+      "allowed_hosts"
+    ],
+    "value": [
+      "127.0.0.1"
+    ],
+    "historical_path": [
+      "profiles",
+      1,
+      "allowed_hosts"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L09",
+    "path": [
+      "networks",
+      1,
+      "wallet"
+    ],
+    "value": "secret",
+    "historical_path": [
+      "profiles",
+      1,
+      "wallet"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L10",
+    "path": [
+      "networks",
+      1,
+      "readiness"
+    ],
+    "value": "READY",
+    "historical_path": [
+      "profiles",
+      1,
+      "readiness"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L11",
+    "path": [
+      "networks",
+      1,
+      "read_only_transport",
+      "mode"
+    ],
+    "value": "LIVE",
+    "historical_path": [
+      "profiles",
+      1,
+      "mode"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L12",
+    "path": [
+      "networks",
+      1,
+      "chain_id"
+    ],
+    "value": 84532,
+    "historical_path": [
+      "profiles",
+      1,
+      "chain_id"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L13",
+    "path": [
+      "networks",
+      1,
+      "chain_id"
+    ],
+    "value": "084532",
+    "historical_path": [
+      "profiles",
+      1,
+      "chain_id"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L14",
+    "path": [
+      "networks",
+      1,
+      "capabilities",
+      "chain_identity"
+    ],
+    "value": "NOT_A_CAPABILITY_STATE",
+    "historical_path": [
+      "profiles",
+      1,
+      "source_evidence"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L15",
+    "path": [
+      "networks",
+      1,
+      "capabilities",
+      "liquidity_depth"
+    ],
+    "value": "PROFITABLE",
+    "historical_path": [
+      "profiles",
+      1,
+      "economic_evidence"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L16",
+    "path": [
+      "networks",
+      1,
+      "risk_boundary",
+      "bridge_exposure"
+    ],
+    "value": "ALLOWED",
+    "historical_path": [
+      "profiles",
+      1,
+      "bridge_exposure"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "CHAIN_ID_MISMATCH",
+    "id": "L17",
+    "path": [
+      "networks",
+      1,
+      "chain_id"
+    ],
+    "value": "421614",
+    "historical_path": [
+      "profiles",
+      1,
+      "chain_id"
+    ],
+    "historical_expected": "HOLD_IDENTITY",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  },
+  {
+    "expected": "SCHEMA_REJECT",
+    "id": "L18",
+    "path": [
+      "signed_off_by_human"
+    ],
+    "value": "Architect",
+    "historical_path": [
+      "signed_off_by_human"
+    ],
+    "historical_expected": "HOLD_SCHEMA",
+    "mapping_note": "Historical local format; mapped to original nested shape. L14 now tests invalid enum; not a Stage A N-case."
+  }
+]

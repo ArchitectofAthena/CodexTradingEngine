@@ -1,0 +1,655 @@
+{
+  "schema_id": "eve_q.evm_capability_registry.v0.1",
+  "document_status": "PROPOSAL_ONLY",
+  "as_of_utc": "2026-10-29T00:00:00Z",
+  "producer_repo": "ArchitectofAthena/CodexTradingEngine",
+  "producer_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7",
+  "authority": false,
+  "human_promotion_required": true,
+  "networks": [
+    {
+      "network_id": "base-mainnet",
+      "display_name": "Base",
+      "family": "EVM",
+      "environment": "mainnet",
+      "chain_id": "8453",
+      "wave": "EVM_WAVE_1",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "base-testnet",
+      "display_name": "Base Sepolia",
+      "family": "EVM",
+      "environment": "testnet",
+      "chain_id": "84532",
+      "wave": "EVM_WAVE_1",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "arbitrum-mainnet",
+      "display_name": "Arbitrum One",
+      "family": "EVM",
+      "environment": "mainnet",
+      "chain_id": "42161",
+      "wave": "EVM_WAVE_1",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "arbitrum-testnet",
+      "display_name": "Arbitrum Sepolia",
+      "family": "EVM",
+      "environment": "testnet",
+      "chain_id": "421614",
+      "wave": "EVM_WAVE_1",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "polygon-mainnet",
+      "display_name": "Polygon PoS",
+      "family": "EVM",
+      "environment": "mainnet",
+      "chain_id": "137",
+      "wave": "EVM_WAVE_2",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "polygon-testnet",
+      "display_name": "Polygon Amoy",
+      "family": "EVM",
+      "environment": "testnet",
+      "chain_id": "80002",
+      "wave": "EVM_WAVE_2",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "optimism-mainnet",
+      "display_name": "OP Mainnet",
+      "family": "EVM",
+      "environment": "mainnet",
+      "chain_id": "10",
+      "wave": "EVM_WAVE_2",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "optimism-testnet",
+      "display_name": "OP Sepolia",
+      "family": "EVM",
+      "environment": "testnet",
+      "chain_id": "11155420",
+      "wave": "EVM_WAVE_2",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "bsc-mainnet",
+      "display_name": "BNB Smart Chain",
+      "family": "EVM",
+      "environment": "mainnet",
+      "chain_id": "56",
+      "wave": "EVM_WAVE_2",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "bsc-testnet",
+      "display_name": "BSC Testnet",
+      "family": "EVM",
+      "environment": "testnet",
+      "chain_id": "97",
+      "wave": "EVM_WAVE_2",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "avalanche-mainnet",
+      "display_name": "Avalanche C-Chain",
+      "family": "EVM",
+      "environment": "mainnet",
+      "chain_id": "43114",
+      "wave": "EVM_WAVE_2",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "avalanche-testnet",
+      "display_name": "Avalanche Fuji",
+      "family": "EVM",
+      "environment": "testnet",
+      "chain_id": "43113",
+      "wave": "EVM_WAVE_2",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "ethereum-mainnet",
+      "display_name": "Ethereum Mainnet",
+      "family": "EVM",
+      "environment": "mainnet",
+      "chain_id": "1",
+      "wave": "DEFERRED",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    },
+    {
+      "network_id": "ethereum-testnet",
+      "display_name": "Ethereum Sepolia",
+      "family": "EVM",
+      "environment": "testnet",
+      "chain_id": "11155111",
+      "wave": "DEFERRED",
+      "enabled": false,
+      "readiness": "HOLD",
+      "read_only_transport": {
+        "mode": "NO_NETWORK",
+        "allowed_methods": [],
+        "allowed_hosts": []
+      },
+      "source_reviews": [],
+      "capabilities": {
+        "flash_liquidity": "UNKNOWN",
+        "dex_availability": "UNKNOWN",
+        "liquidity_depth": "UNKNOWN",
+        "fee_model": "UNKNOWN",
+        "slippage_model": "UNKNOWN",
+        "reliability": "UNKNOWN",
+        "tooling": "UNKNOWN",
+        "chain_identity": "UNKNOWN",
+        "finality_reorg_handling": "UNKNOWN"
+      },
+      "risk_boundary": {
+        "bridge_exposure": "PROHIBITED",
+        "cross_chain_atomicity_assumed": false
+      },
+      "authority": {
+        "may_observe": false,
+        "may_generate_live_proposal": false,
+        "may_sign": false,
+        "may_submit": false,
+        "may_execute": false,
+        "may_move_capital": false,
+        "may_promote": false
+      },
+      "evidence": {
+        "review_sha256": null,
+        "last_reviewed_at": null,
+        "review_expires_at": null,
+        "source_commit": "228a3edec7ee83a50037a9f4a81f2f6546bb73f7"
+      }
+    }
+  ]
+}
